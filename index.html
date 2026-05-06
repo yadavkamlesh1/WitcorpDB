@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        body.menu-open {
+      overflow: hidden;
+    }
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
         
@@ -122,9 +125,10 @@
   <span class="font-bold text-sm">Witcorp</span>
 </div>
 
-<div id="mobileMenu" class="fixed inset-0 bg-black/40 hidden z-50">
-  <div class="w-64 bg-[#1e3a8a] h-full p-4 text-white">
-    <button onclick="toggleMenu()">Close</button>
+<div id="mobileMenu" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-50">
+  
+  <div class="w-[75%] max-w-[280px] bg-[#1e3a8a] h-full p-4 text-white overflow-y-auto"
+       onclick="event.stopPropagation()">
 
     <div class="mt-4 space-y-2">
       <button onclick="showSection('dashboard');toggleMenu()">Dashboard</button>
@@ -740,7 +744,14 @@ supabaseClient.auth.getSession().then(({ data }) => {
   }
 });
         function toggleMenu() {
-  document.getElementById("mobileMenu").classList.toggle("hidden");
+  const menu = document.getElementById("mobileMenu");
+  menu.classList.toggle("hidden");
+
+  if (menu.classList.contains("hidden")) {
+    document.body.classList.remove("menu-open");
+  } else {
+    document.body.classList.add("menu-open");
+  }
 }
     </script>
           
