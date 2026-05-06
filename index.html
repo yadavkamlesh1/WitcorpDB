@@ -3,331 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Witcorp Hub | Pro</title>
+    <title>Witcorp Hub | Pro Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
-        /* --- CLEAN BOX STYLE (Lighting Animation Removed) --- */
-        .lighting-border {
-            position: relative;
-            background: #fff;
-            border-radius: 2.5rem;
-            z-index: 1;
-            border: 1px solid #e2e8f0; /* Simple clean border instead of animation */
+        :root {
+            --primary: #1e3a8a;
+            --accent: #fbbf24;
         }
 
-        /* Sidebar Styling */
-        .nav-btn { position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-btn i { filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); transition: transform 0.3s ease; }
-        .nav-btn:hover i { transform: scale(1.2) rotate(-5deg); }
-        .nav-btn.active { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1e3a8a; font-weight: 800; transform: translateX(5px); box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3); }
-        
-        .section { display: none; }
-        .section.active { display: block; animation: slideUp 0.4s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Modern Elements */
-        .stat-card { cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); }
-        .stat-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); }
-        
-        /* Input & Form Styling */
-        input:disabled, select:disabled { background-color: #f8fafc; cursor: default; color: #94a3b8; border-color: #e2e8f0; opacity: 0.8; }
-        .form-input-focus:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-        
-        /* Status Pills */
-        .status-pill { padding: 6px 14px; border-radius: 9999px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid currentColor; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .st-pending { background-color: #fff1f2; color: #e11d48; }
-        .st-processing { background-color: #fffbeb; color: #d97706; }
-        .st-completed { background-color: #f0fdf4; color: #16a34a; }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b;
+        }
 
-        /* Branding Motto Style */
-        .motto-text { font-size: 9px; letter-spacing: 2px; font-weight: 800; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-top: 8px; position: relative; display: inline-block; }
-        .motto-text::after { content: ''; position: absolute; bottom: -4px; left: 25%; width: 50%; height: 1.5px; background: #fbbf24; border-radius: 10px; }
+        /* --- CLEAN BOX STYLE (Lighting Animation Removed) --- */
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+        }
 
-        /* Table Responsive Scroll Fix */
-        .scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        /* Sidebar & Nav */
+        .sidebar { background: var(--primary); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-link { transition: all 0.3s ease; border-radius: 1rem; margin-bottom: 0.5rem; color: rgba(255,255,255,0.7); }
+        .nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-link.active { background: var(--accent); color: var(--primary); font-weight: 700; box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.3); }
+
+        /* Stats */
+        .stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+        
+        /* Status Badges */
+        .status-pill { padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .status-pending { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+        .status-processing { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+        .status-completed { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+
+        .section { display: none; animation: fadeIn 0.4s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Tables */
+        .custom-table thead th { background: #f1f5f9; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; color: #64748b; padding: 16px 24px; }
+        .custom-table tbody td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; }
+        
+        .search-bar:focus-within { ring: 2px solid #3b82f6; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50">
-        <div class="p-8 border-b border-white/10 text-center">
-            <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
-                <i class="fas fa-university text-[#1e3a8a] text-2xl"></i>
+    <!-- SIDEBAR -->
+    <aside class="w-72 sidebar flex flex-col z-50">
+        <div class="p-8">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-white rounded-lg"><i class="fas fa-university text-blue-900"></i></div>
+                <h1 class="text-xl font-extrabold text-white tracking-tight">WITCORP <span class="text-yellow-400">HUB</span></h1>
             </div>
-            <h1 class="text-lg font-black text-yellow-400 tracking-tighter uppercase leading-tight">Witcorp India<br><span class="text-[10px] text-white/60">Advisors  LLP</span></h1>
-            <div class="motto-text animate-pulse">Strategic Wisdom. Global Growth.</div>
+            <p class="text-[10px] text-blue-200 font-bold tracking-widest uppercase opacity-60">Professional Advisors LLP</p>
         </div>
-        
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn active w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-house-chimney-window w-5 text-yellow-400"></i> Dashboard Home
+
+        <nav class="flex-1 px-4 space-y-1">
+            <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-link active w-full flex items-center gap-3 p-4">
+                <i class="fas fa-grid-2"></i> Dashboard
+            </button>
+            <button onclick="showSection('clientManagement')" id="nav-client" class="nav-link w-full flex items-center gap-3 p-4">
+                <i class="fas fa-users"></i> Client Directory
+            </button>
+            <button onclick="showSection('vaultManagement')" id="nav-vault" class="nav-link w-full flex items-center gap-3 p-4">
+                <i class="fas fa-key"></i> Credential Vault
             </button>
 
-            <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Client & Security</div>
-            <button onclick="showSection('clientManagement')" id="nav-client" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-address-card w-5 text-blue-300"></i> Client Details
+            <div class="pt-6 pb-2 px-4 text-[10px] font-bold text-blue-300 uppercase tracking-widest opacity-50">Services</div>
+            <button onclick="filterByField('service_category', 'GST')" class="nav-link w-full flex items-center gap-3 p-4">
+                <i class="fas fa-file-invoice text-emerald-400"></i> GST Portal
             </button>
-            <button onclick="showSection('vaultManagement')" id="nav-vault" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-shield-halved w-5 text-blue-300"></i> Credentials Vault
+            <button onclick="filterByField('service_category', 'ROC')" class="nav-link w-full flex items-center gap-3 p-4">
+                <i class="fas fa-building text-amber-400"></i> ROC / MCA
             </button>
-
-            <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Managements</div>
-            <button onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> GST Management
-            </button>
-            <button onclick="filterByField('service_category', 'ROC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-landmark-dome w-5 text-amber-500"></i> ROC / MCA Desk
-            </button>
-            <button onclick="filterByField('service_category', 'IT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-piggy-bank w-5 text-rose-400"></i> Income Tax
-            </button>
-            <button onclick="filterByField('service_category', 'PT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-briefcase w-5 text-sky-400"></i> Prof. Tax (PT)
+            <button onclick="filterByField('service_category', 'IT')" class="nav-link w-full flex items-center gap-3 p-4">
+                <i class="fas fa-coins text-rose-400"></i> Income Tax
             </button>
         </nav>
 
-        <div class="p-6 bg-black/20 text-center border-t border-white/10">
-            <p class="text-[10px] uppercase text-blue-300 mb-1 tracking-widest">Developed By</p>
-            <p class="font-bold text-sm text-yellow-400">Kamlesh Yadav</p>
+        <div class="p-6 mt-auto border-t border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center font-bold text-blue-900">KY</div>
+                <div>
+                    <p class="text-xs font-bold text-white">Kamlesh Yadav</p>
+                    <p class="text-[10px] text-blue-300">Super Admin</p>
+                </div>
+            </div>
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-8 lg:p-12" id="mainContent">
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto p-8 lg:p-12">
         
-        <div class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
-            <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search Client, Service or Staff..." class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
+        <!-- Header & Search -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <div>
+                <h2 class="text-2xl font-extrabold text-slate-800" id="pageTitle">Main Dashboard</h2>
+                <p class="text-slate-500 text-sm">Welcome back! Here's what's happening today.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-white border rounded-2xl flex items-center px-4 py-2 search-bar shadow-sm w-full md:w-80">
+                    <i class="fas fa-search text-slate-400 mr-3"></i>
+                    <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search anything..." class="bg-transparent outline-none text-sm w-full font-medium">
+                </div>
+                <button class="w-10 h-10 rounded-2xl bg-white border flex items-center justify-center text-slate-500 hover:text-blue-600 transition-colors">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
         </div>
 
+        <!-- DASHBOARD SECTION -->
         <div id="dashboard" class="section active">
-            <div id="topAnchor"></div>
-            
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Workspace Overview</h2>
-                <div class="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black border border-emerald-200 shadow-sm">
-                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> SYSTEM LIVE SYNC
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <div onclick="filterByField('all')" class="glass-card p-6 cursor-pointer hover:border-blue-300">
+                    <div class="stat-icon bg-blue-50 text-blue-600 mb-4"><i class="fas fa-folder"></i></div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Tasks</p>
+                    <h3 id="statTotal" class="text-3xl font-black text-slate-800 mt-1">0</h3>
+                </div>
+                <div onclick="filterByField('status', 'Completed')" class="glass-card p-6 cursor-pointer hover:border-emerald-300">
+                    <div class="stat-icon bg-emerald-50 text-emerald-600 mb-4"><i class="fas fa-check-circle"></i></div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Completed</p>
+                    <h3 id="statDone" class="text-3xl font-black text-emerald-600 mt-1">0</h3>
+                </div>
+                <div onclick="filterByField('status', 'Pending')" class="glass-card p-6 cursor-pointer hover:border-rose-300">
+                    <div class="stat-icon bg-rose-50 text-rose-600 mb-4"><i class="fas fa-clock"></i></div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending</p>
+                    <h3 id="statPending" class="text-3xl font-black text-rose-600 mt-1">0</h3>
+                </div>
+                <div onclick="filterByField('status', 'Processing')" class="glass-card p-6 cursor-pointer hover:border-amber-300">
+                    <div class="stat-icon bg-amber-50 text-amber-600 mb-4"><i class="fas fa-spinner"></i></div>
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">In Progress</p>
+                    <h3 id="statProcessing" class="text-3xl font-black text-amber-600 mt-1">0</h3>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <div onclick="filterByField('all')" class="stat-card bg-white p-8 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group">
-                    <i class="fas fa-folder-tree absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Portfolios</p>
-                    <h3 id="statTotal" class="text-5xl font-black text-slate-800 mt-2">0</h3>
+            <!-- FORM -->
+            <div class="glass-card p-8 mb-10 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800" id="formTitle">Create New Service Task</h3>
+                    <div id="editBadge" class="hidden px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-bold uppercase tracking-wider">Edit Mode</div>
                 </div>
-                <div onclick="filterByField('status', 'Completed')" class="stat-card bg-white p-8 rounded-[2.5rem] shadow-sm border-l-[12px] border-emerald-500 group relative overflow-hidden">
-                    <i class="fas fa-circle-check absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Completed</p>
-                    <h3 id="statDone" class="text-5xl font-black text-emerald-600 mt-2">0</h3>
-                </div>
-                <div onclick="filterByField('status', 'Pending')" class="stat-card bg-white p-8 rounded-[2.5rem] shadow-sm border-l-[12px] border-rose-500 group relative overflow-hidden">
-                    <i class="fas fa-clock absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Pending Action</p>
-                    <h3 id="statPending" class="text-5xl font-black text-rose-600 mt-2">0</h3>
-                </div>
-            </div>
-
-            <!-- Form with lighting removed -->
-            <div id="entryFormAnchor" class="lighting-border p-10 shadow-lg mb-14 relative">
-                <div class="flex items-center justify-between mb-10">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-                            <i class="fas fa-pen-to-square text-xl"></i>
-                        </div>
-                        <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight" id="formTitle">Management Portal</h3>
-                    </div>
-                    <div id="editBadge" class="hidden px-5 py-2 bg-amber-50 text-amber-700 rounded-xl text-[10px] font-black border border-amber-200 uppercase tracking-widest animate-pulse">
-                        <i class="fas fa-lock mr-2"></i> Edit Mode Active
-                    </div>
-                </div>
+                
                 <input type="hidden" id="editId">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Client Name</label>
-                        <input type="text" id="clientName" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Client Name</label>
+                        <input type="text" id="clientName" class="p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 ring-blue-500/20 outline-none font-semibold">
                     </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
-                        <select id="serviceCategory" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                            <option value="GST">GST Management</option>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Service Category</label>
+                        <select id="serviceCategory" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold">
+                            <option value="GST">GST Services</option>
                             <option value="ROC">ROC / MCA Desk</option>
                             <option value="IT">Income Tax</option>
                             <option value="PT">Professional Tax</option>
                         </select>
                     </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Service Detail</label>
-                        <input type="text" id="serviceDetail" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Task Detail</label>
+                        <input type="text" id="serviceDetail" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold">
                     </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Assign Staff</label>
-                        <input type="text" id="assignedStaff" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Assigned Staff</label>
+                        <input type="text" id="assignedStaff" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold">
                     </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Deadline</label>
-                        <input type="date" id="deadline" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Target Date</label>
+                        <input type="date" id="deadline" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold">
                     </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Current Status</label>
-                        <select id="status" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Execution Status</label>
+                        <select id="status" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold">
                             <option value="Pending">Pending 🚫</option>
                             <option value="Processing">Processing ⏳</option>
                             <option value="Completed">Completed 🟢</option>
                         </select>
                     </div>
-                    <div class="md:col-span-2 space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Remarks / Notes</label>
-                        <input type="text" id="remarks" placeholder="Add specific case notes here..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                    <div class="md:col-span-2 flex flex-col gap-2">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Internal Remarks</label>
+                        <input type="text" id="remarks" placeholder="Notes for team..." class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold">
                     </div>
                 </div>
-                <div class="mt-10 flex gap-5">
-                    <button onclick="handleSubmit()" id="submitBtn" class="flex-1 bg-[#1e3a8a] text-white py-6 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-800 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3">
-                        <i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB
+
+                <div class="mt-8 flex gap-4">
+                    <button onclick="handleSubmit()" id="submitBtn" class="flex-1 bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i> Save Task to DB
                     </button>
-                    <button onclick="clearForm()" class="px-10 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel / Clear</button>
+                    <button onclick="clearForm()" class="px-8 bg-slate-100 text-slate-500 rounded-xl font-bold hover:bg-slate-200">Clear</button>
                 </div>
             </div>
 
-            <!-- Table Container with lighting removed -->
-            <div class="lighting-border bg-white overflow-hidden shadow-lg">
-                <div class="p-8 border-b flex justify-between items-center bg-slate-50/30">
-                    <h4 class="font-black text-slate-800 uppercase text-xs tracking-[0.2em]">Live Records Database</h4>
+            <!-- DATA TABLE -->
+            <div class="glass-card overflow-hidden">
+                <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
+                    <h4 class="font-bold text-slate-700 text-sm">Service Records History</h4>
+                    <button onclick="fetchRecords()" class="text-blue-600 text-xs font-bold hover:underline"><i class="fas fa-sync-alt mr-1"></i> Refresh</button>
                 </div>
-                <div class="scroll-container">
-                    <table class="w-full text-left border-collapse min-w-[1000px]">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left custom-table">
                         <thead>
-                            <tr class="bg-slate-50/50">
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Client</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Last Update</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Service</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Category</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Staff</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-right tracking-wider">Actions</th>
+                            <tr>
+                                <th>Client</th>
+                                <th>Category</th>
+                                <th>Task Detail</th>
+                                <th>Assigned To</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="mainTableBody" class="divide-y divide-slate-50"></tbody>
+                        <tbody id="mainTableBody">
+                            <!-- JS Renders Here -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- Client Management Section -->
+        <!-- CLIENT MANAGEMENT SECTION -->
         <div id="clientManagement" class="section">
-            <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Client Directory</h2>
-            <div class="lighting-border p-10 shadow-lg mb-12">
-                <input type="hidden" id="cEditId">
+            <h2 class="text-2xl font-black text-slate-800 mb-8">Client Directory</h2>
+            <div class="glass-card p-8 mb-10">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <input type="text" id="cName" placeholder="Legal Entity Name" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
-                    <input type="text" id="cPhone" placeholder="Contact Mobile" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
-                    <input type="email" id="cEmail" placeholder="Official Email ID" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
-                    <select id="cType" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
+                    <input type="text" id="cName" placeholder="Legal Entity Name" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <input type="text" id="cPhone" placeholder="Mobile Number" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <input type="email" id="cEmail" placeholder="Email Address" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <select id="cType" class="p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none">
                         <option value="Pvt Ltd">Private Limited</option>
                         <option value="LLP">LLP Organization</option>
                         <option value="Others">Proprietor / Others</option>
                     </select>
                 </div>
-                <button onclick="saveClient()" id="clientBtn" class="mt-6 w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Save Client Profile</button>
+                <button onclick="saveClient()" class="mt-6 w-full bg-blue-600 text-white p-4 rounded-xl font-bold hover:bg-blue-700 transition-all">Add Client Profile</button>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                    <div class="p-6 bg-blue-600 text-white font-black uppercase text-center text-xs tracking-widest">Private Limited</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card overflow-hidden">
+                    <div class="p-4 bg-blue-600 text-white text-xs font-black text-center uppercase tracking-widest">Private Limited</div>
                     <div id="pvtLtdList" class="p-6 space-y-4"></div>
                 </div>
-                <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                    <div class="p-6 bg-purple-600 text-white font-black uppercase text-center text-xs tracking-widest">LLP Entities</div>
+                <div class="glass-card overflow-hidden">
+                    <div class="p-4 bg-purple-600 text-white text-xs font-black text-center uppercase tracking-widest">LLP Entities</div>
                     <div id="llpList" class="p-6 space-y-4"></div>
                 </div>
-                <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                    <div class="p-6 bg-slate-700 text-white font-black uppercase text-center text-xs tracking-widest">General / Individuals</div>
+                <div class="glass-card overflow-hidden">
+                    <div class="p-4 bg-slate-700 text-white text-xs font-black text-center uppercase tracking-widest">Proprietor / Others</div>
                     <div id="othersList" class="p-6 space-y-4"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Vault Management Section -->
+        <!-- VAULT SECTION -->
         <div id="vaultManagement" class="section">
-            <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Credential Vault</h2>
-            <div class="lighting-border p-10 shadow-lg mb-12">
-                <input type="hidden" id="vEditId">
+            <h2 class="text-2xl font-black text-slate-800 mb-8">Credential Vault</h2>
+            <div class="glass-card p-8 mb-10">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <input type="text" id="vClient" placeholder="Select Client" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                    <input type="text" id="vCat" placeholder="System/Portal Category" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                    <input type="text" id="vUser" placeholder="Login ID" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                    <input type="text" id="vPass" placeholder="Access Password" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+                    <input type="text" id="vClient" placeholder="Select Client" class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                    <input type="text" id="vCat" placeholder="System (GST/IT/ICEGATE)" class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                    <input type="text" id="vUser" placeholder="Login Username" class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                    <input type="text" id="vPass" placeholder="Password" class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
                 </div>
-                <button onclick="saveVault()" id="vaultBtn" class="mt-6 w-full bg-yellow-500 text-blue-900 p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 transition-all">Store Securely</button>
+                <button onclick="saveVault()" class="mt-6 w-full bg-slate-800 text-white p-4 rounded-xl font-bold hover:bg-black transition-all">Store Securely</button>
             </div>
-            <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                <div class="scroll-container">
-                    <table class="w-full text-left min-w-[900px]">
-                        <thead class="bg-slate-50/50 border-b">
-                            <tr>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Entity</th>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Access Category</th>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Username</th>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Password</th>
-                                <th class="p-8 text-right font-black text-[10px] uppercase text-slate-400 tracking-wider">Secure Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="vaultTableBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
+            <div class="glass-card overflow-hidden">
+                <table class="w-full text-left custom-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Portal</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vaultTableBody"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Filter View -->
+        <!-- FILTER VIEW -->
         <div id="filterView" class="section">
-            <div class="flex items-center gap-6 mb-12">
-                <button onclick="showSection('dashboard')" class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-md text-slate-400 hover:text-blue-600 transition-all transform hover:-translate-x-1">
-                    <i class="fas fa-arrow-left text-xl"></i>
+            <div class="flex items-center gap-4 mb-8">
+                <button onclick="showSection('dashboard')" class="w-10 h-10 rounded-xl bg-white border flex items-center justify-center text-slate-500 hover:text-blue-600">
+                    <i class="fas fa-arrow-left"></i>
                 </button>
-                <h2 id="filterTitle" class="text-3xl font-black text-slate-800 uppercase">Records Filtered</h2>
+                <h2 id="filterTitle" class="text-2xl font-black text-slate-800 uppercase tracking-tight">Filtered Results</h2>
             </div>
-            <div class="lighting-border bg-white shadow-lg overflow-hidden border" id="filterTableContainer">
-                <div class="scroll-container">
-                    <table class="w-full text-left border-collapse min-w-[1200px]">
-                        <thead class="bg-slate-50/50">
-                            <tr>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Info</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Service Desk</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Category</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Staff</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Deadline</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Status</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-right tracking-widest">Manage</th>
-                            </tr>
-                        </thead>
-                        <tbody id="filterTableBody" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>
+            <div class="glass-card overflow-hidden">
+                <table class="w-full text-left custom-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Category</th>
+                            <th>Detail</th>
+                            <th>Deadline</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filterTableBody"></tbody>
+                </table>
             </div>
         </div>
 
     </main>
 
     <script>
-        // Supabase Logic remains exactly same as your previous code
+        // SUPABASE CONFIGURATION
         const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
-        const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
+        const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y'; // Keeping your provided key
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         let allRecords = [];
+        let allClients = [];
+        let allVault = [];
 
+        // FETCH ALL DATA
         async function fetchRecords() {
             const { data, error } = await supabaseClient.from('witcorp_records').select('*').order('updated_at', { ascending: false });
             if (!error) {
@@ -337,81 +338,168 @@
             }
         }
 
+        async function fetchClients() {
+            const { data, error } = await supabaseClient.from('witcorp_clients').select('*');
+            if (!error) {
+                allClients = data;
+                renderClients();
+            }
+        }
+
+        async function fetchVault() {
+            const { data, error } = await supabaseClient.from('witcorp_vault').select('*');
+            if (!error) {
+                allVault = data;
+                renderVault();
+            }
+        }
+
+        // RENDER FUNCTIONS
         function renderTable(data, targetId) {
             const tbody = document.getElementById(targetId);
-            if (!tbody) return;
-            tbody.innerHTML = data.length === 0 ? `<tr><td colspan="9" class="p-20 text-center text-slate-400 font-bold">No active records found.</td></tr>` : "";
+            tbody.innerHTML = data.length === 0 ? `<tr><td colspan="7" class="p-10 text-center text-slate-400 font-bold">No records found.</td></tr>` : "";
+            
             data.forEach(row => {
-                const statusClass = {'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing'}[row.status] || 'bg-slate-100';
-                const statusIcon = {'Completed': 'fa-circle-check', 'Pending': 'fa-circle-exclamation', 'Processing': 'fa-spinner fa-spin'}[row.status] || 'fa-info-circle';
-                const lastUpdate = row.updated_at ? new Date(row.updated_at).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short', year: 'numeric' }) : 'Syncing...';
-
+                const statusClass = row.status === 'Completed' ? 'status-completed' : (row.status === 'Processing' ? 'status-processing' : 'status-pending');
+                const statusIcon = row.status === 'Completed' ? 'fa-check-circle' : (row.status === 'Processing' ? 'fa-spinner fa-spin' : 'fa-circle-exclamation');
+                
                 tbody.innerHTML += `
-                    <tr class="group transition-all hover:bg-slate-50/80">
-                        <td class="p-8 font-black text-slate-800 text-sm tracking-tight">${row.client_name}</td>
-                        <td class="p-8 text-[9px] font-black text-slate-400 uppercase"><i class="far fa-clock text-blue-400 mr-1"></i> ${lastUpdate}</td>
-                        <td class="p-8 text-center text-[11px] text-slate-500 font-bold">${row.service_detail || 'General Consulting'}</td>
-                        <td class="p-8 text-center"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase shadow-sm tracking-widest">${row.service_category}</div></td>
-                        <td class="p-8 text-center"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500"></i> ${row.assigned_staff || 'TBD'}</div></td>
-                        <td class="p-8 text-center font-black text-slate-500 text-[11px]">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
-                        <td class="p-8 text-center"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
-                        <td class="p-8 text-slate-500 text-[11px] italic max-w-[180px] truncate font-medium">${row.remarks || '---'}</td>
-                        <td class="p-8 text-right"><div class="flex justify-end gap-3"><button onclick='editRecord(${JSON.stringify(row)})' class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-trash-alt"></i></button></div></td>
-                    </tr>`;
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="font-bold text-slate-800">${row.client_name}</td>
+                        <td><span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-black rounded-md uppercase">${row.service_category}</span></td>
+                        <td class="text-slate-500 font-medium">${row.service_detail || '---'}</td>
+                        <td class="text-slate-500 font-bold">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
+                        <td><span class="status-pill ${statusClass}"><i class="fas ${statusIcon} mr-1"></i> ${row.status}</span></td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button onclick='editRecord(${JSON.stringify(row)})' class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteRecord(${row.id})" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
+        function renderClients() {
+            const lists = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
+            Object.values(lists).forEach(id => document.getElementById(id).innerHTML = "");
+            
+            allClients.forEach(c => {
+                const target = lists[c.type] || 'othersList';
+                document.getElementById(target).innerHTML += `
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 group">
+                        <div class="flex justify-between items-start mb-2">
+                            <h5 class="font-bold text-slate-800 text-sm leading-tight">${c.name}</h5>
+                            <button onclick="deleteClient(${c.id})" class="opacity-0 group-hover:opacity-100 text-rose-500 text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-[10px] text-slate-500 font-bold"><i class="fas fa-phone mr-1"></i> ${c.phone}</p>
+                            <p class="text-[10px] text-slate-500 font-bold"><i class="fas fa-envelope mr-1"></i> ${c.email}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderVault() {
+            const tbody = document.getElementById('vaultTableBody');
+            tbody.innerHTML = "";
+            allVault.forEach(v => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-bold">${v.client_name}</td>
+                        <td class="text-blue-600 font-bold">${v.category}</td>
+                        <td class="font-mono text-xs">${v.username}</td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <input type="password" value="${v.password}" readonly class="bg-transparent font-mono text-xs outline-none w-20">
+                                <button onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'" class="text-slate-400 hover:text-blue-600"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </td>
+                        <td><button onclick="deleteVault(${v.id})" class="text-rose-500 hover:bg-rose-50 p-2 rounded-lg"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // CRUD OPERATIONS
         async function handleSubmit() {
             const id = document.getElementById('editId').value;
             const payload = {
-                status: document.getElementById('status').value,
-                remarks: document.getElementById('remarks').value,
                 client_name: document.getElementById('clientName').value,
                 service_category: document.getElementById('serviceCategory').value,
                 service_detail: document.getElementById('serviceDetail').value,
                 assigned_staff: document.getElementById('assignedStaff').value,
                 deadline: document.getElementById('deadline').value,
+                status: document.getElementById('status').value,
+                remarks: document.getElementById('remarks').value,
                 updated_at: new Date().toISOString()
             };
 
-            if (!payload.client_name) return alert("Error: Client Name is mandatory.");
+            if (!payload.client_name) return alert("Please enter Client Name");
 
-            const { error } = id 
-                ? await supabaseClient.from('witcorp_records').update(payload).eq('id', id) 
-                : await supabaseClient.from('witcorp_records').insert([payload]);
+            let result;
+            if (id) {
+                result = await supabaseClient.from('witcorp_records').update(payload).eq('id', id);
+            } else {
+                result = await supabaseClient.from('witcorp_records').insert([payload]);
+            }
 
-            if (!error) { 
-                alert(id ? "Record Updated!" : "Record Successfully Added!");
-                clearForm(); fetchRecords(); showSection('dashboard'); 
-            } else { alert("Sync Error: Please check connection."); }
+            if (!result.error) {
+                alert("Database Synced Successfully!");
+                clearForm();
+                fetchRecords();
+            }
+        }
+
+        function editRecord(row) {
+            document.getElementById('editId').value = row.id;
+            document.getElementById('clientName').value = row.client_name;
+            document.getElementById('serviceCategory').value = row.service_category;
+            document.getElementById('serviceDetail').value = row.service_detail;
+            document.getElementById('assignedStaff').value = row.assigned_staff;
+            document.getElementById('deadline').value = row.deadline;
+            document.getElementById('status').value = row.status;
+            document.getElementById('remarks').value = row.remarks;
+            
+            document.getElementById('formTitle').innerText = "Updating Record: " + row.client_name;
+            document.getElementById('editBadge').classList.remove('hidden');
+            document.getElementById('submitBtn').innerHTML = `<i class="fas fa-sync-alt"></i> Update Database`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteRecord(id) {
+            if (confirm("Delete this record permanently?")) {
+                const { error } = await supabaseClient.from('witcorp_records').delete().eq('id', id);
+                if (!error) fetchRecords();
+            }
+        }
+
+        // OTHER FUNCTIONS
+        function clearForm() {
+            document.getElementById('editId').value = "";
+            document.getElementById('formTitle').innerText = "Create New Service Task";
+            document.getElementById('editBadge').classList.add('hidden');
+            document.getElementById('submitBtn').innerHTML = `<i class="fas fa-save"></i> Save Task to DB`;
+            ['clientName', 'serviceDetail', 'assignedStaff', 'deadline', 'remarks'].forEach(id => document.getElementById(id).value = "");
         }
 
         function updateStats(data) {
             document.getElementById('statTotal').innerText = data.length;
             document.getElementById('statDone').innerText = data.filter(r => r.status === 'Completed').length;
             document.getElementById('statPending').innerText = data.filter(r => r.status === 'Pending').length;
+            document.getElementById('statProcessing').innerText = data.filter(r => r.status === 'Processing').length;
         }
 
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.add('active');
-        }
-
-        function clearForm() {
-            document.getElementById('editId').value = "";
-            document.getElementById('clientName').value = "";
-            document.getElementById('serviceDetail').value = "";
-            document.getElementById('assignedStaff').value = "";
-            document.getElementById('deadline').value = "";
-            document.getElementById('remarks').value = "";
-            document.getElementById('formTitle').innerText = "Management Portal";
-            document.getElementById('submitBtn').innerHTML = `<i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB`;
-            document.getElementById('editBadge').classList.add('hidden');
-            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'deadline'].forEach(id => {
-                document.getElementById(id).disabled = false;
-            });
+        function handleSearch(val) {
+            const v = val.toLowerCase();
+            const filtered = allRecords.filter(r => 
+                r.client_name.toLowerCase().includes(v) || 
+                r.service_category.toLowerCase().includes(v) ||
+                (r.service_detail && r.service_detail.toLowerCase().includes(v))
+            );
+            renderTable(filtered, 'mainTableBody');
         }
 
         function filterByField(field, value) {
@@ -424,17 +512,22 @@
             showSection('filterView');
         }
 
-        function handleSearch(val) {
-            const v = val.toLowerCase();
-            const filtered = allRecords.filter(r => 
-                r.client_name.toLowerCase().includes(v) || 
-                r.service_category.toLowerCase().includes(v) ||
-                (r.assigned_staff && r.assigned_staff.toLowerCase().includes(v))
-            );
-            renderTable(filtered, 'mainTableBody');
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.add('active');
+            
+            const titles = { 'dashboard': 'Main Dashboard', 'clientManagement': 'Client Directory', 'vaultManagement': 'Credential Vault', 'filterView': 'Filtered View' };
+            document.getElementById('pageTitle').innerText = titles[id] || 'Witcorp Hub';
         }
 
-        window.onload = () => { fetchRecords(); fetchClients(); fetchVault(); };
+        // Initialize
+        window.onload = () => {
+            fetchRecords();
+            fetchClients();
+            fetchVault();
+        };
     </script>
 </body>
 </html>
