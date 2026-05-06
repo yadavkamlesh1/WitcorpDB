@@ -73,46 +73,43 @@
         .scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="h-screen overflow-hidden">
   <!-- LOGIN / REGISTER SCREEN -->
-<div id="authScreen" class="h-screen flex items-center justify-center bg-[#1e3a8a]">
+<div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1e3a8a]">
 
-  <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center">
-    
-    <!-- LOGO -->
-    <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-yellow-400">
-      <img src="logo.png" class="w-full h-full object-cover">
-    </div>
+ <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center">
 
-    <h1 class="text-lg font-black text-[#1e3a8a] uppercase">
-      Witcorp India Advisors LLP
-    </h1>
-
-    <p class="text-xs text-green-500 font-bold mt-1">
-      Strategic Wisdom. Global Growth.
-    </p>
-
-    <!-- EMAIL -->
-    <input id="email" type="email" placeholder="Enter Email"
-      class="w-full mt-6 p-3 border rounded-xl">
-
-    <!-- PASSWORD -->
-    <input id="password" type="password" placeholder="Enter Password"
-      class="w-full mt-3 p-3 border rounded-xl">
-
-    <!-- BUTTONS -->
-    <button onclick="registerUser()"
-      class="w-full mt-4 bg-yellow-400 text-blue-900 py-3 rounded-xl font-bold">
-      Register
-    </button>
-
-    <button onclick="loginUser()"
-      class="w-full mt-2 bg-[#1e3a8a] text-white py-3 rounded-xl font-bold">
-      Login
-    </button>
-
-    <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
+  <!-- LOGO -->
+  <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-yellow-400">
+    <img src="logo.png" class="w-full h-full object-cover">
   </div>
+
+  <h1 class="text-lg font-black text-[#1e3a8a] uppercase">
+    Witcorp India Advisors LLP
+  </h1>
+
+  <p class="text-xs text-green-500 font-bold mt-1">
+    Strategic Wisdom. Global Growth.
+  </p>
+
+  <input id="email" type="email" placeholder="Enter Email"
+    class="w-full mt-6 p-3 border rounded-xl">
+
+  <input id="password" type="password" placeholder="Enter Password"
+    class="w-full mt-3 p-3 border rounded-xl">
+
+  <button onclick="registerUser()"
+    class="w-full mt-4 bg-yellow-400 text-blue-900 py-3 rounded-xl font-bold">
+    Register
+  </button>
+
+  <button onclick="loginUser()"
+    class="w-full mt-2 bg-[#1e3a8a] text-white py-3 rounded-xl font-bold">
+    Login
+  </button>
+
+  <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
+</div>
 </div>
   <div id="appScreen" class="hidden flex w-full">
    <aside class="w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50">
@@ -630,25 +627,36 @@
                 el.value = (i === 'serviceCategory') ? 'GST' : (i === 'status' ? 'Pending' : "");
                 el.disabled = false;
             });
-        }
-
-        fetchRecords();
+        }    
       // REGISTER
 async function registerUser() {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  const { error } = await supabaseClient.auth.signUp({
+  const { data, error } = await supabaseClient.auth.signUp({
     email,
     password
   });
 
   if (error) {
     document.getElementById('authMsg').innerText = error.message;
-  } else {
-    document.getElementById('authMsg').innerText =
-      "Registered! Wait for admin approval.";
+    return;
   }
+
+  const user = data.user;
+
+  // 🔥 AUTO INSERT
+  await supabaseClient.from('witcorp_users').insert([
+    {
+      id: user.id,
+      email: user.email,
+      role: 'user',
+      approved: true
+    }
+  ]);
+
+  document.getElementById('authMsg').innerText =
+    "Registered & Approved! Now login.";
 }
 
 // LOGIN
@@ -695,6 +703,7 @@ function showApp(user) {
 
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
+    fetchRecords();
 }
 
 // LOGOUT
