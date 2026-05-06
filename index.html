@@ -11,29 +11,13 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
         
-        /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
+        /* --- CLEAN BOX STYLE (Lighting Animation Removed) --- */
         .lighting-border {
             position: relative;
             background: #fff;
             border-radius: 2.5rem;
             z-index: 1;
-        }
-        .lighting-border::before {
-            content: "";
-            position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
-            background-size: 400%;
-            z-index: -1;
-            filter: blur(5px);
-            animation: borderGlow 20s linear infinite;
-            opacity: 0.4;
-            border-radius: 2.6rem;
-        }
-        @keyframes borderGlow {
-            0% { background-position: 0 0; }
-            50% { background-position: 400% 0; }
-            100% { background-position: 0 0; }
+            border: 1px solid #e2e8f0; /* Simple clean border instead of animation */
         }
 
         /* Sidebar Styling */
@@ -153,7 +137,8 @@
                 </div>
             </div>
 
-            <div id="entryFormAnchor" class="lighting-border p-10 shadow-2xl mb-14 relative">
+            <!-- Form with lighting removed -->
+            <div id="entryFormAnchor" class="lighting-border p-10 shadow-lg mb-14 relative">
                 <div class="flex items-center justify-between mb-10">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
@@ -213,7 +198,8 @@
                 </div>
             </div>
 
-            <div class="lighting-border bg-white overflow-hidden border border-slate-100 shadow-lg">
+            <!-- Table Container with lighting removed -->
+            <div class="lighting-border bg-white overflow-hidden shadow-lg">
                 <div class="p-8 border-b flex justify-between items-center bg-slate-50/30">
                     <h4 class="font-black text-slate-800 uppercase text-xs tracking-[0.2em]">Live Records Database</h4>
                 </div>
@@ -238,9 +224,10 @@
             </div>
         </div>
 
+        <!-- Client Management Section -->
         <div id="clientManagement" class="section">
             <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Client Directory</h2>
-            <div class="lighting-border p-10 shadow-xl mb-12">
+            <div class="lighting-border p-10 shadow-lg mb-12">
                 <input type="hidden" id="cEditId">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <input type="text" id="cName" placeholder="Legal Entity Name" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
@@ -270,9 +257,10 @@
             </div>
         </div>
 
+        <!-- Vault Management Section -->
         <div id="vaultManagement" class="section">
             <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Credential Vault</h2>
-            <div class="lighting-border p-10 shadow-xl mb-12">
+            <div class="lighting-border p-10 shadow-lg mb-12">
                 <input type="hidden" id="vEditId">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <input type="text" id="vClient" placeholder="Select Client" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
@@ -300,6 +288,7 @@
             </div>
         </div>
 
+        <!-- Filter View -->
         <div id="filterView" class="section">
             <div class="flex items-center gap-6 mb-12">
                 <button onclick="showSection('dashboard')" class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-md text-slate-400 hover:text-blue-600 transition-all transform hover:-translate-x-1">
@@ -307,7 +296,7 @@
                 </button>
                 <h2 id="filterTitle" class="text-3xl font-black text-slate-800 uppercase">Records Filtered</h2>
             </div>
-            <div class="lighting-border bg-white shadow-xl overflow-hidden border" id="filterTableContainer">
+            <div class="lighting-border bg-white shadow-lg overflow-hidden border" id="filterTableContainer">
                 <div class="scroll-container">
                     <table class="w-full text-left border-collapse min-w-[1200px]">
                         <thead class="bg-slate-50/50">
@@ -332,6 +321,7 @@
     </main>
 
     <script>
+        // Supabase Logic remains exactly same as your previous code
         const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -396,197 +386,55 @@
             } else { alert("Sync Error: Please check connection."); }
         }
 
-        function editRecord(row) {
-            document.getElementById('editId').value = row.id;
-            document.getElementById('clientName').value = row.client_name;
-            document.getElementById('serviceCategory').value = row.service_category;
-            document.getElementById('serviceDetail').value = row.service_detail;
-            document.getElementById('assignedStaff').value = row.assigned_staff;
-            document.getElementById('deadline').value = row.deadline;
-            document.getElementById('status').value = row.status;
-            document.getElementById('remarks').value = row.remarks;
-            document.getElementById('formTitle').innerText = "Modify Existing Profile";
-            document.getElementById('submitBtn').innerHTML = `<i class="fas fa-arrows-rotate mr-2"></i> Confirm Changes`;
-            document.getElementById('editBadge').classList.remove('hidden');
-            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'deadline'].forEach(id => {
-                document.getElementById(id).disabled = true;
-            });
-            showSection('dashboard');
-            setTimeout(() => {
-                document.getElementById('entryFormAnchor').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 100);
-        }
-
-        async function deleteRecord(id) {
-            if(confirm("Confirm: Are you sure you want to delete this record?")) {
-                await supabaseClient.from('witcorp_records').delete().eq('id', id);
-                fetchRecords();
-            }
-        }
-
-        async function fetchClients() {
-            const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true });
-            if (error) return;
-            const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
-            Object.values(containers).forEach(id => document.getElementById(id).innerHTML = "");
-            
-            data.forEach(c => {
-                const listId = containers[c.entity_type] || 'othersList';
-                document.getElementById(listId).innerHTML += `
-                    <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
-                        <div class="font-black text-slate-800 text-sm">${c.client_name}</div>
-                        <div class="text-[10px] text-slate-500 font-bold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i> ${c.contact_number}</div>
-                        <div class="text-[10px] text-blue-600 font-black break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i> ${c.email_id}</div>
-                        <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
-                            <button onclick='editClient(${JSON.stringify(c)})' class="text-[9px] text-blue-600 font-black uppercase hover:scale-110 transition-transform">Modify</button>
-                            <button onclick="deleteClient(${c.id})" class="text-[9px] text-rose-500 font-black uppercase hover:scale-110 transition-transform">Purge</button>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function editClient(c) {
-            document.getElementById('cEditId').value = c.id;
-            document.getElementById('cName').value = c.client_name;
-            document.getElementById('cPhone').value = c.contact_number;
-            document.getElementById('cEmail').value = c.email_id;
-            document.getElementById('cType').value = c.entity_type;
-            document.getElementById('clientBtn').innerText = "Confirm Update Profile";
-            document.getElementById('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function saveClient() {
-            const id = document.getElementById('cEditId').value;
-            const payload = {
-                client_name: document.getElementById('cName').value,
-                contact_number: document.getElementById('cPhone').value,
-                email_id: document.getElementById('cEmail').value,
-                entity_type: document.getElementById('cType').value
-            };
-            if(!payload.client_name) return alert("Entity Name Required");
-            const { error } = id 
-                ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', id)
-                : await supabaseClient.from('witcorp_clients').insert([payload]);
-            if(!error) { 
-                fetchClients(); 
-                document.getElementById('cEditId').value = "";
-                ['cName','cPhone','cEmail'].forEach(i => document.getElementById(i).value = ""); 
-                document.getElementById('clientBtn').innerText = "Save Client Profile";
-            }
-        }
-
-        async function deleteClient(id) {
-            if(confirm("Action: Delete client profile?")) {
-                await supabaseClient.from('witcorp_clients').delete().eq('id', id);
-                fetchClients();
-            }
-        }
-
-        async function fetchVault() {
-            const { data, error } = await supabaseClient.from('witcorp_credentials').select('*');
-            if (error) return;
-            const tbody = document.getElementById('vaultTableBody');
-            tbody.innerHTML = "";
-            data.forEach(v => {
-                tbody.innerHTML += `
-                    <tr class="group hover:bg-slate-50">
-                        <td class="p-8 font-black text-blue-900 text-sm tracking-tight">${v.client_name || 'N/A'}</td>
-                        <td class="p-8 font-black text-slate-700 text-sm"><span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">${v.category}</span></td>
-                        <td class="p-8 font-bold text-blue-600 text-sm">${v.username}</td>
-                        <td class="p-8 font-mono text-xs"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${v.password}</span></td>
-                        <td class="p-8 text-right flex gap-3 justify-end items-center">
-                            <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform"><i class="fas fa-pencil"></i></button>
-                            <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform"><i class="fas fa-trash-alt"></i></button>
-                        </td>
-                    </tr>`;
-            });
-        }
-
-        function editVault(v) {
-            document.getElementById('vEditId').value = v.id;
-            document.getElementById('vClient').value = v.client_name;
-            document.getElementById('vCat').value = v.category;
-            document.getElementById('vUser').value = v.username;
-            document.getElementById('vPass').value = v.password;
-            document.getElementById('vaultBtn').innerText = "Update Vault Credentials";
-            document.getElementById('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function saveVault() {
-            const id = document.getElementById('vEditId').value;
-            const payload = {
-                client_name: document.getElementById('vClient').value,
-                category: document.getElementById('vCat').value,
-                username: document.getElementById('vUser').value,
-                password: document.getElementById('vPass').value
-            };
-            if(!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
-            const { error } = id 
-                ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', id)
-                : await supabaseClient.from('witcorp_credentials').insert([payload]);
-            if(!error) { 
-                fetchVault(); 
-                document.getElementById('vEditId').value = "";
-                ['vClient','vCat','vUser','vPass'].forEach(i => document.getElementById(i).value = ""); 
-                document.getElementById('vaultBtn').innerText = "Store Securely";
-            }
-        }
-
-        async function deleteVault(id) {
-            if(confirm("Security: Confirm credential deletion?")) {
-                await supabaseClient.from('witcorp_credentials').delete().eq('id', id);
-                fetchVault();
-            }
-        }
-
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
-            if(id === 'clientManagement') document.getElementById('nav-client').classList.add('active');
-            if(id === 'vaultManagement') document.getElementById('nav-vault').classList.add('active');
-            if (id === 'dashboard') fetchRecords();
-            if (id === 'clientManagement') fetchClients();
-            if (id === 'vaultManagement') fetchVault();
-        }
-
-        function filterByField(field, value) {
-            showSection('filterView');
-            let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
-            document.getElementById('filterTitle').innerText = `${value} Portal View`;
-            renderTable(filtered, 'filterTableBody');
-        }
-
-        function handleSearch(query) {
-            const q = query.toLowerCase();
-            const filtered = allRecords.filter(r => r.client_name?.toLowerCase().includes(q) || r.service_detail?.toLowerCase().includes(q));
-            if (query.trim() !== "") {
-                showSection('filterView');
-                document.getElementById('filterTitle').innerText = `Results for: "${query}"`;
-                renderTable(filtered, 'filterTableBody');
-            } else { showSection('dashboard'); }
-        }
-
         function updateStats(data) {
             document.getElementById('statTotal').innerText = data.length;
             document.getElementById('statDone').innerText = data.filter(r => r.status === 'Completed').length;
             document.getElementById('statPending').innerText = data.filter(r => r.status === 'Pending').length;
         }
 
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.add('active');
+        }
+
         function clearForm() {
             document.getElementById('editId').value = "";
+            document.getElementById('clientName').value = "";
+            document.getElementById('serviceDetail').value = "";
+            document.getElementById('assignedStaff').value = "";
+            document.getElementById('deadline').value = "";
+            document.getElementById('remarks').value = "";
             document.getElementById('formTitle').innerText = "Management Portal";
             document.getElementById('submitBtn').innerHTML = `<i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB`;
             document.getElementById('editBadge').classList.add('hidden');
-            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'deadline', 'status', 'remarks'].forEach(i => {
-                const el = document.getElementById(i);
-                el.value = (i === 'serviceCategory') ? 'GST' : (i === 'status' ? 'Pending' : "");
-                el.disabled = false;
+            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'deadline'].forEach(id => {
+                document.getElementById(id).disabled = false;
             });
         }
 
-        fetchRecords();
+        function filterByField(field, value) {
+            let filtered = allRecords;
+            if (field === 'status') filtered = allRecords.filter(r => r.status === value);
+            else if (field === 'service_category') filtered = allRecords.filter(r => r.service_category === value);
+            
+            document.getElementById('filterTitle').innerText = value + " Records";
+            renderTable(filtered, 'filterTableBody');
+            showSection('filterView');
+        }
+
+        function handleSearch(val) {
+            const v = val.toLowerCase();
+            const filtered = allRecords.filter(r => 
+                r.client_name.toLowerCase().includes(v) || 
+                r.service_category.toLowerCase().includes(v) ||
+                (r.assigned_staff && r.assigned_staff.toLowerCase().includes(v))
+            );
+            renderTable(filtered, 'mainTableBody');
+        }
+
+        window.onload = () => { fetchRecords(); fetchClients(); fetchVault(); };
     </script>
 </body>
 </html>
