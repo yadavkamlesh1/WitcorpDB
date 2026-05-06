@@ -10,22 +10,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
-         <!-- 🔐 LOGIN BOX START -->
-<div id="authBox" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-  <div class="bg-white p-10 rounded-2xl w-[400px] text-center">
-    <h2 class="text-xl font-bold mb-5">Login to Witcorp</h2>
-
-    <input id="email" type="email" placeholder="Enter Email" class="w-full p-3 border mb-3 rounded-lg">
-    <input id="password" type="password" placeholder="Enter Password" class="w-full p-3 border mb-5 rounded-lg">
-
-    <button onclick="signup()" class="w-full bg-green-500 text-white p-3 rounded-lg mb-2">Register</button>
-    <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg">Login</button>
-
-    <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
-  </div>
-</div>
-<!-- 🔐 LOGIN BOX END -->
-        
         /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
         .lighting-border {
             position: relative;
@@ -89,6 +73,21 @@
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
+    <!-- 🔐 LOGIN BOX START -->
+<div id="authBox" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <div class="bg-white p-10 rounded-2xl w-[400px] text-center">
+    <h2 class="text-xl font-bold mb-5">Login to Witcorp</h2>
+
+    <input id="email" type="email" placeholder="Enter Email" class="w-full p-3 border mb-3 rounded-lg">
+    <input id="password" type="password" placeholder="Enter Password" class="w-full p-3 border mb-5 rounded-lg">
+
+    <button onclick="signup()" class="w-full bg-green-500 text-white p-3 rounded-lg mb-2">Register</button>
+    <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg">Login</button>
+
+    <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
+  </div>
+</div>
+<!-- 🔐 LOGIN BOX END -->
     <aside class="w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50">
         <div class="p-8 border-b border-white/10 text-center">
             <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center shadow-lg transform rotate-3">
@@ -387,8 +386,17 @@ async function login() {
     .select('approved')
     .eq('id', user.id)
     .single();
+    if (!profile || !profile.approved) {
+  document.getElementById('authMsg').innerText = "Waiting for admin approval.";
+  await supabaseClient.auth.signOut();
+  return;
+}
 
-  if (!profile.approved) {
+// ✅ LOGIN SUCCESS
+document.getElementById('authBox').style.display = 'none';
+document.getElementById('mainContent').style.display = 'block';
+
+  if (!profile || !profile.approved) {
     document.getElementById('authMsg').innerText = "Waiting for admin approval.";
     await supabaseClient.auth.signOut();
     return;
@@ -415,12 +423,13 @@ async function checkSession() {
   }
 }
 
-checkSession();
+
 
 // 🔐 AUTH SYSTEM END
         const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        checkSession();
 
         let allRecords = [];
 
@@ -509,10 +518,6 @@ checkSession();
                 fetchRecords();
             }
         }
-        async function logout() {
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
     async function fetchClients() {
             const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true });
             if (error) return;
@@ -676,6 +681,10 @@ checkSession();
         }
 
         fetchRecords();
+         async function logout() {
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
     </script>
 </body>
 </html>
