@@ -75,7 +75,7 @@
         .scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
-<body class="h-screen">
+<body class="min-h-screen overflow-x-hidden">
   <!-- LOGIN / REGISTER SCREEN -->
 <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1e3a8a]">
 
@@ -113,9 +113,25 @@
   <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
 </div>
 </div>
-  <div id="appScreen" class="hidden flex w-full h-screen">
-   <aside class="w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50">
-        <div class="p-8 border-b border-white/10 text-center">
+  <div id="appScreen" class="hidden flex w-full min-h-screen">
+      <div class="lg:hidden flex items-center justify-between p-3 bg-[#1e3a8a] text-white">
+  <button onclick="toggleMenu()">☰</button>
+  <span class="font-bold text-sm">Witcorp</span>
+</div>
+
+<div id="mobileMenu" class="fixed inset-0 bg-black/40 hidden z-50">
+  <div class="w-64 bg-[#1e3a8a] h-full p-4 text-white">
+    <button onclick="toggleMenu()">Close</button>
+
+    <div class="mt-4 space-y-2">
+      <button onclick="showSection('dashboard');toggleMenu()">Dashboard</button>
+      <button onclick="showSection('clientManagement');toggleMenu()">Clients</button>
+      <button onclick="showSection('vaultManagement');toggleMenu()">Vault</button>
+    </div>
+  </div>
+</div>
+   <aside class="w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
+        <div class="p-4 border-b border-white/10 text-center">
             <div class="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-yellow-400">
     <img src="logo.png" class="w-full h-full object-cover">
 </div>
@@ -157,7 +173,7 @@
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-8 lg:p-12" id="mainContent">
+    <main class="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-12 w-full" id="mainContent">
       <div class="flex justify-end items-center mb-6 gap-3">
   <img id="userAvatar" class="w-10 h-10 rounded-full border" />
   <span id="userEmail" class="font-bold text-slate-700"></span>
@@ -179,21 +195,21 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <div onclick="filterByField('all')" class="stat-card bg-white p-8 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+                <div onclick="filterByField('all')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group">
                     <i class="fas fa-folder-tree absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
                     <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Portfolios</p>
-                    <h3 id="statTotal" class="text-5xl font-black text-slate-800 mt-2">0</h3>
+                    <h3 id="statTotal" class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 mt-2">0</h3>
                 </div>
-                <div onclick="filterByField('status', 'Completed')" class="stat-card bg-white p-8 rounded-[2.5rem] shadow-sm border-l-[12px] border-emerald-500 group relative overflow-hidden">
+                <div onclick="filterByField('status', 'Completed')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-emerald-500 group relative overflow-hidden">
                     <i class="fas fa-circle-check absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
                     <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Completed</p>
-                    <h3 id="statDone" class="text-5xl font-black text-emerald-600 mt-2">0</h3>
+                    <h3 id="statDone" class="text-3xl sm:text-4xl lg:text-5xl font-black text-emerald-600 mt-2">0</h3>
                 </div>
-                <div onclick="filterByField('status', 'Pending')" class="stat-card bg-white p-8 rounded-[2.5rem] shadow-sm border-l-[12px] border-rose-500 group relative overflow-hidden">
+                <div onclick="filterByField('status', 'Pending')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-rose-500 group relative overflow-hidden">
                     <i class="fas fa-clock absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
                     <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Pending Action</p>
-                    <h3 id="statPending" class="text-5xl font-black text-rose-600 mt-2">0</h3>
+                    <h3 id="statPending" class="text-3xl sm:text-4xl lg:text-5xl font-black text-rose-600 mt-2">0</h3>
                 </div>
             </div>
 
@@ -210,7 +226,7 @@
                     </div>
                 </div>
                 <input type="hidden" id="editId">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Client Name</label>
                         <input type="text" id="clientName" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
@@ -258,22 +274,22 @@
             </div>
 
             <div class="lighting-border bg-white overflow-hidden border border-slate-100 shadow-lg">
-                <div class="p-8 border-b flex justify-between items-center bg-slate-50/30">
+                <div class="p-4 border-b flex justify-between items-center bg-slate-50/30">
                     <h4 class="font-black text-slate-800 uppercase text-xs tracking-[0.2em]">Live Records Database</h4>
                 </div>
                 <div class="scroll-container">
-                    <table class="w-full text-left border-collapse min-w-[1000px]">
+                    <table class="w-full text-left border-collapse min-w-[900px] text-xs sm:text-sm">
                         <thead>
                             <tr class="bg-slate-50/50">
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Client</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Last Update</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Service</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Category</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Staff</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase border-b text-right tracking-wider">Actions</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Client</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Last Update</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Service</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Category</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Staff</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-right tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="mainTableBody" class="divide-y divide-slate-50"></tbody>
@@ -298,7 +314,7 @@
                 </div>
                 <button onclick="saveClient()" id="clientBtn" class="mt-6 w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Save Client Profile</button>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
                     <div class="p-6 bg-blue-600 text-white font-black uppercase text-center text-xs tracking-widest">Private Limited</div>
                     <div id="pvtLtdList" class="p-6 space-y-4"></div>
@@ -331,11 +347,11 @@
                     <table class="w-full text-left min-w-[900px]">
                         <thead class="bg-slate-50/50 border-b">
                             <tr>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Entity</th>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Access Category</th>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Username</th>
-                                <th class="p-8 font-black text-[10px] uppercase text-slate-400 tracking-wider">Password</th>
-                                <th class="p-8 text-right font-black text-[10px] uppercase text-slate-400 tracking-wider">Secure Action</th>
+                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Entity</th>
+                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Access Category</th>
+                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Username</th>
+                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Password</th>
+                                <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400 tracking-wider">Secure Action</th>
                             </tr>
                         </thead>
                         <tbody id="vaultTableBody" class="divide-y divide-slate-100"></tbody>
@@ -356,15 +372,15 @@
                     <table class="w-full text-left border-collapse min-w-[1200px]">
                         <thead class="bg-slate-50/50">
                             <tr>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Info</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Service Desk</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Category</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Staff</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Deadline</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Status</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes</th>
-                                <th class="p-8 text-[10px] font-black text-slate-400 uppercase text-right tracking-widest">Manage</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Info</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Service Desk</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Category</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Staff</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Deadline</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Status</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-right tracking-widest">Manage</th>
                             </tr>
                         </thead>
                         <tbody id="filterTableBody" class="divide-y divide-slate-50"></tbody>
@@ -403,15 +419,15 @@
 
                 tbody.innerHTML += `
                     <tr class="group transition-all hover:bg-slate-50/80">
-                        <td class="p-8 font-black text-slate-800 text-sm tracking-tight">${row.client_name}</td>
-                        <td class="p-8 text-[9px] font-black text-slate-400 uppercase"><i class="far fa-clock text-blue-400 mr-1"></i> ${lastUpdate}</td>
-                        <td class="p-8 text-center text-[11px] text-slate-500 font-bold">${row.service_detail || 'General Consulting'}</td>
-                        <td class="p-8 text-center"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase shadow-sm tracking-widest">${row.service_category}</div></td>
-                        <td class="p-8 text-center"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500"></i> ${row.assigned_staff || 'TBD'}</div></td>
-                        <td class="p-8 text-center font-black text-slate-500 text-[11px]">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
-                        <td class="p-8 text-center"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
-                        <td class="p-8 text-slate-500 text-[11px] italic max-w-[180px] truncate font-medium">${row.remarks || '---'}</td>
-                        <td class="p-8 text-right"><div class="flex justify-end gap-3"><button onclick='editRecord(${JSON.stringify(row)})' class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-trash-alt"></i></button></div></td>
+                        <td class="p-4 font-black text-slate-800 text-sm tracking-tight">${row.client_name}</td>
+                        <td class="p-4 text-[9px] font-black text-slate-400 uppercase"><i class="far fa-clock text-blue-400 mr-1"></i> ${lastUpdate}</td>
+                        <td class="p-4 text-center text-[11px] text-slate-500 font-bold">${row.service_detail || 'General Consulting'}</td>
+                        <td class="p-4 text-center"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase shadow-sm tracking-widest">${row.service_category}</div></td>
+                        <td class="p-4 text-center"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500"></i> ${row.assigned_staff || 'TBD'}</div></td>
+                        <td class="p-4 text-center font-black text-slate-500 text-[11px]">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
+                        <td class="p-4 text-center"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
+                        <td class="p-4 text-slate-500 text-[11px] italic max-w-[180px] truncate font-medium">${row.remarks || '---'}</td>
+                        <td class="p-4 text-right"><div class="flex justify-end gap-3"><button onclick='editRecord(${JSON.stringify(row)})' class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-trash-alt"></i></button></div></td>
                     </tr>`;
             });
         }
@@ -535,11 +551,11 @@
             data.forEach(v => {
                 tbody.innerHTML += `
                     <tr class="group hover:bg-slate-50">
-                        <td class="p-8 font-black text-blue-900 text-sm tracking-tight">${v.client_name || 'N/A'}</td>
-                        <td class="p-8 font-black text-slate-700 text-sm"><span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">${v.category}</span></td>
-                        <td class="p-8 font-bold text-blue-600 text-sm">${v.username}</td>
-                        <td class="p-8 font-mono text-xs"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${v.password}</span></td>
-                        <td class="p-8 text-right flex gap-3 justify-end items-center">
+                        <td class="p-4 font-black text-blue-900 text-sm tracking-tight">${v.client_name || 'N/A'}</td>
+                        <td class="p-4 font-black text-slate-700 text-sm"><span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">${v.category}</span></td>
+                        <td class="p-4 font-bold text-blue-600 text-sm">${v.username}</td>
+                        <td class="p-4 font-mono text-xs"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${v.password}</span></td>
+                        <td class="p-4 text-right flex gap-3 justify-end items-center">
                             <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform"><i class="fas fa-pencil"></i></button>
                             <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform"><i class="fas fa-trash-alt"></i></button>
                         </td>
@@ -720,7 +736,11 @@ supabaseClient.auth.getSession().then(({ data }) => {
     checkApproval(data.session.user);
   }
 });
+        function toggleMenu() {
+  document.getElementById("mobileMenu").classList.toggle("hidden");
+}
     </script>
+          
     <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
