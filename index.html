@@ -73,6 +73,29 @@
 
         /* Table Responsive Scroll Fix */
         .scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        /* ===== MOBILE FIX START ===== */
+@media (max-width: 1024px) {
+
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 50;
+  }
+
+  #mainContent {
+    width: 100%;
+    padding: 16px;
+  }
+
+}
+
+/* SCROLL FIX */
+body {
+  overflow-x: hidden;
+}
+/* ===== MOBILE FIX END ===== */
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
@@ -115,8 +138,8 @@
 </div>
   <div id="appScreen" class="hidden flex w-full h-screen">
    <aside id="sidebar"
-class="fixed lg:static w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50
--translate-x-full lg:translate-x-0 transition-transform duration-300">
+class="fixed lg:relative w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50
+-translate-x-full lg:translate-x-0 lg:flex">
         <div class="p-8 border-b border-white/10 text-center">
             <div class="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-yellow-400">
     <img src="logo.png" class="w-full h-full object-cover">
@@ -158,8 +181,12 @@ class="fixed lg:static w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-5
             <p class="font-bold text-sm text-yellow-400">Kamlesh Yadav</p>
         </div>
     </aside>
+                <!-- MOBILE OVERLAY -->
+<div id="overlay" 
+class="fixed inset-0 bg-black/40 hidden z-40 lg:hidden"
+onclick="toggleSidebar()"></div>
 
-    <main class="flex-1 overflow-y-auto p-8 lg:p-12" id="mainContent">
+    <main class="flex-1 overflow-y-auto p-6 lg:p-12" id="mainContent">
 
     <!-- ✅ MOBILE MENU BUTTON -->
     <button onclick="toggleSidebar()" 
@@ -642,9 +669,21 @@ class="fixed lg:static w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-5
             });
         }    
         function toggleSidebar() {
-     const sidebar = document.getElementById('sidebar');
-     sidebar.classList.toggle('-translate-x-full');
-   }
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+
+  sidebar.classList.toggle('-translate-x-full');
+  overlay.classList.toggle('hidden');
+}
+        document.addEventListener('click', function(e) {
+  const sidebar = document.getElementById('sidebar');
+  const menuBtn = document.querySelector('button[onclick="toggleSidebar()"]');
+
+  if (!sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+    sidebar.classList.add('-translate-x-full');
+    document.getElementById('overlay').classList.add('hidden');
+  }
+});
       // REGISTER
 async function registerUser() {
   const email = document.getElementById('email').value;
