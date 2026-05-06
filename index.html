@@ -130,11 +130,60 @@
   <div class="w-[75%] max-w-[280px] bg-[#1e3a8a] h-full p-4 text-white overflow-y-auto"
        onclick="event.stopPropagation()">
 
-    <div class="mt-4 space-y-2">
-      <button onclick="showSection('dashboard');toggleMenu()">Dashboard</button>
-      <button onclick="showSection('clientManagement');toggleMenu()">Clients</button>
-      <button onclick="showSection('vaultManagement');toggleMenu()">Vault</button>
-    </div>
+    <div class="text-center mb-4">
+  <div class="w-16 h-16 mx-auto mb-2 rounded-xl overflow-hidden border-2 border-yellow-400">
+    <img src="logo.png" class="w-full h-full object-cover">
+  </div>
+
+  <h1 class="text-sm font-black text-yellow-400 uppercase leading-tight">
+    Witcorp India Advisors LLP
+  </h1>
+
+  <p class="text-[9px] text-green-400 font-bold mt-1">
+    Strategic Wisdom. Global Growth.
+  </p>
+</div>
+
+<div class="mt-4 space-y-2 text-sm">
+
+  <button onclick="showSection('dashboard');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
+    Dashboard Home
+  </button>
+
+  <button onclick="showSection('clientManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
+    Client Details
+  </button>
+
+  <button onclick="showSection('vaultManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
+    Credentials Vault
+  </button>
+
+  <div class="mt-4 text-[10px] text-blue-200 uppercase">
+    Managements
+  </div>
+
+  <button onclick="filterByField('service_category','GST');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    GST Management
+  </button>
+
+  <button onclick="filterByField('service_category','ROC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    ROC / MCA
+  </button>
+
+  <button onclick="filterByField('service_category','IT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    Income Tax
+  </button>
+
+  <button onclick="filterByField('service_category','PT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    Prof. Tax
+  </button>
+
+</div>
+
+<div class="mt-6 pt-4 border-t border-white/20 text-center">
+  <p class="text-[10px] text-blue-200">Developed By</p>
+  <p class="text-sm font-bold text-yellow-400">Kamlesh Yadav</p>
+</div>
   </div>
 </div>
    <aside class="w-72 bg-[#1e3a8a] text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
