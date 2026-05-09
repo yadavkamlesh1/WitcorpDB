@@ -907,24 +907,24 @@ async function askAI() {
   chat.scrollTop = chat.scrollHeight;
 
   // API CALL
-  const response = await fetch(
+ const response = await fetch(
 
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=AIzaSyDrY9eYxiH__uZYxpGJP7lkcuob6qKb2l8",
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyDrY9eYxiH__uZYxpGJP7lkcuob6qKb2l8",
 
-    {
-      method: "POST",
+  {
+    method: "POST",
 
-      headers: {
-        "Content-Type": "application/json"
-      },
+    headers: {
+      "Content-Type": "application/json"
+    },
 
-      body: JSON.stringify({
+    body: JSON.stringify({
 
-        contents: [
-          {
-            parts: [
-              {
-                text: `
+      contents: [
+        {
+          parts: [
+            {
+              text: `
 You are Witcorp AI Assistant.
 
 You help with:
@@ -939,25 +939,27 @@ Answer professionally and simply.
 
 User Question:
 ${message}
-                `
-              }
-            ]
-          }
-        ]
+              `
+            }
+          ]
+        }
+      ]
 
-      })
-    }
+    })
+  }
 
-  );
+);
 
   const data = await response.json();
 
-  document.getElementById('loadingAI').remove();
+console.log(data);
 
-  const aiReply =
-    data.candidates?.[0]?.content?.parts?.[0]?.text
-    || "No response";
+document.getElementById('loadingAI').remove();
 
+const aiReply =
+  data?.candidates?.[0]?.content?.parts?.[0]?.text
+  || data?.error?.message
+  || "No response from AI";
   // AI RESPONSE
   chat.innerHTML += `
     <div class="text-left">
