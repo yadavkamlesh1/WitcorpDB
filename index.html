@@ -345,6 +345,7 @@
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Updated By</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-right tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -461,6 +462,7 @@
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Deadline</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Status</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Updated By</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-right tracking-widest">Manage</th>
                             </tr>
                         </thead>
@@ -511,6 +513,7 @@
                         <td class="p-4 text-center font-black text-slate-500 text-[11px]">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
                         <td class="p-4 text-center"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
                         <td class="p-4 text-slate-500 text-[11px] italic max-w-[180px] truncate font-medium">${row.remarks || '---'}</td>
+                        <td class="p-4 text-[11px] font-bold text-blue-700">${row.updated_by || 'N/A'}</td>
                         <td class="p-4 text-right"><div class="flex justify-end gap-3"><button onclick='editRecord(${JSON.stringify(row)})' class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-trash-alt"></i></button></div></td>
                     </tr>`;
             });
@@ -584,6 +587,7 @@
                         <div class="font-black text-slate-800 text-sm">${c.client_name}</div>
                         <div class="text-[10px] text-slate-500 font-bold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i> ${c.contact_number}</div>
                         <div class="text-[10px] text-blue-600 font-black break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i> ${c.email_id}</div>
+                        <div class="text-[10px] text-green-600 font-black mt-1">Updated By: ${c.updated_by || 'N/A'}</div>
                         <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
                             <button onclick='editClient(${JSON.stringify(c)})' class="text-[9px] text-blue-600 font-black uppercase hover:scale-110 transition-transform">Modify</button>
                             <button onclick="deleteClient(${c.id})" class="text-[9px] text-rose-500 font-black uppercase hover:scale-110 transition-transform">Delete</button>
