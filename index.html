@@ -236,7 +236,7 @@
   <button onclick="logout()" class="text-red-500 font-bold">Logout</button>
 </div>
         
-        <div class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
+        <div id="globalSearchBox" class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
             <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search Client, Service or Staff..." class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
         </div>
@@ -356,6 +356,17 @@
 
         <div id="clientManagement" class="section">
             <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Client Directory</h2>
+            <div class="mb-8 relative max-w-xl">
+    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+
+    <input 
+        type="text"
+        id="clientSearch"
+        oninput="searchClients(this.value)"
+        placeholder="Search Client Name, Phone or Email..."
+        class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all"
+    >
+</div>
             <div class="lighting-border p-10 shadow-xl mb-12">
                 <input type="hidden" id="cEditId">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -454,6 +465,7 @@
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
         let allRecords = [];
+        let allClients = [];
 
         async function fetchRecords() {
             const { data, error } = await supabaseClient.from('witcorp_records').select('*').order('updated_at', { ascending: false });
@@ -544,6 +556,7 @@
         async function fetchClients() {
             const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true });
             if (error) return;
+            allClients = data;
             const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
             Object.values(containers).forEach(id => document.getElementById(id).innerHTML = "");
             
@@ -658,6 +671,13 @@
 
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            const globalSearch = document.getElementById('globalSearchBox');
+
+if (id === 'clientManagement') {
+    globalSearch.style.display = 'none';
+} else {
+    globalSearch.style.display = 'block';
+}
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
@@ -805,6 +825,69 @@ supabaseClient.auth.getSession().then(({ data }) => {
   } else {
     document.body.classList.add("menu-open");
   }
+}
+        function searchClients(query) {
+
+    const q = query.toLowerCase();
+
+    const filtered = allClients.filter(c =>
+        c.client_name?.toLowerCase().includes(q) ||
+        c.contact_number?.toLowerCase().includes(q) ||
+        c.email_id?.toLowerCase().includes(q)
+    );
+
+    const containers = {
+        'Pvt Ltd': 'pvtLtdList',
+        'LLP': 'llpList',
+        'Others': 'othersList'
+    };
+
+    Object.values(containers).forEach(id => {
+        document.getElementById(id).innerHTML = "";
+    });
+
+    filtered.forEach(c => {
+
+        const listId = containers[c.entity_type] || 'othersList';
+
+        document.getElementById(listId).innerHTML += `
+            <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
+
+                <div class="font-black text-slate-800 text-sm">
+                    ${c.client_name}
+                </div>
+
+                <div class="text-[10px] text-slate-500 font-bold mt-1">
+                    <i class="fas fa-phone-alt mr-1.5 text-blue-500"></i>
+                    ${c.contact_number}
+                </div>
+
+                <div class="text-[10px] text-blue-600 font-black break-all mt-1 opacity-70 group-hover:opacity-100">
+                    <i class="fas fa-envelope mr-1.5"></i>
+                    ${c.email_id}
+                </div>
+
+                <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
+
+                    <button onclick='editClient(${JSON.stringify(c)})'
+                        class="text-[9px] text-blue-600 font-black uppercase hover:scale-110 transition-transform">
+                        Modify
+                    </button>
+
+                    <button onclick="deleteClient(${c.id})"
+                        class="text-[9px] text-rose-500 font-black uppercase hover:scale-110 transition-transform">
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+    });
+
+    if (query.trim() === "") {
+        fetchClients();
+    }
 }
     </script>
           
