@@ -431,6 +431,7 @@
                                 <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Access Category</th>
                                 <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Username</th>
                                 <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Password</th>
+                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Updated By</th>
                                 <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400 tracking-wider">Secure Action</th>
                             </tr>
                         </thead>
@@ -645,6 +646,7 @@
                         <td class="p-4 font-black text-slate-700 text-sm"><span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">${v.category}</span></td>
                         <td class="p-4 font-bold text-blue-600 text-sm">${v.username}</td>
                         <td class="p-4 font-mono text-xs"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${v.password}</span></td>
+                        <td class="p-4 text-[11px] font-bold text-blue-700">${v.updated_by || 'N/A'}</td>
                         <td class="p-4 text-right flex gap-3 justify-end items-center">
                             <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform"><i class="fas fa-pencil"></i></button>
                             <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform"><i class="fas fa-trash-alt"></i></button>
