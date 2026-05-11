@@ -596,7 +596,10 @@
             document.getElementById('cEmail').value = c.email_id;
             document.getElementById('cType').value = c.entity_type;
             document.getElementById('clientBtn').innerText = "Confirm Update Profile";
-            document.getElementById('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('cName').scrollIntoView({
+    behavior: 'smooth',
+    block: 'center'
+});
         }
 
         async function saveClient() {
@@ -654,7 +657,10 @@
             document.getElementById('vUser').value = v.username;
             document.getElementById('vPass').value = v.password;
             document.getElementById('vaultBtn').innerText = "Update Vault Credentials";
-            document.getElementById('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('vClient').scrollIntoView({
+    behavior: 'smooth',
+    block: 'center'
+});
         }
 
         async function saveVault() {
