@@ -525,7 +525,7 @@
                 service_detail: document.getElementById('serviceDetail').value,
                 assigned_staff: document.getElementById('assignedStaff').value,
                 deadline: document.getElementById('deadline').value,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
                 updated_by: currentUserEmail
             };
 
@@ -610,7 +610,7 @@
                 client_name: document.getElementById('cName').value,
                 contact_number: document.getElementById('cPhone').value,
                 email_id: document.getElementById('cEmail').value,
-                entity_type: document.getElementById('cType').value
+                entity_type: document.getElementById('cType').value,
                 updated_by: currentUserEmail
             };
             if(!payload.client_name) return alert("Entity Name Required");
@@ -672,7 +672,7 @@
                 client_name: document.getElementById('vClient').value,
                 category: document.getElementById('vCat').value,
                 username: document.getElementById('vUser').value,
-                password: document.getElementById('vPass').value
+                password: document.getElementById('vPass').value,
                 updated_by: currentUserEmail
             };
             if(!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
