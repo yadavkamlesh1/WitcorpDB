@@ -526,6 +526,7 @@
                 assigned_staff: document.getElementById('assignedStaff').value,
                 deadline: document.getElementById('deadline').value,
                 updated_at: new Date().toISOString()
+                updated_by: currentUserEmail
             };
 
             if (!payload.client_name) return alert("Error: Client Name is mandatory.");
@@ -610,6 +611,7 @@
                 contact_number: document.getElementById('cPhone').value,
                 email_id: document.getElementById('cEmail').value,
                 entity_type: document.getElementById('cType').value
+                updated_by: currentUserEmail
             };
             if(!payload.client_name) return alert("Entity Name Required");
             const { error } = id 
@@ -671,6 +673,7 @@
                 category: document.getElementById('vCat').value,
                 username: document.getElementById('vUser').value,
                 password: document.getElementById('vPass').value
+                updated_by: currentUserEmail
             };
             if(!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
             const { error } = id 
