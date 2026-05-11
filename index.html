@@ -835,6 +835,9 @@ supabaseClient.auth.getSession().then(({ data }) => {
         c.contact_number?.toLowerCase().includes(q) ||
         c.email_id?.toLowerCase().includes(q)
     );
+            filtered.sort((a, b) => {
+    return a.client_name.toLowerCase().startsWith(q) ? -1 : 1;
+});
 
     const containers = {
         'Pvt Ltd': 'pvtLtdList',
