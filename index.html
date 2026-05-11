@@ -688,10 +688,17 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             const globalSearch = document.getElementById('globalSearchBox');
 
-if (id === 'clientManagement') {
+if (
+    id === 'clientManagement' ||
+    id === 'vaultManagement'
+) {
+
     globalSearch.style.display = 'none';
+
 } else {
+
     globalSearch.style.display = 'block';
+
 }
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(id).classList.add('active');
