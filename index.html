@@ -677,7 +677,11 @@
 
         function handleSearch(query) {
             const q = query.toLowerCase();
-            const filtered = allRecords.filter(r => r.client_name?.toLowerCase().includes(q) || r.service_detail?.toLowerCase().includes(q));
+            const filtered = allRecords.filter(r => 
+    r.client_name?.toLowerCase().includes(q) ||
+    r.service_detail?.toLowerCase().includes(q) ||
+    r.assigned_staff?.toLowerCase().includes(q)
+);
             if (query.trim() !== "") {
                 showSection('filterView');
                 document.getElementById('filterTitle').innerText = `Results for: "${query}"`;
