@@ -480,6 +480,7 @@
         let allRecords = [];
         let allClients = [];
         let allVault = [];
+        let currentUserEmail = "";
 
         async function fetchRecords() {
             const { data, error } = await supabaseClient.from('witcorp_records').select('*').order('updated_at', { ascending: false });
@@ -826,6 +827,7 @@ function showApp(user) {
   document.getElementById('appScreen').classList.remove('hidden');
 
   document.getElementById('userEmail').innerText = user.email;
+    currentUserEmail = user.email;
 
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
