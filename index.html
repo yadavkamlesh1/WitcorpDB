@@ -351,6 +351,14 @@
                         </thead>
                         <tbody id="mainTableBody" class="divide-y divide-slate-50"></tbody>
                     </table>
+                    <div class="p-6 text-center">
+    <button 
+        id="loadMoreBtn"
+        onclick="fetchRecords(false)"
+        class="bg-[#1e3a8a] text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-800">
+        Load More
+    </button>
+</div>
                 </div>
             </div>
         </div>
@@ -484,15 +492,44 @@
         let allClients = [];
         let allVault = [];
         let currentUserEmail = "";
+        let recordPage = 0;
+        const PAGE_SIZE = 100;
 
-        async function fetchRecords() {
-            const { data, error } = await supabaseClient.from('witcorp_records').select('*').order('updated_at', { ascending: false });
-            if (!error) {
-                allRecords = data;
-                renderTable(data, 'mainTableBody');
-                updateStats(data);
-            }
+        async function fetchRecords(reset = true) {
+
+    if (reset) {
+        recordPage = 0;
+        allRecords = [];
+    }
+
+    const from = recordPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, error } = await supabaseClient
+        .from('witcorp_records')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .range(from, to);
+
+    if (!error && data) {
+
+        allRecords = [...allRecords, ...data];
+
+        renderTable(allRecords, 'mainTableBody');
+
+        updateStats(allRecords);
+
+        recordPage++;
+
+        const btn = document.getElementById("loadMoreBtn");
+
+        if (data.length < PAGE_SIZE) {
+            btn.style.display = "none";
+        } else {
+            btn.style.display = "block";
         }
+    }
+}
 
         function renderTable(data, targetId) {
             const tbody = document.getElementById(targetId);
@@ -574,7 +611,7 @@
         }
 
         async function fetchClients() {
-            const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true });
+            const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true }).limit(300);
             if (error) return;
             allClients = data;
             const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
@@ -638,7 +675,7 @@
         }
 
         async function fetchVault() {
-            const { data, error } = await supabaseClient.from('witcorp_credentials').select('*');
+            const { data, error } = await supabaseClient.from('witcorp_credentials').select('*').limit(300);
             if (error) return;
             allVault = data;
             const tbody = document.getElementById('vaultTableBody');
@@ -721,7 +758,7 @@ if (
             if(id === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
             if(id === 'clientManagement') document.getElementById('nav-client').classList.add('active');
             if(id === 'vaultManagement') document.getElementById('nav-vault').classList.add('active');
-            if (id === 'dashboard') fetchRecords();
+            if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
             if (id === 'clientManagement') fetchClients();
             if (id === 'vaultManagement') fetchVault();
         }
@@ -840,7 +877,7 @@ function showApp(user) {
 
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
-    fetchRecords();
+
 }
 
 // LOGOUT
