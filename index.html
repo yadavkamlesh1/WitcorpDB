@@ -285,7 +285,7 @@
                 <button 
     onclick="refreshDashboard()"
     id="refreshBtn"
-    class="bg-blue-400 hover:bg-blue-500 text-white px-3 py-2 rounded-2xl font-bold shadow-lg transition-all flex items-center gap-2">
+    class="bg-blue-700 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2">
 
     <i class="fas fa-rotate-right"></i>
     Refresh
@@ -1081,7 +1081,7 @@ function showApp(user) {
     fetchRecords(true);
     setTimeout(() => {
 
-    checkDueReminders();
+    smartDueCheck();
 
 }, 3000);
 
@@ -1247,6 +1247,7 @@ supabaseClient.auth.getSession().then(({ data }) => {
     </script>
           
     <script>
+        const GEMINI_API_KEY = "AIzaSyACTvH50TdaVd4JgPcAVI-lsNsM3m2hnTI";
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
     .then(() => console.log("SW registered"));
@@ -1257,7 +1258,7 @@ if ('serviceWorker' in navigator) {
         .classList.toggle("hidden");
 
 }
-        async function askAI() {
+       async function askAI() {
 
     const input = document.getElementById("aiInput");
 
@@ -1270,164 +1271,101 @@ if ('serviceWorker' in navigator) {
     // USER MESSAGE
     chat.innerHTML += `
         <div class="text-right">
-
             <div class="inline-block bg-[#1e3a8a] text-white px-4 py-3 rounded-2xl text-sm font-bold">
-
                 ${msg}
-
             </div>
-
         </div>
     `;
 
     input.value = "";
 
-    let reply = "No data found.";
+    // LOADING
+    const loadingId = "loading-" + Date.now();
 
-    // TODAY DUE
-    if (
-        msg.toLowerCase().includes("today") ||
-        msg.toLowerCase().includes("due")
-    ) {
-
-        const today = new Date()
-            .toISOString()
-            .split("T")[0];
-
-        const due = allRecords.filter(r =>
-
-            r.deadline === today
-
-        );
-
-        if (due.length > 0) {
-
-            reply = due.map(r => `
-                • ${r.client_name}
-                (${r.service_category})
-            `).join("<br>");
-
-        } else {
-
-            reply = "✅ No due today.";
-
-        }
-    }
-
-    // CATEGORY SEARCH
-else if (
-
-    msg.toLowerCase().includes("gst") ||
-    msg.toLowerCase().includes("roc") ||
-    msg.toLowerCase().includes("mca") ||
-    msg.toLowerCase().includes("tds") ||
-    msg.toLowerCase().includes("pt") ||
-    msg.toLowerCase().includes("itr") ||
-    msg.toLowerCase().includes("lut")
-
-) {
-
-    const keyword = msg.toLowerCase();
-
-    const found = allRecords.filter(r =>
-
-        r.service_category
-        ?.toLowerCase()
-        .includes(keyword)
-
-        ||
-
-        r.service_detail
-        ?.toLowerCase()
-        .includes(keyword)
-
-    );
-
-    if (found.length > 0) {
-
-        reply = found.map(r => `
-            • ${r.client_name}
-            <br>
-            ${r.service_detail}
-            <br>
-            ${r.status}
-        `).join("<br><br>");
-
-    } else {
-
-        reply = "No matching records found.";
-
-    }
-
-}
-
-    // OVERDUE
-    else if (
-        msg.toLowerCase().includes("overdue")
-    ) {
-
-        const today = new Date();
-
-        const overdue = allRecords.filter(r =>
-
-            r.deadline &&
-            new Date(r.deadline) < today &&
-            r.status !== "Completed"
-
-        );
-
-        if (overdue.length > 0) {
-
-            reply = overdue.map(r => `
-                • ${r.client_name}
-                (${r.deadline})
-            `).join("<br>");
-
-        } else {
-
-            reply = "✅ No overdue work.";
-
-        }
-    }
-
-    // CLIENT SEARCH
-    else {
-
-        const found = allRecords.filter(r =>
-
-            r.client_name
-            ?.toLowerCase()
-            .includes(msg.toLowerCase())
-
-        );
-
-        if (found.length > 0) {
-
-            reply = found.map(r => `
-                • ${r.client_name}
-                <br>
-                ${r.service_category}
-                - ${r.status}
-            `).join("<br><br>");
-
-        }
-    }
-
-    // AI MESSAGE
     chat.innerHTML += `
-        <div>
-
+        <div id="${loadingId}">
             <div class="inline-block bg-white border px-4 py-3 rounded-2xl text-sm font-bold">
-
-                ${reply}
-
+                <i class="fas fa-spinner fa-spin"></i>
+                Thinking...
             </div>
-
         </div>
     `;
 
-    // AUTO SCROLL
     chat.scrollTop = chat.scrollHeight;
+
+    try {
+
+        const prompt = `
+You are Witcorp AI Assistant.
+
+Company Records:
+${JSON.stringify(allRecords)}
+
+User Question:
+${msg}
+
+Rules:
+- Answer professionally
+- Keep answer short
+- Mention client names clearly
+- Explain due dates
+- Mention overdue items
+`;
+
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            parts: [
+                                {
+                                    text: prompt
+                                }
+                            ]
+                        }
+                    ]
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        document.getElementById(loadingId).remove();
+
+        let reply =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text
+            || "No response.";
+
+        chat.innerHTML += `
+            <div>
+                <div class="inline-block bg-white border px-4 py-3 rounded-2xl text-sm font-bold whitespace-pre-wrap">
+                    ${reply}
+                </div>
+            </div>
+        `;
+
+        chat.scrollTop = chat.scrollHeight;
+
+    } catch (err) {
+
+        document.getElementById(loadingId).remove();
+
+        chat.innerHTML += `
+            <div>
+                <div class="inline-block bg-red-100 text-red-600 border border-red-300 px-4 py-3 rounded-2xl text-sm font-bold">
+                    AI Error. Check API key or internet.
+                </div>
+            </div>
+        `;
+
+        console.log(err);
+    }
+}
 
 }
         document.addEventListener("DOMContentLoaded", () => {
@@ -1530,9 +1468,43 @@ else if (
         });
 
 });
+        async function smartDueCheck() {
+
+    const today = new Date();
+
+    const urgent = allRecords.filter(r => {
+
+        if (!r.deadline) return false;
+
+        const diff =
+            Math.ceil(
+                (new Date(r.deadline) - today)
+                / (1000 * 60 * 60 * 24)
+            );
+
+        return diff <= 3 && r.status !== "Completed";
+
+    });
+
+    if (urgent.length > 0) {
+
+        document.getElementById("reminderPopup")
+            .classList.remove("hidden");
+
+        document.getElementById("reminderContent")
+            .innerHTML = urgent.map(r => `
+                🚨 ${r.client_name}
+                <br>
+                ${r.service_category}
+                <br>
+                Due: ${r.deadline}
+            `).join("<hr class='my-3'>");
+
+    }
+}
         setInterval(() => {
 
-    checkDueReminders();
+    smartDueCheck();
 
 }, 60000);
 </script>
