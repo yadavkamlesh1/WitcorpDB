@@ -601,6 +601,7 @@
         const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+        const GEMINI_API_KEY = "https://yznyimxtlamdzotfgajz.supabase.co/functions/v1/witcorp-ai";
 
         let allRecords = [];
         let allClients = [];
@@ -1084,6 +1085,7 @@ function showApp(user) {
     smartDueCheck();
 
 }, 3000);
+    checkDueReminders();
 
 }
 
@@ -1247,7 +1249,6 @@ supabaseClient.auth.getSession().then(({ data }) => {
     </script>
           
     <script>
-        const GEMINI_API_KEY = "AIzaSyACTvH50TdaVd4JgPcAVI-lsNsM3m2hnTI";
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
     .then(() => console.log("SW registered"));
@@ -1296,20 +1297,31 @@ if ('serviceWorker' in navigator) {
     try {
 
         const prompt = `
-You are Witcorp AI Assistant.
+You are Witcorp India Advisors LLP AI Assistant.
 
-Company Records:
+You help with:
+- GST
+- ROC
+- MCA
+- Income Tax
+- PT
+- Due dates
+- Overdue reminders
+- Client tracking
+
+Company Live Records:
 ${JSON.stringify(allRecords)}
 
 User Question:
 ${msg}
 
-Rules:
-- Answer professionally
-- Keep answer short
-- Mention client names clearly
-- Explain due dates
-- Mention overdue items
+Instructions:
+- Answer in simple professional English
+- Mention exact client names
+- Mention due dates clearly
+- Mention overdue cases clearly
+- If user asks pending work, show pending records
+- Keep answers short and smart
 `;
 
         const response = await fetch(
@@ -1337,9 +1349,20 @@ Rules:
 
         document.getElementById(loadingId).remove();
 
-        let reply =
-            data?.candidates?.[0]?.content?.parts?.[0]?.text
-            || "No response.";
+        if (data.error) {
+
+    throw new Error(data.error.message);
+
+}
+
+let reply =
+data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+if (!reply) {
+
+    reply = "No AI response received.";
+
+}
 
         chat.innerHTML += `
             <div>
@@ -1350,6 +1373,11 @@ Rules:
         `;
 
         chat.scrollTop = chat.scrollHeight;
+        setTimeout(() => {
+
+    chat.scrollTop = chat.scrollHeight;
+
+}, 100);
 
     } catch (err) {
 
@@ -1365,17 +1393,15 @@ Rules:
 
         console.log(err);
     }
-}
-
-}
-        document.addEventListener("DOMContentLoaded", () => {
-            function checkDueReminders() {
-                function closeReminder() {
+           function closeReminder() {
 
     document.getElementById("reminderPopup")
         .classList.add("hidden");
 
 }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            function checkDueReminders() {
 
     const today = new Date();
 
