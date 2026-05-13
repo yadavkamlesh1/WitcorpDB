@@ -627,7 +627,12 @@
 
     if (!error && data) {
 
-        allRecords = [...allRecords, ...data];
+        const merged = [...allRecords, ...data];
+
+allRecords = merged.filter(
+    (record, index, self) =>
+        index === self.findIndex(r => r.id === record.id)
+);
 
         renderTable(allRecords, 'mainTableBody');
 
@@ -670,32 +675,89 @@
             });
         }
 
-        async function handleSubmit() {
-            const id = document.getElementById('editId').value;
-            const payload = {
-                status: document.getElementById('status').value,
-                remarks: document.getElementById('remarks').value,
-                client_name: document.getElementById('clientName').value,
-                service_category: document.getElementById('serviceCategory').value,
-                service_detail: document.getElementById('serviceDetail').value,
-                assigned_staff: document.getElementById('assignedStaff').value,
-                deadline: document.getElementById('deadline').value,
-                updated_at: new Date().toISOString(),
-                updated_by: currentUserEmail
-            };
+       let isSubmitting = false;
 
-            if (!payload.client_name) return alert("Error: Client Name is mandatory.");
+async function handleSubmit() {
 
-            const { error } = id 
-                ? await supabaseClient.from('witcorp_records').update(payload).eq('id', id) 
-                : await supabaseClient.from('witcorp_records').insert([payload]);
+    if (isSubmitting) return;
 
-            if (!error) { 
-                alert(id ? "Record Updated!" : "Record Successfully Added!");
-                clearForm(); fetchRecords(); showSection('dashboard'); 
-            } else { alert("Sync Error: Please check connection."); }
-        }
+    isSubmitting = true;
 
+    const btn = document.getElementById('submitBtn');
+
+    btn.disabled = true;
+
+    btn.innerHTML = `
+        <i class="fas fa-spinner fa-spin"></i>
+        Syncing...
+    `;
+
+    const id = document.getElementById('editId').value;
+
+    const payload = {
+        status: document.getElementById('status').value,
+        remarks: document.getElementById('remarks').value,
+        client_name: document.getElementById('clientName').value,
+        service_category: document.getElementById('serviceCategory').value,
+        service_detail: document.getElementById('serviceDetail').value,
+        assigned_staff: document.getElementById('assignedStaff').value,
+        deadline: document.getElementById('deadline').value,
+        updated_at: new Date().toISOString(),
+        updated_by: currentUserEmail
+    };
+
+    if (!payload.client_name) {
+
+        alert("Error: Client Name is mandatory.");
+
+        isSubmitting = false;
+
+        btn.disabled = false;
+
+        btn.innerHTML = `
+            <i class="fas fa-cloud-arrow-up text-xl"></i>
+            Sync To WitcorpDB
+        `;
+
+        return;
+    }
+
+    const { error } = id
+
+        ? await supabaseClient
+            .from('witcorp_records')
+            .update(payload)
+            .eq('id', id)
+
+        : await supabaseClient
+            .from('witcorp_records')
+            .insert([payload]);
+
+    if (!error) {
+
+        alert(id ? "Record Updated!" : "Record Successfully Added!");
+
+        clearForm();
+
+        await fetchRecords(true);
+
+        showSection('dashboard');
+
+    } else {
+
+        alert("Sync Error: Please check connection.");
+
+    }
+
+    isSubmitting = false;
+
+    btn.disabled = false;
+
+    btn.innerHTML = `
+        <i class="fas fa-cloud-arrow-up text-xl"></i>
+        Sync To WitcorpDB
+    `;
+}
         function editRecord(row) {
             document.getElementById('editId').value = row.id;
             document.getElementById('clientName').value = row.client_name;
