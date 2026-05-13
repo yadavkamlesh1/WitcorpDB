@@ -82,6 +82,34 @@
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
+    <!-- REMINDER POPUP -->
+<div id="reminderPopup"
+     class="hidden fixed top-5 right-5 z-[9999] w-[350px] bg-white border-l-[8px] border-red-500 rounded-2xl shadow-2xl p-5">
+
+    <div class="flex justify-between items-start">
+
+        <div>
+
+            <h3 class="font-black text-red-600 text-lg">
+                ⚠ Compliance Reminder
+            </h3>
+
+            <div id="reminderContent"
+                 class="mt-3 text-sm font-bold text-slate-700 space-y-2">
+            </div>
+
+        </div>
+
+        <button onclick="closeReminder()"
+                class="text-slate-400 hover:text-black">
+
+            ✖
+
+        </button>
+
+    </div>
+
+</div>
   <!-- LOGIN / REGISTER SCREEN -->
 <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1e3a8a]">
 
@@ -989,6 +1017,11 @@ function showApp(user) {
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
     fetchRecords(true);
+    setTimeout(() => {
+
+    checkDueReminders();
+
+}, 3000);
 
 }
 
@@ -1219,31 +1252,52 @@ if ('serviceWorker' in navigator) {
         }
     }
 
-    // GST PENDING
-    else if (
-        msg.toLowerCase().includes("gst")
-    ) {
+    // CATEGORY SEARCH
+else if (
 
-        const gst = allRecords.filter(r =>
+    msg.toLowerCase().includes("gst") ||
+    msg.toLowerCase().includes("roc") ||
+    msg.toLowerCase().includes("mca") ||
+    msg.toLowerCase().includes("tds") ||
+    msg.toLowerCase().includes("pt") ||
+    msg.toLowerCase().includes("itr") ||
+    msg.toLowerCase().includes("lut")
 
-            r.service_category === "GST" &&
-            r.status !== "Completed"
+) {
 
-        );
+    const keyword = msg.toLowerCase();
 
-        if (gst.length > 0) {
+    const found = allRecords.filter(r =>
 
-            reply = gst.map(r => `
-                • ${r.client_name}
-                - ${r.status}
-            `).join("<br>");
+        r.service_category
+        ?.toLowerCase()
+        .includes(keyword)
 
-        } else {
+        ||
 
-            reply = "✅ No GST pending.";
+        r.service_detail
+        ?.toLowerCase()
+        .includes(keyword)
 
-        }
+    );
+
+    if (found.length > 0) {
+
+        reply = found.map(r => `
+            • ${r.client_name}
+            <br>
+            ${r.service_detail}
+            <br>
+            ${r.status}
+        `).join("<br><br>");
+
+    } else {
+
+        reply = "No matching records found.";
+
     }
+
+}
 
     // OVERDUE
     else if (
@@ -1315,6 +1369,92 @@ if ('serviceWorker' in navigator) {
 
 }
         document.addEventListener("DOMContentLoaded", () => {
+            function checkDueReminders() {
+                function closeReminder() {
+
+    document.getElementById("reminderPopup")
+        .classList.add("hidden");
+
+}
+
+    const today = new Date();
+
+    const reminders = [];
+
+    allRecords.forEach(r => {
+
+        if (!r.deadline) return;
+
+        const deadline = new Date(r.deadline);
+
+        const diffDays = Math.ceil(
+            (deadline - today) / (1000 * 60 * 60 * 24)
+        );
+
+        // 30 DAYS BEFORE
+        if (diffDays === 30) {
+
+            reminders.push(`
+                📅 1 Month Left:
+                <br>
+                ${r.client_name}
+                - ${r.service_category}
+            `);
+
+        }
+
+        // 10 DAYS BEFORE
+        if (diffDays === 10) {
+
+            reminders.push(`
+                ⏳ 10 Days Left:
+                <br>
+                ${r.client_name}
+                - ${r.service_category}
+            `);
+
+        }
+
+        // LAST DAY
+        if (diffDays === 0) {
+
+            reminders.push(`
+                🚨 LAST DATE TODAY:
+                <br>
+                ${r.client_name}
+                - ${r.service_category}
+            `);
+
+        }
+
+        // OVERDUE
+        if (
+            diffDays < 0 &&
+            r.status !== "Completed"
+        ) {
+
+            reminders.push(`
+                ❌ OVERDUE:
+                <br>
+                ${r.client_name}
+                - ${r.service_category}
+            `);
+
+        }
+
+    });
+
+    if (reminders.length > 0) {
+
+        document.getElementById("reminderPopup")
+            .classList.remove("hidden");
+
+        document.getElementById("reminderContent")
+            .innerHTML = reminders.join("<hr class='my-2'>");
+
+    }
+
+}
 
     document.getElementById("aiInput")
         .addEventListener("keypress", function(e) {
@@ -1328,6 +1468,11 @@ if ('serviceWorker' in navigator) {
         });
 
 });
+        setInterval(() => {
+
+    checkDueReminders();
+
+}, 60000);
 </script>
 </body>
 </html>
