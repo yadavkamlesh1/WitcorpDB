@@ -1256,16 +1256,20 @@ supabaseClient.auth.getSession().then(({ data }) => {
     const { data, error } = await supabaseClient
         .from('witcorp_dsc')
         .select('*')
-        .order('id', { ascending: false });
+        .order('updated_at', { ascending: false }); // ✅ FIX IMPORTANT
 
-    if (error) return;
+    if (error) {
+        console.log("DSC FETCH ERROR:", error);
+        return;
+    }
 
-    allDSC = data;
+    allDSC = data || [];
 
-    renderDSC(data);
+    renderDSC(allDSC);
 }
 
 function renderDSC(data) {
+    if (!Array.isArray(data)) return;
 
     const tbody = document.getElementById('dscTableBody');
 
@@ -1382,14 +1386,15 @@ async function saveDSC() {
             .from('witcorp_dsc')
             .insert([payload]));
     }
-
+    console.log("DSC SAVED OK, REFRESHING UI...");
     console.log("DSC ERROR:", JSON.stringify(error));
 
     if (!error) {
 
         alert(id ? "DSC Updated Successfully" : "DSC Saved Successfully");
 
-        await fetchDSC();
+        await new Promise(r => setTimeout(r, 300)); // ✅ FORCE REFRESH DELAY
+await fetchDSC();
 
         document.getElementById('dEditId').value = "";
 
@@ -1419,7 +1424,9 @@ function editDSC(d) {
         d.client_name;
 
     document.getElementById('dStatus').value =
-        d.status;
+    (d.status === "Valid" || d.status === "Expired" || d.status === "No DSC")
+        ? d.status
+        : "Valid";
 
     document.getElementById('dExpiry').value =
     d.expiry_date
