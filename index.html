@@ -649,8 +649,10 @@
         let isFetchingRecords = false;
 
         async function fetchRecords(reset = true) {
-            if (isFetchingRecords) return;
-isFetchingRecords = true;
+
+    if (isFetchingRecords) return;
+
+    isFetchingRecords = true;
 
     if (reset) {
         recordPage = 0;
@@ -669,12 +671,12 @@ isFetchingRecords = true;
     if (!error && data) {
 
         const uniqueData = data.filter(
-    newItem => !allRecords.some(
-        oldItem => oldItem.id === newItem.id
-    )
-);
+            newItem => !allRecords.some(
+                oldItem => oldItem.id === newItem.id
+            )
+        );
 
-allRecords = [...allRecords, ...uniqueData];
+        allRecords = [...allRecords, ...uniqueData];
 
         renderTable(allRecords, 'mainTableBody');
 
@@ -684,15 +686,19 @@ allRecords = [...allRecords, ...uniqueData];
 
         const btn = document.getElementById("loadMoreBtn");
 
-        if (data.length < PAGE_SIZE) {
-            btn.style.display = "none";
-        } else {
-            btn.style.display = "block";
+        if (btn) {
+
+            if (data.length < PAGE_SIZE) {
+                btn.style.display = "none";
+            } else {
+                btn.style.display = "block";
+            }
+
         }
     }
-}
-        isFetchingRecords = false;
 
+    isFetchingRecords = false;
+}
         function renderTable(data, targetId) {
             const tbody = document.getElementById(targetId);
             if (!tbody) return;
@@ -741,9 +747,20 @@ allRecords = [...allRecords, ...uniqueData];
                 : await supabaseClient.from('witcorp_records').insert([payload]);
 
             if (!error) { 
-                alert(id ? "Record Updated!" : "Record Successfully Added!");
-                clearForm(); fetchRecords(); showSection('dashboard'); 
-            } else { alert("Sync Error: Please check connection."); }
+
+    alert(id ? "Record Updated!" : "Record Successfully Added!");
+
+    clearForm();
+
+    await fetchRecords(true);
+
+    showSection('dashboard');
+
+} else {
+
+    alert("Sync Error: Please check connection.");
+
+}
         }
 
         function editRecord(row) {
@@ -974,6 +991,7 @@ document.getElementById('filterTitle').innerText =
         '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
 
     await fetchRecords(true);
+            renderTable(allRecords, 'mainTableBody');
 
     btn.innerHTML =
         '<i class="fas fa-check mr-1"></i> Updated';
@@ -1380,7 +1398,9 @@ function editDSC(d) {
         d.status;
 
     document.getElementById('dExpiry').value =
-        d.expiry_date;
+    d.expiry_date
+    ? d.expiry_date.split('T')[0]
+    : "";
 
     document.getElementById('dRemarks').value =
         d.remarks;
@@ -1398,7 +1418,7 @@ async function deleteDSC(id) {
             .delete()
             .eq('id', id);
 
-        fetchDSC();
+        await fetchDSC();
     }
 }
 
