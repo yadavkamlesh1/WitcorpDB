@@ -1174,7 +1174,65 @@ supabaseClient.auth.getSession().then(({ data }) => {
         v.username?.toLowerCase().includes(q)
 
     );
-            async function fetchDSC() {
+           
+    const tbody = document.getElementById('vaultTableBody');
+
+    tbody.innerHTML = "";
+
+    filtered.forEach(v => {
+
+        tbody.innerHTML += `
+
+            <tr class="group hover:bg-slate-50">
+
+                <td class="p-4 font-black text-blue-900 text-sm tracking-tight">
+                    ${v.client_name || 'N/A'}
+                </td>
+
+                <td class="p-4 font-black text-slate-700 text-sm">
+                    <span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">
+                        ${v.category}
+                    </span>
+                </td>
+
+                <td class="p-4 font-bold text-blue-600 text-sm">
+                    ${v.username}
+                </td>
+
+                <td class="p-4 font-mono text-xs">
+                    <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">
+                        ${v.password}
+                    </span>
+                </td>
+
+                <td class="p-4 text-right flex gap-3 justify-end items-center">
+
+                    <button onclick='editVault(${JSON.stringify(v)})'
+                        class="text-blue-500 hover:scale-125 transition-transform">
+
+                        <i class="fas fa-pencil"></i>
+
+                    </button>
+
+                    <button onclick="deleteVault(${v.id})"
+                        class="text-rose-500 hover:scale-125 transition-transform">
+
+                        <i class="fas fa-trash-alt"></i>
+
+                    </button>
+
+                </td>
+
+            </tr>
+
+        `;
+    });
+
+    if (query.trim() === "") {
+        fetchVault();
+    }
+}
+         async function fetchDSC() {
 
     const { data, error } = await supabaseClient
         .from('witcorp_dsc')
@@ -1359,63 +1417,6 @@ function searchDSC(query) {
     renderDSC(filtered);
 }
 
-    const tbody = document.getElementById('vaultTableBody');
-
-    tbody.innerHTML = "";
-
-    filtered.forEach(v => {
-
-        tbody.innerHTML += `
-
-            <tr class="group hover:bg-slate-50">
-
-                <td class="p-4 font-black text-blue-900 text-sm tracking-tight">
-                    ${v.client_name || 'N/A'}
-                </td>
-
-                <td class="p-4 font-black text-slate-700 text-sm">
-                    <span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">
-                        ${v.category}
-                    </span>
-                </td>
-
-                <td class="p-4 font-bold text-blue-600 text-sm">
-                    ${v.username}
-                </td>
-
-                <td class="p-4 font-mono text-xs">
-                    <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">
-                        ${v.password}
-                    </span>
-                </td>
-
-                <td class="p-4 text-right flex gap-3 justify-end items-center">
-
-                    <button onclick='editVault(${JSON.stringify(v)})'
-                        class="text-blue-500 hover:scale-125 transition-transform">
-
-                        <i class="fas fa-pencil"></i>
-
-                    </button>
-
-                    <button onclick="deleteVault(${v.id})"
-                        class="text-rose-500 hover:scale-125 transition-transform">
-
-                        <i class="fas fa-trash-alt"></i>
-
-                    </button>
-
-                </td>
-
-            </tr>
-
-        `;
-    });
-
-    if (query.trim() === "") {
-        fetchVault();
-    }
-}
     </script>
           
     <script>
