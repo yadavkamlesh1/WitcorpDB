@@ -157,6 +157,9 @@
   <button onclick="showSection('vaultManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
     Credentials Vault
   </button>
+    <button onclick="showSection('dscManagement')" id="nav-dsc" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <i class="fas fa-key w-5 text-cyan-300"></i> DSC Status
+</button>
 
   <div class="mt-4 text-[10px] text-blue-200 uppercase">
     Managements
@@ -177,6 +180,13 @@
   <button onclick="filterByField('service_category','PT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
     Prof. Tax
   </button>
+    <button onclick="filterByField('service_category','TDS');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    TDS Management
+</button>
+
+<button onclick="filterByField('service_category','DIR3KYC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    DIR3 KYC
+</button>
 
 </div>
 
@@ -207,6 +217,9 @@
             <button onclick="showSection('vaultManagement')" id="nav-vault" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
                 <i class="fas fa-shield-halved w-5 text-blue-300"></i> Credentials Vault
             </button>
+            <button onclick="showSection('dscManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
+    DSC Status
+</button>
 
             <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Managements</div>
             <button onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
@@ -221,6 +234,13 @@
             <button onclick="filterByField('service_category', 'PT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
                 <i class="fas fa-briefcase w-5 text-sky-400"></i> Prof. Tax (PT)
             </button>
+            <button onclick="filterByField('service_category', 'TDS')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <i class="fas fa-file-invoice w-5 text-orange-400"></i> TDS Management
+</button>
+
+<button onclick="filterByField('service_category', 'DIR3KYC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <i class="fas fa-id-card w-5 text-pink-400"></i> DIR3 KYC
+</button>
         </nav>
 
         <div class="p-6 bg-black/20 text-center border-t border-white/10">
@@ -246,6 +266,18 @@
             
             <div class="flex justify-between items-center mb-10">
                 <h2 class="text-3xl font-black text-slate-800 tracking-tight">Workspace Overview</h2>
+                <div class="flex items-center gap-3">
+
+    <button onclick="refreshData()"
+        id="refreshBtn"
+        class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow">
+
+        <i class="fas fa-rotate-right mr-1"></i>
+        Refresh
+
+    </button>
+
+</div>
                 <div class="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black border border-emerald-200 shadow-sm">
                     <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> SYSTEM LIVE SYNC
                 </div>
@@ -294,6 +326,8 @@
                             <option value="ROC">ROC / MCA Desk</option>
                             <option value="IT">Income Tax</option>
                             <option value="PT">Professional Tax</option>
+                            <option value="TDS">TDS Management</option>
+                            <option value="DIR3KYC">DIR3 KYC</option>
                         </select>
                     </div>
                     <div class="space-y-3">
@@ -304,6 +338,17 @@
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Assign Staff</label>
                         <input type="text" id="assignedStaff" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
                     </div>
+                    <div class="space-y-3">
+
+    <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">
+        Alloted By
+    </label>
+
+    <input type="text"
+        id="allotedBy"
+        class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+
+</div>
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Deadline</label>
                         <input type="date" id="deadline" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
@@ -342,6 +387,7 @@
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Service</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Category</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Staff</th>
+                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Alloted By</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
                                 <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
@@ -449,6 +495,110 @@
                 </div>
             </div>
         </div>
+        <div id="dscManagement" class="section">
+
+    <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">
+        DSC Status
+    </h2>
+
+    <div class="mb-8 relative max-w-xl">
+
+        <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+
+        <input
+            type="text"
+            id="dscSearch"
+            oninput="searchDSC(this.value)"
+            placeholder="Search Company, Client or Status..."
+            class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all"
+        >
+
+    </div>
+
+    <div class="lighting-border p-10 shadow-xl mb-12">
+
+        <input type="hidden" id="dEditId">
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+
+            <input type="text"
+                id="dCompany"
+                placeholder="Company Name"
+                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+
+            <input type="text"
+                id="dClient"
+                placeholder="Client Name"
+                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+
+            <select
+                id="dStatus"
+                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+
+                <option value="Valid">Status Valid</option>
+                <option value="Expired">Expired</option>
+                <option value="No DSC">No DSC</option>
+
+            </select>
+
+            <input type="date"
+                id="dExpiry"
+                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+
+            <input type="text"
+                id="dRemarks"
+                placeholder="Remarks"
+                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+
+        </div>
+
+        <button onclick="saveDSC()"
+            id="dscBtn"
+            class="mt-6 w-full bg-cyan-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-cyan-700 transition-all">
+
+            Save DSC Status
+
+        </button>
+
+    </div>
+
+    <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
+
+        <div class="scroll-container">
+
+            <table class="w-full text-left min-w-[1200px]">
+
+                <thead class="bg-slate-50/50 border-b">
+
+                    <tr>
+
+                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Company</th>
+
+                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Client</th>
+
+                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Status</th>
+
+                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Expiry</th>
+
+                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Remarks</th>
+
+                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Updated By</th>
+
+                        <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400">Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="dscTableBody" class="divide-y divide-slate-100"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
 
         <div id="filterView" class="section">
             <div class="flex items-center gap-6 mb-12">
@@ -491,11 +641,15 @@
         let allRecords = [];
         let allClients = [];
         let allVault = [];
+        let allDSC = [];
         let currentUserEmail = "";
         let recordPage = 0;
         const PAGE_SIZE = 100;
+        let isFetchingRecords = false;
 
         async function fetchRecords(reset = true) {
+            if (isFetchingRecords) return;
+isFetchingRecords = true;
 
     if (reset) {
         recordPage = 0;
@@ -513,7 +667,13 @@
 
     if (!error && data) {
 
-        allRecords = [...allRecords, ...data];
+        const uniqueData = data.filter(
+    newItem => !allRecords.some(
+        oldItem => oldItem.id === newItem.id
+    )
+);
+
+allRecords = [...allRecords, ...uniqueData];
 
         renderTable(allRecords, 'mainTableBody');
 
@@ -530,6 +690,7 @@
         }
     }
 }
+        isFetchingRecords = false;
 
         function renderTable(data, targetId) {
             const tbody = document.getElementById(targetId);
@@ -547,6 +708,7 @@
                         <td class="p-4 text-center text-[11px] text-slate-500 font-bold">${row.service_detail || 'General Consulting'}</td>
                         <td class="p-4 text-center"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-[9px] font-black uppercase shadow-sm tracking-widest">${row.service_category}</div></td>
                         <td class="p-4 text-center"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500"></i> ${row.assigned_staff || 'TBD'}</div></td>
+                        <td class="p-4 text-center"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 border border-cyan-200 rounded-xl text-[10px] font-black text-cyan-700 shadow-sm"><i class="fas fa-user-check"></i>${row.alloted_by || 'N/A'}</div></td>
                         <td class="p-4 text-center font-black text-slate-500 text-[11px]">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
                         <td class="p-4 text-center"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
                         <td class="p-4 text-slate-500 text-[11px] italic max-w-[180px] truncate font-medium">${row.remarks || '---'}</td>
@@ -565,6 +727,7 @@
                 service_category: document.getElementById('serviceCategory').value,
                 service_detail: document.getElementById('serviceDetail').value,
                 assigned_staff: document.getElementById('assignedStaff').value,
+                alloted_by: document.getElementById('allotedBy').value,
                 deadline: document.getElementById('deadline').value,
                 updated_at: new Date().toISOString(),
                 updated_by: currentUserEmail
@@ -588,13 +751,14 @@
             document.getElementById('serviceCategory').value = row.service_category;
             document.getElementById('serviceDetail').value = row.service_detail;
             document.getElementById('assignedStaff').value = row.assigned_staff;
+            document.getElementById('allotedBy').value = row.alloted_by;
             document.getElementById('deadline').value = row.deadline;
             document.getElementById('status').value = row.status;
             document.getElementById('remarks').value = row.remarks;
             document.getElementById('formTitle').innerText = "Modify Existing Profile";
             document.getElementById('submitBtn').innerHTML = `<i class="fas fa-arrows-rotate mr-2"></i> Confirm Changes`;
             document.getElementById('editBadge').classList.remove('hidden');
-            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'deadline'].forEach(id => {
+            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline'].forEach(id => {
                 document.getElementById(id).disabled = true;
             });
             showSection('dashboard');
@@ -758,15 +922,27 @@ if (
             if(id === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
             if(id === 'clientManagement') document.getElementById('nav-client').classList.add('active');
             if(id === 'vaultManagement') document.getElementById('nav-vault').classList.add('active');
+            if(id === 'dscManagement') document.getElementById('nav-dsc').classList.add('active');
             if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
             if (id === 'clientManagement') fetchClients();
             if (id === 'vaultManagement') fetchVault();
+            if(id === 'dscManagement') fetchDSC();
         }
 
         function filterByField(field, value) {
             showSection('filterView');
             let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
-            document.getElementById('filterTitle').innerText = `${value} Portal View`;
+            const titles = {
+    GST: "GST Management",
+    ROC: "ROC / MCA Desk",
+    IT: "Income Tax",
+    PT: "Professional Tax",
+    TDS: "TDS Management",
+    DIR3KYC: "DIR3 KYC"
+};
+
+document.getElementById('filterTitle').innerText =
+    `${titles[value] || value} Portal View`;
             renderTable(filtered, 'filterTableBody');
         }
 
@@ -789,13 +965,32 @@ if (
             document.getElementById('statDone').innerText = data.filter(r => r.status === 'Completed').length;
             document.getElementById('statPending').innerText = data.filter(r => r.status === 'Pending').length;
         }
+        async function refreshData() {
+
+    const btn = document.getElementById("refreshBtn");
+
+    btn.innerHTML =
+        '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
+
+    await fetchRecords(true);
+
+    btn.innerHTML =
+        '<i class="fas fa-check mr-1"></i> Updated';
+
+    setTimeout(() => {
+
+        btn.innerHTML =
+            '<i class="fas fa-rotate-right mr-1"></i> Refresh';
+
+    }, 1500);
+}
 
         function clearForm() {
             document.getElementById('editId').value = "";
             document.getElementById('formTitle').innerText = "Management Portal";
             document.getElementById('submitBtn').innerHTML = `<i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB`;
             document.getElementById('editBadge').classList.add('hidden');
-            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'deadline', 'status', 'remarks'].forEach(i => {
+            ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline', 'status', 'remarks'].forEach(i => {
                 const el = document.getElementById(i);
                 el.value = (i === 'serviceCategory') ? 'GST' : (i === 'status' ? 'Pending' : "");
                 el.disabled = false;
@@ -979,6 +1174,190 @@ supabaseClient.auth.getSession().then(({ data }) => {
         v.username?.toLowerCase().includes(q)
 
     );
+            async function fetchDSC() {
+
+    const { data, error } = await supabaseClient
+        .from('witcorp_dsc')
+        .select('*')
+        .order('id', { ascending: false });
+
+    if (error) return;
+
+    allDSC = data;
+
+    renderDSC(data);
+}
+
+function renderDSC(data) {
+
+    const tbody = document.getElementById('dscTableBody');
+
+    tbody.innerHTML = "";
+
+    data.forEach(d => {
+
+        tbody.innerHTML += `
+
+        <tr class="group hover:bg-slate-50">
+
+            <td class="p-4 font-black text-slate-800">
+                ${d.company_name}
+            </td>
+
+            <td class="p-4 font-bold text-blue-600">
+                ${d.client_name}
+            </td>
+
+            <td class="p-4">
+
+                <span class="px-3 py-1 rounded-xl text-xs font-black
+                ${d.status === 'Valid'
+                    ? 'bg-green-100 text-green-700'
+                    : d.status === 'Expired'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-slate-100 text-slate-700'}">
+
+                    ${d.status}
+
+                </span>
+
+            </td>
+
+            <td class="p-4 font-bold text-slate-600">
+                ${d.expiry_date || 'N/A'}
+            </td>
+
+            <td class="p-4 text-slate-500">
+                ${d.remarks || '---'}
+            </td>
+
+            <td class="p-4 text-[11px] font-bold text-blue-700">
+                ${d.updated_by || 'N/A'}
+            </td>
+
+            <td class="p-4 text-right flex gap-3 justify-end">
+
+                <button onclick='editDSC(${JSON.stringify(d)})'
+                    class="text-blue-500 hover:scale-125 transition-transform">
+
+                    <i class="fas fa-pencil"></i>
+
+                </button>
+
+                <button onclick="deleteDSC(${d.id})"
+                    class="text-rose-500 hover:scale-125 transition-transform">
+
+                    <i class="fas fa-trash-alt"></i>
+
+                </button>
+
+            </td>
+
+        </tr>
+        `;
+    });
+}
+
+async function saveDSC() {
+
+    const id = document.getElementById('dEditId').value;
+
+    const payload = {
+
+        company_name: document.getElementById('dCompany').value,
+
+        client_name: document.getElementById('dClient').value,
+
+        status: document.getElementById('dStatus').value,
+
+        expiry_date: document.getElementById('dExpiry').value,
+
+        remarks: document.getElementById('dRemarks').value,
+
+        updated_by: currentUserEmail
+    };
+
+    if (!payload.company_name)
+        return alert("Company Name Required");
+
+    const { error } = id
+
+        ? await supabaseClient
+            .from('witcorp_dsc')
+            .update(payload)
+            .eq('id', id)
+
+        : await supabaseClient
+            .from('witcorp_dsc')
+            .insert([payload]);
+
+    if (!error) {
+
+        fetchDSC();
+
+        document.getElementById('dEditId').value = "";
+
+        ['dCompany','dClient','dExpiry','dRemarks']
+        .forEach(i => document.getElementById(i).value = "");
+
+        document.getElementById('dStatus').value = "Valid";
+
+        document.getElementById('dscBtn').innerText =
+            "Save DSC Status";
+    }
+}
+
+function editDSC(d) {
+
+    document.getElementById('dEditId').value = d.id;
+
+    document.getElementById('dCompany').value =
+        d.company_name;
+
+    document.getElementById('dClient').value =
+        d.client_name;
+
+    document.getElementById('dStatus').value =
+        d.status;
+
+    document.getElementById('dExpiry').value =
+        d.expiry_date;
+
+    document.getElementById('dRemarks').value =
+        d.remarks;
+
+    document.getElementById('dscBtn').innerText =
+        "Update DSC Status";
+}
+
+async function deleteDSC(id) {
+
+    if(confirm("Delete DSC Record?")) {
+
+        await supabaseClient
+            .from('witcorp_dsc')
+            .delete()
+            .eq('id', id);
+
+        fetchDSC();
+    }
+}
+
+function searchDSC(query) {
+
+    const q = query.toLowerCase();
+
+    const filtered = allDSC.filter(d =>
+
+        d.company_name?.toLowerCase().includes(q) ||
+
+        d.client_name?.toLowerCase().includes(q) ||
+
+        d.status?.toLowerCase().includes(q)
+    );
+
+    renderDSC(filtered);
+}
 
     const tbody = document.getElementById('vaultTableBody');
 
