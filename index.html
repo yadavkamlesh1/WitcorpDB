@@ -1337,40 +1337,59 @@ function renderDSC(data) {
 
 async function saveDSC() {
 
+    const btn = document.getElementById('dscBtn');
+
+    btn.disabled = true;
+
     const id = document.getElementById('dEditId').value;
 
     const payload = {
 
-        company_name: document.getElementById('dCompany').value,
+        company_name: document.getElementById('dCompany').value.trim(),
 
-        client_name: document.getElementById('dClient').value,
+        client_name: document.getElementById('dClient').value.trim(),
 
         status: document.getElementById('dStatus').value,
 
         expiry_date: document.getElementById('dExpiry').value,
 
-        remarks: document.getElementById('dRemarks').value,
+        remarks: document.getElementById('dRemarks').value.trim(),
 
-        updated_by: currentUserEmail
+        updated_by: currentUserEmail,
+
+        updated_at: new Date().toISOString()
     };
 
-    if (!payload.company_name)
+    if (!payload.company_name) {
+
+        btn.disabled = false;
+
         return alert("Company Name Required");
+    }
 
-    const { error } = id
+    let error;
 
-        ? await supabaseClient
+    if (id) {
+
+        ({ error } = await supabaseClient
             .from('witcorp_dsc')
             .update(payload)
-            .eq('id', id)
+            .eq('id', id));
 
-        : await supabaseClient
+    } else {
+
+        ({ error } = await supabaseClient
             .from('witcorp_dsc')
-            .insert([payload]);
+            .insert([payload]));
+    }
+
+    console.log(error);
 
     if (!error) {
 
-        fetchDSC();
+        alert(id ? "DSC Updated Successfully" : "DSC Saved Successfully");
+
+        await fetchDSC();
 
         document.getElementById('dEditId').value = "";
 
@@ -1381,9 +1400,14 @@ async function saveDSC() {
 
         document.getElementById('dscBtn').innerText =
             "Save DSC Status";
-    }
-}
 
+    } else {
+
+        alert("Supabase Error Check Console");
+    }
+
+    btn.disabled = false;
+}
 function editDSC(d) {
 
     document.getElementById('dEditId').value = d.id;
