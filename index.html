@@ -164,6 +164,40 @@
   <div class="mt-4 text-[10px] text-blue-200 uppercase">
     Managements
   </div>
+    <!-- BOOKKEEPING START -->
+
+<div class="mt-2">
+
+    <button onclick="toggleBookkeeping()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm">
+        <i class="fas fa-book mr-2"></i> Bookkeeping
+        </button>
+       <div id="bookkeepingMenu" class="hidden mt-2 space-y-2">
+
+     <button onclick="filterByField('service_category', 'Current Liabilities')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Current Liabilities
+         </button>
+
+      <button onclick="filterByField('service_category', 'Loans')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Loans
+         </button>
+
+      <button onclick="filterByField('service_category', 'Suspense Account')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Suspense Account
+         </button>
+
+      <button onclick="filterByField('service_category', 'Fixed Assets')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Fixed Assets
+         </button>
+
+       <button onclick="filterByField('service_category', 'P/L Account')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         P/L Account
+         </button>
+
+    </div>
+
+</div>
+
+<!-- BOOKKEEPING END -->
 
   <button onclick="filterByField('service_category','GST');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
     GST Management
@@ -321,6 +355,11 @@
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
                         <select id="serviceCategory" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                            <option value="Current Liabilities">Current Liabilities</option>
+                            <option value="Loans">Loans</option>
+                            <option value="Suspense Account">Suspense Account</option>
+                            <option value="Fixed Assets">Fixed Assets</option>
+                            <option value="P/L Account">P/L Account</option>
                             <option value="GST">GST Management</option>
                             <option value="ROC">ROC / MCA Desk</option>
                             <option value="IT">Income Tax</option>
@@ -919,6 +958,14 @@
                 fetchVault();
             }
         }
+        function toggleBookkeeping() {
+
+    const menu =
+        document.getElementById('bookkeepingMenu');
+
+    menu.classList.toggle('hidden');
+
+}
 
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -957,6 +1004,11 @@ if (
             showSection('filterView');
             let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
             const titles = {
+    "Current Liabilities": "Current Liabilities",
+    "Loans": "Loans Management",
+    "Suspense Account": "Suspense Account",
+    "Fixed Assets": "Fixed Assets Register",
+    "P/L Account": "Profit & Loss Account",
     GST: "GST Management",
     ROC: "ROC / MCA Desk",
     IT: "Income Tax",
