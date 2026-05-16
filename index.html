@@ -925,7 +925,8 @@
 
 if (
     id === 'clientManagement' ||
-    id === 'vaultManagement'
+    id === 'vaultManagement' ||
+    id === 'dscManagement'
 ) {
 
     globalSearch.style.display = 'none';
@@ -944,7 +945,11 @@ if (
             if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
             if (id === 'clientManagement') fetchClients();
             if (id === 'vaultManagement') fetchVault();
-            if(id === 'dscManagement') fetchDSC();
+            if(id === 'dscManagement') {
+
+    fetchDSC();
+
+}
         }
 
         function filterByField(field, value) {
@@ -1316,7 +1321,9 @@ function renderDSC(data) {
                 ${d.updated_by || 'N/A'}
             </td>
 
-            <td class="p-4 text-right flex gap-3 justify-end">
+            <td class="p-4 text-right">
+
+    <div class="flex gap-3 justify-end">
 
                 <button onclick='editDSC(${JSON.stringify(d)})'
                     class="text-blue-500 hover:scale-125 transition-transform">
@@ -1331,7 +1338,7 @@ function renderDSC(data) {
                     <i class="fas fa-trash-alt"></i>
 
                 </button>
-
+                </div>
             </td>
 
         </tr>
@@ -1395,6 +1402,7 @@ async function saveDSC() {
 
         await new Promise(r => setTimeout(r, 300)); // ✅ FORCE REFRESH DELAY
 await fetchDSC();
+        renderDSC(allDSC);
 
         document.getElementById('dEditId').value = "";
 
