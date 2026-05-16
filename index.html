@@ -534,7 +534,7 @@
                 id="dStatus"
                 class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
 
-                <option value="Valid">Status Valid</option>
+                <option value="Valid">Valid</option>
                 <option value="Expired">Expired</option>
                 <option value="No DSC">No DSC</option>
 
@@ -1324,7 +1324,7 @@ function renderDSC(data) {
 
             <td class="p-4">
 
-                <div class="flex gap-2">
+                <div class="flex gap-4 justify-center">
 
                     <button onclick='editDSC(${JSON.stringify(d)})'
                         class="px-3 py-1 bg-blue-500 text-white rounded">
@@ -1405,8 +1405,8 @@ async function saveDSC() {
         alert(id ? "DSC Updated Successfully" : "DSC Saved Successfully");
 
         await new Promise(r => setTimeout(r, 300)); // ✅ FORCE REFRESH DELAY
-await fetchDSC();
-        renderDSC(allDSC);
+        await fetchDSC();
+        
 
         document.getElementById('dEditId').value = "";
 
@@ -1450,6 +1450,10 @@ function editDSC(d) {
 
     document.getElementById('dscBtn').innerText =
         "Update DSC Status";
+    document.getElementById('dCompany').scrollIntoView({
+    behavior: 'smooth',
+    block: 'center'
+});
 }
 
 async function deleteDSC(id) {
