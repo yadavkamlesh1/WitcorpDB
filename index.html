@@ -1319,35 +1319,36 @@ function renderDSC(data) {
     ${d.updated_at
         ? new Date(d.updated_at).toLocaleString('en-IN')
         : 'N/A'}
+          </td>
+            </td>
+
+           <td class="p-4 text-right whitespace-nowrap">
+
+    <div class="flex gap-2 justify-end items-center">
+
+        <button onclick='editDSC(${JSON.stringify(d)})'
+            class="px-3 py-1 bg-blue-500 text-white rounded">
+
+            Edit
+
+        </button>
+
+        <button onclick="deleteDSC(${d.id})"
+            class="px-3 py-1 bg-red-500 text-white rounded">
+
+            Delete
+
+        </button>
+
+    </div>
+
 </td>
-            </td>
 
-            <td class="p-4">
+</tr>
 
-                <div class="flex gap-4 justify-center">
+`;
+});
 
-                    <button onclick='editDSC(${JSON.stringify(d)})'
-                        class="px-3 py-1 bg-blue-500 text-white rounded">
-
-                        Edit
-
-                    </button>
-
-                    <button onclick="deleteDSC(${d.id})"
-                        class="px-3 py-1 bg-red-500 text-white rounded">
-
-                        Delete
-
-                    </button>
-
-                </div>
-
-            </td>
-
-        </tr>
-
-        `;
-    });
 }
 
 async function saveDSC() {
