@@ -583,7 +583,9 @@
                         <th class="p-4 font-black text-[10px] uppercase text-slate-400">Remarks</th>
 
                         <th class="p-4 font-black text-[10px] uppercase text-slate-400">Updated By</th>
-
+                        
+                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Updated At</th>
+                        
                         <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400">Action</th>
 
                     </tr>
@@ -1311,7 +1313,12 @@ function renderDSC(data) {
             </td>
 
             <td class="p-4 text-blue-700 text-xs">
-                ${d.updated_by || ''}
+                ${d.updated_by || 'N/A'}
+                <td class="p-4 text-[11px] font-bold text-slate-500">
+    ${d.updated_at
+        ? new Date(d.updated_at).toLocaleString('en-IN')
+        : 'N/A'}
+</td>
             </td>
 
             <td class="p-4">
