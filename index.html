@@ -1274,9 +1274,13 @@ supabaseClient.auth.getSession().then(({ data }) => {
 }
 
 function renderDSC(data) {
-    if (!Array.isArray(data)) return;
 
     const tbody = document.getElementById('dscTableBody');
+
+    if (!tbody) {
+        console.log("dscTableBody NOT FOUND");
+        return;
+    }
 
     tbody.innerHTML = "";
 
@@ -1284,64 +1288,56 @@ function renderDSC(data) {
 
         tbody.innerHTML += `
 
-        <tr class="group hover:bg-slate-50">
+        <tr class="border-b border-slate-200 hover:bg-slate-50">
 
-            <td class="p-4 font-black text-slate-800">
-                ${d.company_name}
+            <td class="p-4 font-bold">
+                ${d.company_name || ''}
             </td>
 
-            <td class="p-4 font-bold text-blue-600">
-                ${d.client_name}
+            <td class="p-4">
+                ${d.client_name || ''}
+            </td>
+
+            <td class="p-4">
+                ${d.status || ''}
+            </td>
+
+            <td class="p-4">
+                ${d.expiry_date || ''}
+            </td>
+
+            <td class="p-4">
+                ${d.remarks || ''}
+            </td>
+
+            <td class="p-4 text-blue-700 text-xs">
+                ${d.updated_by || ''}
             </td>
 
             <td class="p-4">
 
-                <span class="px-3 py-1 rounded-xl text-xs font-black
-                ${d.status === 'Valid'
-                    ? 'bg-green-100 text-green-700'
-                    : d.status === 'Expired'
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-slate-100 text-slate-700'}">
+                <div class="flex gap-2">
 
-                    ${d.status}
+                    <button onclick='editDSC(${JSON.stringify(d)})'
+                        class="px-3 py-1 bg-blue-500 text-white rounded">
 
-                </span>
+                        Edit
 
-            </td>
+                    </button>
 
-            <td class="p-4 font-bold text-slate-600">
-                ${d.expiry_date || 'N/A'}
-            </td>
+                    <button onclick="deleteDSC(${d.id})"
+                        class="px-3 py-1 bg-red-500 text-white rounded">
 
-            <td class="p-4 text-slate-500">
-                ${d.remarks || '---'}
-            </td>
+                        Delete
 
-            <td class="p-4 text-[11px] font-bold text-blue-700">
-                ${d.updated_by || 'N/A'}
-            </td>
+                    </button>
 
-            <td class="p-4 text-right">
-
-    <div class="flex gap-3 justify-end">
-
-                <button onclick='editDSC(${JSON.stringify(d)})'
-                    class="text-blue-500 hover:scale-125 transition-transform">
-
-                    <i class="fas fa-pencil"></i>
-
-                </button>
-
-                <button onclick="deleteDSC(${d.id})"
-                    class="text-rose-500 hover:scale-125 transition-transform">
-
-                    <i class="fas fa-trash-alt"></i>
-
-                </button>
                 </div>
+
             </td>
 
         </tr>
+
         `;
     });
 }
