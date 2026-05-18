@@ -17,7 +17,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
         
         /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
-        .lighting-border {
+           .lighting-border {
             position: relative;
             background: #fff;
             border-radius: 2.5rem;
@@ -40,8 +40,89 @@
             10% { background-position: 400% 0; }
             20% { background-position: 0 0; }
         }
+        background: var(--bg);
+color: var(--text);
+transition: all .3s ease;
 
         /* Sidebar Styling */
+        .nav-btn {
+
+    transition: all .25s ease;
+
+}
+
+.nav-btn:hover {
+
+    transform: translateX(5px);
+
+}
+        .theme-dark table {
+
+    background: #111827;
+    color: white;
+
+}
+
+.theme-dark tr {
+
+    border-color: #374151;
+
+}
+
+.theme-dark input,
+.theme-dark select,
+.theme-dark textarea {
+
+    background: #1f2937;
+    color: white;
+    border-color: #374151;
+
+}
+        class="dynamic-bg"
+        .dynamic-bg {
+
+    background: var(--primary) !important;
+    color: white !important;
+    transition: all .3s ease;
+
+}
+        class="card-theme"
+        .card-theme {
+
+    background: var(--card);
+    color: var(--text);
+
+    border-radius: 24px;
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,.05);
+
+    transition: all .3s ease;
+
+}
+        class="top-theme"
+        .top-theme {
+
+    background: var(--primary);
+    color: white;
+    transition: all .3s ease;
+
+}
+       class="sidebar-theme"
+        .sidebar-theme {
+
+    background: var(--sidebar);
+    color: white;
+    transition: all .3s ease;
+
+}
+
+.sidebar-theme .nav-btn.active {
+
+    background: var(--sidebar-light);
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+
+}
         .nav-btn { position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .nav-btn i { filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); transition: transform 0.3s ease; }
         .nav-btn:hover i { transform: scale(1.2) rotate(-5deg); }
@@ -1608,7 +1689,7 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
     .then(() => console.log("SW registered"));
 }
-        function selectTheme(theme, el) {
+       function selectTheme(theme, el) {
 
     currentTheme = theme;
 
@@ -1617,15 +1698,19 @@ if ('serviceWorker' in navigator) {
 
         btn.classList.remove(
             'ring-4',
-            'ring-offset-2'
+            'ring-offset-2',
+            'ring-white'
         );
 
     });
 
     el.classList.add(
         'ring-4',
-        'ring-offset-2'
+        'ring-offset-2',
+        'ring-white'
     );
+
+    applyTheme(theme);
 }
 async function saveProfile() {
 
@@ -1706,30 +1791,81 @@ function applyTheme(theme) {
 
     document.body.classList.add(theme);
 
-    let color = '#2563eb';
+    localStorage.setItem(
+        'witcorp-theme',
+        theme
+    );
+}
+        :root {
 
-    if (theme === 'theme-green') {
-        color = '#16a34a';
-    }
+    --primary: #2563eb;
+    --sidebar: #1e3a8a;
+    --sidebar-light: #2563eb;
+    --card: #ffffff;
+    --text: #0f172a;
+    --bg: #f1f5f9;
 
-    if (theme === 'theme-purple') {
-        color = '#9333ea';
-    }
+}
 
-    if (theme === 'theme-dark') {
-        color = '#0f172a';
-    }
+/* BLUE */
 
-    document.documentElement
-        .style.setProperty('--primary', color);
+.theme-blue {
 
-    document.querySelectorAll(
-        '.dynamic-bg'
-    ).forEach(el => {
+    --primary: #2563eb;
+    --sidebar: #1e3a8a;
+    --sidebar-light: #3b82f6;
+    --card: #ffffff;
+    --text: #0f172a;
+    --bg: #eff6ff;
 
-        el.style.background = color;
+}
 
-    });
+/* GREEN */
+
+.theme-green {
+
+    --primary: #16a34a;
+    --sidebar: #14532d;
+    --sidebar-light: #22c55e;
+    --card: #ffffff;
+    --text: #052e16;
+    --bg: #f0fdf4;
+
+}
+
+/* PURPLE */
+
+.theme-purple {
+
+    --primary: #9333ea;
+    --sidebar: #581c87;
+    --sidebar-light: #a855f7;
+    --card: #ffffff;
+    --text: #3b0764;
+    --bg: #faf5ff;
+
+}
+
+/* DARK */
+
+.theme-dark {
+
+    --primary: #0f172a;
+    --sidebar: #020617;
+    --sidebar-light: #1e293b;
+    --card: #111827;
+    --text: #f8fafc;
+    --bg: #030712;
+
+}
+        const savedTheme =
+localStorage.getItem('witcorp-theme');
+
+if(savedTheme){
+
+    currentTheme = savedTheme;
+
+    applyTheme(savedTheme);
 }
 </script>
     <!-- PROFILE SETUP MODAL -->
