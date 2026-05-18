@@ -1007,6 +1007,7 @@
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             const globalSearch = document.getElementById('globalSearchBox');
+            window.currentNav = null;
 
 if (
     id === 'clientManagement' ||
@@ -1033,6 +1034,14 @@ if (
             if(id === 'dscManagement') {
 
     fetchDSC();
+                
+
+}
+            if(window.currentNav){
+
+document.getElementById(
+window.currentNav
+)?.classList.add("active");
 
 }
         }
@@ -1068,6 +1077,7 @@ value === 'P/L Account'
 ){
 document.getElementById('nav-bookkeeping')
 ?.classList.add('active');
+    window.currentNav="nav-bookkeeping";
 }
             showSection('filterView');
             let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
