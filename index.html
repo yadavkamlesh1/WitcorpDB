@@ -1028,15 +1028,18 @@ if (
             if(id === 'clientManagement') document.getElementById('nav-client').classList.add('active');
             if(id === 'vaultManagement') document.getElementById('nav-vault').classList.add('active');
             if(id === 'dscManagement') document.getElementById('nav-dsc').classList.add('active');
+            if(id === 'bookkeeping') document.getElementById('nav-bookkeeping').classList.add('active');
+            if(id === 'gstManagement') document.getElementById('nav-gst').classList.add('active');
+            if(id === 'rocManagement') document.getElementById('nav-roc').classList.add('active');
+            if(id === 'incomeTax') document.getElementById('nav-it').classList.add('active');
+            if(id === 'ptManagement') document.getElementById('nav-pt').classList.add('active');
+            if(id === 'tdsManagement') document.getElementById('nav-tds').classList.add('active');
+            if(id === 'dir3Management') document.getElementById('nav-dir3').classList.add('active');
             if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
             if (id === 'clientManagement') fetchClients();
             if (id === 'vaultManagement') fetchVault();
-            if(id === 'dscManagement') {
-
-    fetchDSC();
+            if(id === 'dscManagement') fetchDSC();
                 
-
-}
             if(window.currentNav){
 
 document.getElementById(
