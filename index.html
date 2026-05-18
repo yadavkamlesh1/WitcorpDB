@@ -314,7 +314,7 @@
     <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
       <div class="flex justify-end items-center mb-6 gap-3">
   <img id="userAvatar" class="w-10 h-10 rounded-full border" />
-  <span id="userEmail" class="font-bold text-slate-700"></span>
+  <span id="userName" class="font-bold text-slate-700"></span>
   <button onclick="logout()" class="text-red-500 font-bold">Logout</button>
 </div>
         
@@ -713,6 +713,8 @@
         let allVault = [];
         let allDSC = [];
         let currentUserEmail = "";
+        let currentUserName = "";
+        let currentTheme = "theme-blue";
         let recordPage = 0;
         const PAGE_SIZE = 100;
         let isFetchingRecords = false;
@@ -806,7 +808,7 @@
                 alloted_by: document.getElementById('allotedBy').value,
                 deadline: document.getElementById('deadline').value,
                 updated_at: new Date().toISOString(),
-                updated_by: currentUserEmail
+                updated_by: currentUserName
             };
 
             if (!payload.client_name) return alert("Error: Client Name is mandatory.");
@@ -904,7 +906,7 @@
                 contact_number: document.getElementById('cPhone').value,
                 email_id: document.getElementById('cEmail').value,
                 entity_type: document.getElementById('cType').value,
-                updated_by: currentUserEmail
+                updated_by: currentUserName
             };
             if(!payload.client_name) return alert("Entity Name Required");
             const { error } = id 
@@ -967,7 +969,7 @@
                 category: document.getElementById('vCat').value,
                 username: document.getElementById('vUser').value,
                 password: document.getElementById('vPass').value,
-                updated_by: currentUserEmail
+                updated_by: currentUserName
             };
             if(!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
             const { error } = id 
@@ -1176,30 +1178,56 @@ async function checkApproval(user) {
   showApp(user);
 }
 
-// SHOW APP
-function showApp(user) {
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appScreen').classList.remove('hidden');
+async function showApp(user) {
 
-  document.getElementById('userEmail').innerText = user.email;
+    document.getElementById('authScreen').style.display = 'none';
+
+    document.getElementById('appScreen')
+        .classList.remove('hidden');
+
     currentUserEmail = user.email;
 
-  document.getElementById('userAvatar').src =
+    const avatar =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
 
-}
+    document.getElementById('userAvatar').src =
+    avatar;
 
-// LOGOUT
-async function logout() {
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
+    // FETCH PROFILE
 
-// AUTO LOGIN
-supabaseClient.auth.getSession().then(({ data }) => {
-  if (data.session) {
-    checkApproval(data.session.user);
-  }
+    const { data } = await supabaseClient
+        .from('witcorp_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+    // FIRST LOGIN
+
+    if (!data) {
+
+        document.getElementById('profileModal')
+            .classList.remove('hidden');
+
+        document.getElementById('profileModal')
+            .classList.add('flex');
+
+        document.getElementById('profileAvatar').src =
+            avatar;
+
+        return;
+    }
+
+    currentUserName =
+        data.full_name || user.email;
+
+    currentTheme =
+        data.theme || 'theme-blue';
+
+    document.getElementById('userName').innerText =
+        currentUserName;
+
+    applyTheme(currentTheme);
+}
 });
         function toggleMenu() {
   const menu = document.getElementById("mobileMenu");
@@ -1460,7 +1488,7 @@ async function saveDSC() {
 
         remarks: document.getElementById('dRemarks').value.trim(),
 
-        updated_by: currentUserEmail,
+        updated_by: currentUserName,
 
         updated_at: new Date().toISOString()
     };
@@ -1582,6 +1610,184 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
     .then(() => console.log("SW registered"));
 }
+        function selectTheme(theme) {
+
+    currentTheme = theme;
+
+    document.querySelectorAll('.theme-btn')
+    .forEach(btn => {
+
+        btn.classList.remove(
+            'ring-4',
+            'ring-offset-2'
+        );
+
+    });
+
+    event.target.classList.add(
+        'ring-4',
+        'ring-offset-2'
+    );
+}
+
+async function saveProfile() {
+
+    const name =
+    document.getElementById('profileName')
+    .value.trim();
+
+    if (!name) {
+
+        return alert("Enter your name");
+    }
+
+    const { data: userData } =
+    await supabaseClient.auth.getUser();
+
+    const user = userData.user;
+
+    const avatar =
+    `https://ui-avatars.com/api/?name=${name}&background=1e3a8a&color=fff`;
+
+    const { error } = await supabaseClient
+        .from('witcorp_profiles')
+        .insert([{
+
+            id: user.id,
+
+            email: user.email,
+
+            full_name: name,
+
+            avatar_url: avatar,
+
+            theme: currentTheme
+
+        }]);
+
+    if (error) {
+
+        alert(error.message);
+
+        return;
+    }
+
+    currentUserName = name;
+
+    document.getElementById('userName').innerText =
+    name;
+
+    document.getElementById('userAvatar').src =
+    avatar;
+
+    applyTheme(currentTheme);
+
+    document.getElementById('profileModal')
+    .classList.add('hidden');
+}
+
+function applyTheme(theme) {
+
+    document.body.classList.remove(
+        'theme-blue',
+        'theme-green',
+        'theme-purple',
+        'theme-dark'
+    );
+
+    document.body.classList.add(theme);
+
+    let color = '#2563eb';
+
+    if (theme === 'theme-green') {
+
+        color = '#16a34a';
+    }
+
+    if (theme === 'theme-purple') {
+
+        color = '#9333ea';
+    }
+
+    if (theme === 'theme-dark') {
+
+        color = '#0f172a';
+    }
+
+    document.documentElement
+    .style.setProperty('--primary', color);
+
+    document.querySelectorAll('.bg-blue-600')
+    .forEach(el => {
+
+        el.style.background = color;
+
+    });
+}
 </script>
+    <!-- PROFILE SETUP MODAL -->
+
+<div id="profileModal"
+class="fixed inset-0 bg-black/70 hidden z-[99999] items-center justify-center p-5">
+
+    <div class="w-full max-w-md bg-white rounded-[30px] shadow-2xl p-8">
+
+        <div class="text-center">
+
+            <img
+            id="profileAvatar"
+            class="w-24 h-24 rounded-full mx-auto border-4 border-blue-500 shadow-xl">
+
+            <h2 class="text-3xl font-black text-slate-800 mt-5">
+                Setup Profile
+            </h2>
+
+            <p class="text-slate-500 mt-2">
+                Choose your name & theme
+            </p>
+
+        </div>
+
+        <div class="mt-7 space-y-5">
+
+            <input
+            id="profileName"
+            type="text"
+            placeholder="Enter your name"
+            class="w-full px-5 py-4 rounded-2xl border border-slate-300 outline-none font-bold">
+
+            <div class="grid grid-cols-4 gap-3">
+
+                <button
+                onclick="selectTheme('theme-blue')"
+                class="theme-btn h-14 rounded-2xl bg-blue-600"></button>
+
+                <button
+                onclick="selectTheme('theme-green')"
+                class="theme-btn h-14 rounded-2xl bg-green-600"></button>
+
+                <button
+                onclick="selectTheme('theme-purple')"
+                class="theme-btn h-14 rounded-2xl bg-purple-600"></button>
+
+                <button
+                onclick="selectTheme('theme-dark')"
+                class="theme-btn h-14 rounded-2xl bg-slate-900"></button>
+
+            </div>
+
+            <button
+            onclick="saveProfile()"
+            class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-xl">
+
+                Save Profile
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 </body>
 </html>
