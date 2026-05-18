@@ -15,8 +15,6 @@
     }
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
-        
-        /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
         .lighting-border {
             position: relative;
             background: #fff;
@@ -146,15 +144,15 @@
 
 <div class="mt-4 space-y-2 text-sm">
 
-  <button onclick="showSection('dashboard');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
+  <button onclick="showSection('dashboard');toggleMenu()"id="nav-dashboard" class="nav-btn block w-full text-left p-3 rounded-lg hover:bg-white/10">
     Dashboard Home
   </button>
 
-  <button onclick="showSection('clientManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
+  <button onclick="showSection('clientManagement');toggleMenu()"id="nav-client" class="nav-btn block w-full text-left p-3 rounded-lg hover:bg-white/10">
     Client Details
   </button>
 
-  <button onclick="showSection('vaultManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
+  <button onclick="showSection('vaultManagement');toggleMenu()"id="nav-vault" class="nav-btn block w-full text-left p-3 rounded-lg hover:bg-white/10">
     Credentials Vault
   </button>
     <button onclick="showSection('dscManagement')" id="nav-dsc" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
@@ -168,7 +166,7 @@
 
 <div class="mt-2">
 
-    <button onclick="toggleBookkeeping()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm">
+    <button onclick="toggleBookkeeping()"id="nav-bookkeeping" class="nav-btn w-full px-4 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm">
         <i class="fas fa-book mr-2"></i> Bookkeeping
         </button>
        <div id="bookkeepingMenu" class="hidden mt-2 space-y-2">
@@ -199,26 +197,26 @@
 
 <!-- BOOKKEEPING END -->
 
-  <button onclick="filterByField('service_category','GST');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+  <button onclick="filterByField('service_category','GST');toggleMenu()"id="nav-gst" class="nav-btn block w-full text-left p-2 hover:bg-white/10">
     GST Management
   </button>
 
-  <button onclick="filterByField('service_category','ROC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+  <button onclick="filterByField('service_category','ROC');toggleMenu()"id="nav-roc" class="nav-btn block w-full text-left p-2 hover:bg-white/10">
     ROC / MCA
   </button>
 
-  <button onclick="filterByField('service_category','IT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+  <button onclick="filterByField('service_category','IT');toggleMenu()"id="nav-it" class="nav-btn block w-full text-left p-2 hover:bg-white/10">
     Income Tax
   </button>
 
-  <button onclick="filterByField('service_category','PT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+  <button onclick="filterByField('service_category','PT');toggleMenu()"id="nav-pt" class="nav-btn block w-full text-left p-2 hover:bg-white/10">
     Prof. Tax
   </button>
- <button onclick="filterByField('service_category','TDS');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+ <button onclick="filterByField('service_category','TDS');toggleMenu()"id="nav-tds" class="nav-btn block w-full text-left p-2 hover:bg-white/10">
    TDS Management
 </button>
 
-<button onclick="filterByField('service_category','DIR3KYC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+<button onclick="filterByField('service_category','DIR3KYC');toggleMenu()"id="nav-dir3" class="nav-btn block w-full text-left p-2 hover:bg-white/10">
     DIR3 KYC
 </button>
 
