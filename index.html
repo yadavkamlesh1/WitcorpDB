@@ -1682,6 +1682,18 @@ async function saveProfile() {
     document.getElementById('profileModal')
     .classList.add('hidden');
 }
+        async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    document.getElementById('appScreen')
+        .classList.add('hidden');
+
+    document.getElementById('authScreen')
+        .style.display = 'flex';
+
+    location.reload();
+}
 
 function applyTheme(theme) {
 
@@ -1697,25 +1709,23 @@ function applyTheme(theme) {
     let color = '#2563eb';
 
     if (theme === 'theme-green') {
-
         color = '#16a34a';
     }
 
     if (theme === 'theme-purple') {
-
         color = '#9333ea';
     }
 
     if (theme === 'theme-dark') {
-
         color = '#0f172a';
     }
 
     document.documentElement
-    .style.setProperty('--primary', color);
+        .style.setProperty('--primary', color);
 
-    document.querySelectorAll('.bg-blue-600')
-    .forEach(el => {
+    document.querySelectorAll(
+        '.dynamic-bg'
+    ).forEach(el => {
 
         el.style.background = color;
 
