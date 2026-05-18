@@ -259,7 +259,7 @@
 
 <div class="mt-2">
 
-    <button onclick="toggleBookkeepingDesktop()" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <button onclick="toggleBookkeepingDesktop()"id="nav-bookkeeping" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
     <i class="fas fa-book w-5 text-white"></i> Bookkeeping
     </button>
     <div id="bookkeepingDesktopMenu" class="hidden mt-2 space-y-2 px-2">
@@ -284,23 +284,23 @@
 </div>
 
 <!-- BOOKKEEPING END -->
-            <button onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+            <button onclick="filterByField('service_category', 'GST')"id="nav-gst" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
                 <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> GST Management
             </button>
-            <button onclick="filterByField('service_category', 'ROC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+            <button onclick="filterByField('service_category', 'ROC')"id="nav-roc" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
                 <i class="fas fa-landmark-dome w-5 text-amber-500"></i> ROC / MCA Desk
             </button>
-            <button onclick="filterByField('service_category', 'IT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+            <button onclick="filterByField('service_category', 'IT')"id="nav-it" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
                 <i class="fas fa-piggy-bank w-5 text-rose-400"></i> Income Tax
             </button>
-            <button onclick="filterByField('service_category', 'PT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+            <button onclick="filterByField('service_category', 'PT')"id="nav-pt" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
                 <i class="fas fa-briefcase w-5 text-sky-400"></i> Prof. Tax (PT)
             </button>
-            <button onclick="filterByField('service_category', 'TDS')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+            <button onclick="filterByField('service_category', 'TDS')"id="nav-tds" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
     <i class="fas fa-file-invoice w-5 text-orange-400"></i> TDS Management
 </button>
 
-<button onclick="filterByField('service_category', 'DIR3KYC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+<button onclick="filterByField('service_category', 'DIR3KYC')"id="nav-dir3" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
     <i class="fas fa-id-card w-5 text-pink-400"></i> DIR3 KYC
 </button>
         </nav>
@@ -1038,6 +1038,37 @@ if (
         }
 
         function filterByField(field, value) {
+            document.querySelectorAll('.nav-btn')
+.forEach(b => b.classList.remove('active'));
+
+if(value === 'GST MANAGEMENT')
+document.getElementById('nav-gst')?.classList.add('active');
+
+if(value === 'ROC / MCA DESK')
+document.getElementById('nav-roc')?.classList.add('active');
+
+if(value === 'INCOME TAX')
+document.getElementById('nav-it')?.classList.add('active');
+
+if(value === 'PROF. TAX (PT)')
+document.getElementById('nav-pt')?.classList.add('active');
+
+if(value === 'TDS MANAGEMENT')
+document.getElementById('nav-tds')?.classList.add('active');
+
+if(value === 'DIR3 KYC')
+document.getElementById('nav-dir3')?.classList.add('active');
+
+if(
+value === 'Current Liabilities' ||
+value === 'Loans' ||
+value === 'Suspense Account' ||
+value === 'Fixed Assets' ||
+value === 'P/L Account'
+){
+document.getElementById('nav-bookkeeping')
+?.classList.add('active');
+}
             showSection('filterView');
             let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
             const titles = {
