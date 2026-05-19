@@ -129,10 +129,3 @@ box-shadow: 0 0 25px rgba(251, 191, 36, 0.7);
         transform: rotate(360deg);
     }
 }
-#appScreen.hidden {
-  display: none !important;
-}
-
-#authScreen.hidden {
-  display: none !important;
-}
