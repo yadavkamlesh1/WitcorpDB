@@ -406,42 +406,35 @@ document.getElementById('filterTitle').innerText =
         }    
       // REGISTER
 async function registerUser() {
-document.getElementById("fullNameBox").style.display = "block";
-const fullName = document.getElementById("fullName").value;
-localStorage.setItem("fullName", fullName);
+
 const email = document.getElementById("email").value;
+
 const password = document.getElementById("password").value;
 
 const { data, error } = await supabase.auth.signUp({
     email,
-    password,
-    options: {
-        data: {
-            full_name: fullName
-        }
-    }
+    password
 });
 
-  if (error) {
+if (error) {
     document.getElementById('authMsg').innerText = error.message;
     return;
-  }
+}
 
-  const user = data.user;
+const user = data.user;
 
-  // 🔥 AUTO INSERT
-  await supabaseClient.from('witcorp_users').insert([
-  {
+await supabaseClient.from('witcorp_users').insert([
+{
     id: user.id,
     email: user.email,
-    full_name: fullName,
     role: 'user',
     approved: true
-  }
+}
 ]);
 
-  document.getElementById('authMsg').innerText =
-    "Registered & Approved! Now login.";
+document.getElementById('authMsg').innerText =
+"Registered Successfully! Now login.";
+
 }
 
 // LOGIN
@@ -487,7 +480,6 @@ async function checkApproval(user) {
         showApp(user);
 }
 
-// SHOW APP
 function showApp(user) {
 
   document.getElementById('authScreen').style.display = 'none';
@@ -496,21 +488,13 @@ function showApp(user) {
 
   const gmailEl = document.getElementById('userGmail');
 
-  const userNameEl = document.getElementById('userName');
-
   if (gmailEl) {
 
     gmailEl.innerText = user.email;
 
   }
 
-  if (userNameEl) {
-
-    userNameEl.innerText = currentUserName;
-
-  }
-
-  const name = currentUserName || "User";
+  const name = user.email;
 
   const p1 = document.getElementById("profileInitial");
 
