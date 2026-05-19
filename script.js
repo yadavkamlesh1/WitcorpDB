@@ -922,3 +922,54 @@ document.addEventListener("click", function(event) {
     }
 
 });
+// OPEN THEME MODAL
+function openThemeSettings() {
+
+    document.getElementById("themeModal")
+    .classList.remove("hidden");
+
+}
+
+// CLOSE THEME MODAL
+function closeThemeSettings() {
+
+    document.getElementById("themeModal")
+    .classList.add("hidden");
+
+}
+
+// CHANGE THEME
+function changeTheme(themeName){
+
+    const body = document.getElementById("appBody");
+
+    // REMOVE OLD THEMES
+    body.classList.remove(
+        "theme-ocean",
+        "theme-dark",
+        "theme-green",
+        "theme-purple"
+    );
+
+    // ADD NEW THEME
+    body.classList.add(themeName);
+
+    // SAVE THEME
+    localStorage.setItem("witcorpTheme", themeName);
+
+}
+
+// LOAD SAVED THEME
+window.addEventListener("DOMContentLoaded", () => {
+
+    const savedTheme =
+    localStorage.getItem("witcorpTheme");
+
+    if(savedTheme){
+
+        document.getElementById("appBody")
+        .classList.add(savedTheme);
+
+    }
+
+});
