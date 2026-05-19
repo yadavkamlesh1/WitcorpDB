@@ -922,39 +922,21 @@ document.addEventListener("click", function(event) {
     }
 
 });
-// OPEN PANEL
-
-function openThemePanel(){
-    document.getElementById("themePanel").classList.remove("hidden");
-}
-
-// CLOSE PANEL
-
-function closeThemePanel(){
-    document.getElementById("themePanel").classList.add("hidden");
-}
-
-// SET THEME
-
 function setTheme(theme){
 
-    document.body.className = "";
+    document.body.classList.remove(
+        "theme-aubergine",
+        "theme-clementine",
+        "theme-banana",
+        "theme-jade",
+        "theme-lagoon",
+        "theme-barbra",
+        "theme-indigo",
+        "theme-chill",
+        "theme-sea"
+    );
 
     document.body.classList.add("theme-" + theme);
 
     localStorage.setItem("appTheme", theme);
 }
-
-// LOAD SAVED THEME
-
-window.addEventListener("load", ()=>{
-
-    const savedTheme = localStorage.getItem("appTheme");
-
-    if(savedTheme){
-
-        document.body.classList.add("theme-" + savedTheme);
-
-    }
-
-});
