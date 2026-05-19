@@ -13,7 +13,7 @@
     <script src="script.js"></script>
     
 </head>
-<body id="appBody" class="min-h-screen overflow-x-hidden bg-slate-100">
+<body id="appBody" class="min-h-screen overflow-x-hidden transition-all duration-500">
   <!-- LOGIN / REGISTER SCREEN -->
 <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1A2E5A] z-[9999]">
 
@@ -161,7 +161,9 @@
 </div>
   </div>
 </div>
-   <aside class="w-72 bg-[#1A2E5A] text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
+   <aside id="mainSidebar"
+class="w-72 flex flex-col shadow-2xl z-50 hidden lg:flex transition-all duration-500"
+style="background: var(--sidebar-bg); color: white;">
         <div class="p-4 border-b border-white/10 text-center">
             <div class="logo-glow w-20 h-20 mx-auto mb-4">
     <img src="logo.png" class="w-full h-full object-cover">
@@ -242,7 +244,9 @@
         </div>
     </aside>
 
-    <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
+    <main id="mainDashboard"
+class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12 transition-all duration-500"
+style="background: var(--dashboard-bg);">
   <!-- TOP PROFILE -->
 <div class="flex justify-end items-center mb-6 relative">
 
@@ -287,12 +291,12 @@
 
             <!-- MENU -->
             <div class="p-3">
-                <button onclick="openThemeSettings()"
-    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                <button onclick="openThemePanel()"
+class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
 
-    <i class="fas fa-palette"></i>
+<i class="fas fa-palette"></i>
 
-    Settings
+Background Theme
 
 </button>
 
@@ -706,83 +710,113 @@
     </main>
     </div>
     <script src="script.js"></script>
-    <!-- THEME SETTINGS MODAL -->
+    <!-- THEME PANEL -->
 
-<div id="themeModal"
-class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
+<div id="themePanel"
+class="fixed inset-0 bg-black/50 z-[99999] hidden items-center justify-center">
 
-    <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden">
+<div class="w-[95%] max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden">
 
-        <!-- HEADER -->
-        <div class="flex items-center justify-between p-6 border-b">
+    <!-- TOP -->
 
-            <h2 class="text-2xl font-black text-slate-800">
-                Background Themes
-            </h2>
+    <div class="flex items-center justify-between p-6 border-b">
 
-            <button onclick="closeThemeSettings()"
-                class="text-3xl text-slate-400 hover:text-red-500">
+        <h2 class="text-2xl font-black text-slate-800">
+            Choose Your Workspace Theme
+        </h2>
 
-                &times;
+        <button onclick="closeThemePanel()"
+        class="text-2xl text-slate-400 hover:text-red-500">
+            ✕
+        </button>
 
-            </button>
+    </div>
+
+    <!-- THEMES -->
+
+    <div class="p-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-h-[75vh] overflow-y-auto">
+
+        <!-- THEME 1 -->
+
+        <div onclick="applyTheme('#1A2E5A','#f1f5f9')"
+        class="cursor-pointer rounded-3xl overflow-hidden border-4 hover:scale-105 transition-all shadow-lg">
+
+            <div class="h-28 bg-[#1A2E5A]"></div>
+
+            <div class="p-4 bg-white font-black text-center">
+                Classic Blue
+            </div>
 
         </div>
 
-        <!-- THEMES -->
-        <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 max-h-[80vh] overflow-y-auto">
+        <!-- THEME 2 -->
 
-            <!-- THEME 1 -->
-            <div onclick="changeTheme('theme-ocean')"
-                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+        <div onclick="applyTheme('#065f46','#ecfeff')"
+        class="cursor-pointer rounded-3xl overflow-hidden border-4 hover:scale-105 transition-all shadow-lg">
 
-                <div class="h-28 bg-gradient-to-r from-cyan-500 to-blue-700"></div>
+            <div class="h-28 bg-emerald-700"></div>
 
-                <div class="p-3 font-bold text-center">
-                    Ocean Blue
-                </div>
-
+            <div class="p-4 bg-white font-black text-center">
+                Emerald Pro
             </div>
 
-            <!-- THEME 2 -->
-            <div onclick="changeTheme('theme-dark')"
-                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+        </div>
 
-                <div class="h-28 bg-gradient-to-r from-slate-900 to-slate-700"></div>
+        <!-- THEME 3 -->
 
-                <div class="p-3 font-bold text-center">
-                    Dark Mode
-                </div>
+        <div onclick="applyTheme('#4c1d95','#f5f3ff')"
+        class="cursor-pointer rounded-3xl overflow-hidden border-4 hover:scale-105 transition-all shadow-lg">
 
+            <div class="h-28 bg-purple-900"></div>
+
+            <div class="p-4 bg-white font-black text-center">
+                Royal Purple
             </div>
 
-            <!-- THEME 3 -->
-            <div onclick="changeTheme('theme-green')"
-                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+        </div>
 
-                <div class="h-28 bg-gradient-to-r from-emerald-500 to-teal-700"></div>
+        <!-- THEME 4 -->
 
-                <div class="p-3 font-bold text-center">
-                    Green Nature
-                </div>
+        <div onclick="applyTheme('#7c2d12','#fff7ed')"
+        class="cursor-pointer rounded-3xl overflow-hidden border-4 hover:scale-105 transition-all shadow-lg">
 
+            <div class="h-28 bg-orange-900"></div>
+
+            <div class="p-4 bg-white font-black text-center">
+                Burnt Orange
             </div>
 
-            <!-- THEME 4 -->
-            <div onclick="changeTheme('theme-purple')"
-                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+        </div>
 
-                <div class="h-28 bg-gradient-to-r from-fuchsia-500 to-purple-800"></div>
+        <!-- THEME 5 -->
 
-                <div class="p-3 font-bold text-center">
-                    Purple Dream
-                </div>
+        <div onclick="applyTheme('#111827','#0f172a')"
+        class="cursor-pointer rounded-3xl overflow-hidden border-4 hover:scale-105 transition-all shadow-lg">
 
+            <div class="h-28 bg-black"></div>
+
+            <div class="p-4 bg-white font-black text-center">
+                Midnight Dark
+            </div>
+
+        </div>
+
+        <!-- THEME 6 -->
+
+        <div onclick="applyTheme('#be185d','#fff1f2')"
+        class="cursor-pointer rounded-3xl overflow-hidden border-4 hover:scale-105 transition-all shadow-lg">
+
+            <div class="h-28 bg-pink-700"></div>
+
+            <div class="p-4 bg-white font-black text-center">
+                Pink Rose
             </div>
 
         </div>
 
     </div>
+
+</div>
 
 </div>
 </body>
