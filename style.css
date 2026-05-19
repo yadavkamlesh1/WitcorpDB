@@ -264,3 +264,23 @@ body{
     margin-top:0 !important;
     padding-top:0 !important;
 }
+/* FINAL DASHBOARD POSITION FIX */
+
+#mainDashboard{
+    margin:0 !important;
+    padding-top:10px !important;
+    align-self:flex-start;
+}
+
+#dashboard{
+    margin-top:0 !important;
+    padding-top:0 !important;
+}
+
+#globalSearchBox{
+    margin-top:0 !important;
+}
+
+#appScreen{
+    align-items:flex-start !important;
+}
