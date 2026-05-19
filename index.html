@@ -13,7 +13,7 @@
     <script src="script.js"></script>
     
 </head>
-<body id="appBody" class="min-h-screen overflow-x-hidden transition-all duration-500">
+<body id="appBody" class="h-screen overflow-hidden transition-all duration-500">
   <!-- LOGIN / REGISTER SCREEN -->
 <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1A2E5A] z-[9999]">
 
@@ -50,7 +50,7 @@
   <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
 </div>
 </div>
-  <div id="appScreen" class="hidden flex-col lg:flex-row w-full min-h-screen">
+  <div id="appScreen" class="hidden lg:flex w-full h-screen overflow-hidden">
       <div class="lg:hidden flex items-center justify-between p-3 bg-[#1A2E5A] text-white">
   <button onclick="toggleMenu()">☰</button>
   <span class="font-bold text-sm">Witcorp India Advisors LLP</span>
@@ -162,7 +162,7 @@
   </div>
 </div>
    <aside id="mainSidebar"
-class="w-72 flex flex-col shadow-2xl z-50 hidden lg:flex transition-all duration-500"
+class="w-72 h-screen flex flex-col shadow-2xl z-50 hidden lg:flex transition-all duration-500 flex-shrink-0"
 style="background: var(--sidebar-bg); color: white;">
         <div class="p-4 border-b border-white/10 text-center">
             <div class="logo-glow w-20 h-20 mx-auto mb-4">
@@ -245,7 +245,7 @@ style="background: var(--sidebar-bg); color: white;">
     </aside>
 
     <main id="mainDashboard"
-class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12 transition-all duration-500"
+class="flex-1 h-screen overflow-y-auto p-3 sm:p-4 lg:p-12 transition-all duration-500"
 style="background: var(--dashboard-bg);">
   <!-- TOP PROFILE -->
 <div class="flex justify-end items-center mb-6 relative">
