@@ -1,6 +1,27 @@
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+// =============================
+// SAFE SESSION LOADER FIX
+// =============================
+
+window.addEventListener("load", async () => {
+
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (data.session) {
+
+    // agar already login hai
+    checkApproval(data.session.user);
+
+  } else {
+
+    // agar login nahi hai
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('appScreen').style.display = 'none';
+  }
+
+});
 
         let allRecords = [];
         let allClients = [];
@@ -482,27 +503,28 @@ showApp(user);
 
 // SHOW APP
 function showApp(user) {
+
+  // LOGIN SCREEN HIDE
   document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appScreen').classList.remove('hidden');
 
-  document.getElementById('userEmail').innerText =
-  currentUserName;
+  // APP SCREEN SHOW
+  document.getElementById('appScreen').style.display = 'block';
 
-document.getElementById('userGmail').innerText =
-  user.email;
+  // USER INFO SET
+  document.getElementById('userEmail').innerText = currentUserName;
+  document.getElementById('userGmail').innerText = user.email;
 
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
-         // ✅ PROFILE INITIALS
-  // ✅ PROFILE INITIALS
-const name = currentUserName || "User";
 
-document.getElementById("profileInitial").innerText =
-name.charAt(0).toUpperCase();
+  // PROFILE INITIALS
+  const name = currentUserName || "User";
 
-document.getElementById("profileInitial2").innerText =
-name.charAt(0).toUpperCase();
+  document.getElementById("profileInitial").innerText =
+    name.charAt(0).toUpperCase();
 
+  document.getElementById("profileInitial2").innerText =
+    name.charAt(0).toUpperCase();
 }
 
 // LOGOUT
