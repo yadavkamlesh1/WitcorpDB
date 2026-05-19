@@ -926,7 +926,6 @@ document.addEventListener("click", function(event) {
 
 function openThemePanel(){
     document.getElementById("themePanel").classList.remove("hidden");
-    document.getElementById("themePanel").classList.add("flex");
 }
 
 // CLOSE PANEL
@@ -935,52 +934,26 @@ function closeThemePanel(){
     document.getElementById("themePanel").classList.add("hidden");
 }
 
-// APPLY THEME
+// SET THEME
 
-function applyTheme(sidebar,dashboard){
+function setTheme(theme){
 
-    document.documentElement.style.setProperty(
-        '--sidebar-bg',
-        sidebar
-    );
+    document.body.className = "";
 
-    document.documentElement.style.setProperty(
-        '--dashboard-bg',
-        dashboard
-    );
+    document.body.classList.add("theme-" + theme);
 
-    // SAVE THEME
-
-    localStorage.setItem("sidebarTheme", sidebar);
-    localStorage.setItem("dashboardTheme", dashboard);
-
+    localStorage.setItem("appTheme", theme);
 }
 
 // LOAD SAVED THEME
 
 window.addEventListener("load", ()=>{
 
-    const savedSidebar =
-    localStorage.getItem("sidebarTheme");
+    const savedTheme = localStorage.getItem("appTheme");
 
-    const savedDashboard =
-    localStorage.getItem("dashboardTheme");
+    if(savedTheme){
 
-    if(savedSidebar){
-
-        document.documentElement.style.setProperty(
-            '--sidebar-bg',
-            savedSidebar
-        );
-
-    }
-
-    if(savedDashboard){
-
-        document.documentElement.style.setProperty(
-            '--dashboard-bg',
-            savedDashboard
-        );
+        document.body.classList.add("theme-" + savedTheme);
 
     }
 
