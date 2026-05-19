@@ -487,6 +487,14 @@ document.getElementById('userGmail').innerText =
 
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
+         // ✅ PROFILE INITIALS
+  const name = user.user_metadata.full_name || "User";
+
+  document.getElementById("profileInitial").innerText =
+  name.charAt(0).toUpperCase();
+
+  document.getElementById("profileInitial2").innerText =
+  name.charAt(0).toUpperCase();
 
 }
 
@@ -878,3 +886,24 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js')
     .then(() => console.log("SW registered"));
 }
+function toggleProfileMenu() {
+
+    const menu = document.getElementById("profileMenu");
+
+    menu.classList.toggle("hidden");
+
+}
+document.addEventListener("click", function(event) {
+
+    const menu = document.getElementById("profileMenu");
+
+    const button = event.target.closest("button");
+
+    if (!event.target.closest("#profileMenu") &&
+        !event.target.closest("[onclick='toggleProfileMenu()']")) {
+
+        menu.classList.add("hidden");
+
+    }
+
+});
