@@ -922,21 +922,3 @@ document.addEventListener("click", function(event) {
     }
 
 });
-function setTheme(theme){
-
-    document.body.classList.remove(
-        "theme-aubergine",
-        "theme-clementine",
-        "theme-banana",
-        "theme-jade",
-        "theme-lagoon",
-        "theme-barbra",
-        "theme-indigo",
-        "theme-chill",
-        "theme-sea"
-    );
-
-    document.body.classList.add("theme-" + theme);
-
-    localStorage.setItem("appTheme", theme);
-}
