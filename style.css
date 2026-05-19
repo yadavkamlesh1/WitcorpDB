@@ -222,3 +222,45 @@ body{
 .theme-sea{
     background: linear-gradient(135deg,#a5f3fc,#67e8f9,#c084fc);
 }
+/* ===== LAYOUT FIX ===== */
+
+html,
+body{
+    margin:0;
+    padding:0;
+    height:100%;
+    overflow-x:hidden;
+}
+
+/* MAIN APP */
+
+#appScreen{
+    display:flex;
+    align-items:flex-start;   /* IMPORTANT */
+    min-height:100vh;
+}
+
+/* SIDEBAR */
+
+#mainSidebar{
+    width:280px;
+    flex-shrink:0;
+    height:100vh;
+    position:sticky;
+    top:0;
+}
+
+/* DASHBOARD */
+
+#mainDashboard{
+    flex:1;
+    padding-top:20px;   /* thoda upar lane ke liye */
+    margin-top:0 !important;
+}
+
+/* REMOVE EXTRA GAP */
+
+.section{
+    margin-top:0 !important;
+    padding-top:0 !important;
+}
