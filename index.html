@@ -10,75 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body.menu-open {
-      overflow: hidden;
-    }
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; scroll-behavior: smooth; }
-        
-        /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
-        .lighting-border {
-            position: relative;
-            background: #fff;
-            border-radius: 2.5rem;
-            z-index: 1;
-        }
-        .lighting-border::before {
-            content: "";
-            position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
-            background-size: 100%;
-            z-index: -1;
-            filter: blur(2px);
-            animation: borderGlow 10s linear infinite;
-            opacity: 0.1;
-            border-radius: 2.6rem;
-        }
-        @keyframes borderGlow {
-            0% { background-position: 0 0; }
-            10% { background-position: 400% 0; }
-            20% { background-position: 0 0; }
-        }
-
-        /* Sidebar Styling */
-        .nav-btn { position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .nav-btn i { filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); transition: transform 0.3s ease; }
-        .nav-btn:hover i { transform: scale(1.2) rotate(-5deg); }
-        .nav-btn.active { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1e3a8a; font-weight: 800; transform: translateX(5px); box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3); }
-        
-        .section { display: none; }
-        .section.active { display: block; animation: slideUp 0.4s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Modern Elements */
-        .stat-card { cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.1); }
-        .stat-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); }
-        
-        /* Input & Form Styling */
-        input:disabled, select:disabled { background-color: #f8fafc; cursor: default; color: #94a3b8; border-color: #e2e8f0; opacity: 0.8; }
-        .form-input-focus:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-        
-        /* Status Pills */
-        .status-pill { padding: 6px 14px; border-radius: 9999px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid currentColor; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .st-pending { background-color: #fff1f2; color: #e11d48; }
-        .st-processing { background-color: #fffbeb; color: #d97706; }
-        .st-completed { background-color: #f0fdf4; color: #16a34a; }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        /* Branding Motto Style */
-        .motto-text { font-size: 9px; letter-spacing: 2px; font-weight: 800; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-top: 8px; position: relative; display: inline-block; }
-        .motto-text::after { content: ''; position: absolute; bottom: -4px; left: 25%; width: 50%; height: 1.5px; background: #fbbf24; border-radius: 10px; }
-
-        /* Table Responsive Scroll Fix */
-        .scroll-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-         #appScreen {
-    overflow-x: hidden;
-  }
+       
     </style>
 </head>
 <body class="min-h-screen overflow-x-hidden">
