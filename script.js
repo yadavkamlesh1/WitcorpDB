@@ -503,7 +503,7 @@ function showApp(user) {
   document.getElementById('authScreen').style.display = 'none';
 
   // APP SCREEN SHOW
-  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('appScreen').style.display = 'flex';
 
   // USER INFO SET
   document.getElementById('userEmail').innerText = currentUserName;
