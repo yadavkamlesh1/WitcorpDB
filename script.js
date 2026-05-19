@@ -457,6 +457,7 @@ async function loginUser() {
 }
 
 // CHECK APPROVAL
+// CHECK APPROVAL
 async function checkApproval(user) {
 
   const { data } = await supabaseClient
@@ -475,9 +476,7 @@ async function checkApproval(user) {
   }
 
   currentUserName =
-  user.email.split("@")[0];
-    currentUserName
-  );
+    user.email.split("@")[0];
 
   showApp(user);
 }
@@ -735,8 +734,7 @@ function renderDSC(data) {
     ${d.updated_at
         ? new Date(d.updated_at).toLocaleString('en-IN')
         : 'N/A'}
-          </td>
-            </td>
+</td>
 
            <td class="p-4 text-right whitespace-nowrap">
 
