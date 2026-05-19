@@ -439,7 +439,7 @@ document.getElementById('authMsg').innerText =
 
 // LOGIN
 async function loginUser() {
-  document.getElementById("fullNameBox").style.display = "none";
+
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
@@ -458,26 +458,28 @@ async function loginUser() {
 
 // CHECK APPROVAL
 async function checkApproval(user) {
+
   const { data } = await supabaseClient
     .from('witcorp_users')
-    .select('approved, full_name')
+    .select('approved')
     .eq('id', user.id)
     .single();
 
   if (!data.approved) {
+
     alert("Not approved by admin yet");
+
     logout();
+
     return;
   }
 
   currentUserName =
-    data.full_name ||
-    user.user_metadata?.full_name ||
-    user.email.split("@")[0];
-        localStorage.setItem("fullName", currentUserName);
-        console.log(currentUserName);
+  user.email.split("@")[0];
+    currentUserName
+  );
 
-        showApp(user);
+  showApp(user);
 }
 
 function showApp(user) {
