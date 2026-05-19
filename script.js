@@ -406,8 +406,9 @@ document.getElementById('filterTitle').innerText =
         }    
       // REGISTER
 async function registerUser() {
-
+document.getElementById("fullNameBox").style.display = "block";
 const fullName = document.getElementById("fullName").value;
+localStorage.setItem("fullName", fullName);
 const email = document.getElementById("email").value;
 const password = document.getElementById("password").value;
 
@@ -445,6 +446,7 @@ const { data, error } = await supabase.auth.signUp({
 
 // LOGIN
 async function loginUser() {
+  document.getElementById("fullNameBox").style.display = "none";
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
@@ -494,13 +496,15 @@ function showApp(user) {
   const gmailEl = document.getElementById('userGmail');
   const userNameEl = document.getElementById('userName');
 
-  if (gmailEl) {
-    gmailEl.innerText = user.email;
-  }
+  const savedName = localStorage.getItem("fullName");
 
-  if (userNameEl) {
-    userNameEl.innerText = currentUserName;
-  }
+if (gmailEl) {
+    gmailEl.innerText = user.email;
+}
+
+if (userNameEl) {
+    userNameEl.innerText = savedName;
+}
 
   const name = currentUserName || "User";
 
