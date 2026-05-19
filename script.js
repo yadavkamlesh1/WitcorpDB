@@ -407,14 +407,20 @@ document.getElementById('filterTitle').innerText =
         }    
       // REGISTER
 async function registerUser() {
-  const fullName = document.getElementById('fullName').value;
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
 
-  const { data, error } = await supabaseClient.auth.signUp({
+const fullName = document.getElementById("fullName").value;
+const email = document.getElementById("email").value;
+const password = document.getElementById("password").value;
+
+const { data, error } = await supabase.auth.signUp({
     email,
-    password
-  });
+    password,
+    options: {
+        data: {
+            full_name: fullName
+        }
+    }
+});
 
   if (error) {
     document.getElementById('authMsg').innerText = error.message;
@@ -488,13 +494,14 @@ document.getElementById('userGmail').innerText =
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
          // ✅ PROFILE INITIALS
-  const name = user.user_metadata.full_name || "User";
+  // ✅ PROFILE INITIALS
+const name = currentUserName || "User";
 
-  document.getElementById("profileInitial").innerText =
-  name.charAt(0).toUpperCase();
+document.getElementById("profileInitial").innerText =
+name.charAt(0).toUpperCase();
 
-  document.getElementById("profileInitial2").innerText =
-  name.charAt(0).toUpperCase();
+document.getElementById("profileInitial2").innerText =
+name.charAt(0).toUpperCase();
 
 }
 
