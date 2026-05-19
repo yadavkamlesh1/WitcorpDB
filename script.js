@@ -82,7 +82,7 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
                         <td class="p-4 text-center font-black text-slate-500 text-[11px]">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
                         <td class="p-4 text-center"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i> ${row.status}</span></td>
                         <td class="p-4 text-slate-500 text-[11px] italic max-w-[180px] truncate font-medium">${row.remarks || '---'}</td>
-                        <td class="p-4 text-[11px] font-bold text-blue-700">${row.updated_by || 'N/A'}</td>
+                        <td class="p-4 text-[11px] font-bold text-blue-700 break-all max-w-[220px]">${row.updated_by || 'N/A'}</td>
                         <td class="p-4 text-right"><div class="flex justify-end gap-3"><button onclick='editRecord(${JSON.stringify(row)})' class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110"><i class="fas fa-trash-alt"></i></button></div></td>
                     </tr>`;
             });
@@ -475,8 +475,7 @@ async function checkApproval(user) {
     return;
   }
 
-  currentUserName =
-    user.email.split("@")[0];
+  currentUserName = user.email;
 
   showApp(user);
 }
