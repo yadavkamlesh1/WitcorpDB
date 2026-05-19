@@ -761,8 +761,7 @@ async function saveDSC() {
 
         remarks: document.getElementById('dRemarks').value.trim(),
 
-        updated_by: currentUserName
-
+        updated_by: currentUserName,
         updated_at: new Date().toISOString()
     };
 
