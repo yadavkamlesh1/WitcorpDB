@@ -1,3 +1,7 @@
+:root{
+    --dashboard-bg:#F4F6F9;
+    --sidebar-bg:#1A2E5A;
+}
 body{
     transition: all 0.4s ease;
 }
@@ -136,151 +140,49 @@ body{
     transition: all 0.4s ease;
 }
 
-/* THEME ENGINE */
-
-body{
-    transition: all 0.4s ease;
-}
-
-/* THEME ENGINE */
-
-body{
-    transition: all 0.4s ease;
-}
-
-/* THEME CARD */
-
-.theme-card{
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.theme-card:hover{
-    transform: scale(1.04);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-
-/* GLASS EFFECT */
-
-.lighting-border{
-    backdrop-filter: blur(20px);
-    background: rgba(255,255,255,0.75);
-}
-
 /* ===== THEMES ===== */
 
-/* AUBERGINE */
-
 .theme-aubergine{
-    background: linear-gradient(135deg,#2e1065,#581c87,#7e22ce);
+    --sidebar-bg: linear-gradient(180deg,#2e1065,#581c87,#7e22ce);
+    --dashboard-bg: #f3e8ff;
 }
-
-/* CLEMENTINE */
 
 .theme-clementine{
-    background: linear-gradient(135deg,#ea580c,#fb923c,#fdba74);
+    --sidebar-bg: linear-gradient(180deg,#ea580c,#fb923c,#fdba74);
+    --dashboard-bg: #fff7ed;
 }
-
-/* BANANA */
 
 .theme-banana{
-    background: linear-gradient(135deg,#fde047,#facc15,#eab308);
+    --sidebar-bg: linear-gradient(180deg,#ca8a04,#facc15,#fde047);
+    --dashboard-bg: #fefce8;
 }
-
-/* JADE */
 
 .theme-jade{
-    background: linear-gradient(135deg,#065f46,#10b981,#6ee7b7);
+    --sidebar-bg: linear-gradient(180deg,#065f46,#10b981,#6ee7b7);
+    --dashboard-bg: #ecfdf5;
 }
-
-/* LAGOON */
 
 .theme-lagoon{
-    background: linear-gradient(135deg,#164e63,#0891b2,#67e8f9);
+    --sidebar-bg: linear-gradient(180deg,#164e63,#0891b2,#67e8f9);
+    --dashboard-bg: #ecfeff;
 }
-
-/* BARBRA */
 
 .theme-barbra{
-    background: linear-gradient(135deg,#f9a8d4,#f472b6,#ec4899);
+    --sidebar-bg: linear-gradient(180deg,#db2777,#ec4899,#f9a8d4);
+    --dashboard-bg: #fdf2f8;
 }
-
-/* INDIGO */
 
 .theme-indigo{
-    background: linear-gradient(135deg,#1e1b4b,#312e81,#4338ca);
+    --sidebar-bg: linear-gradient(180deg,#1e1b4b,#312e81,#4338ca);
+    --dashboard-bg: #eef2ff;
 }
-
-/* CHILL */
 
 .theme-chill{
-    background: linear-gradient(135deg,#134e4a,#0f766e,#14b8a6);
+    --sidebar-bg: linear-gradient(180deg,#134e4a,#0f766e,#14b8a6);
+    --dashboard-bg: #f0fdfa;
 }
-
-/* SEA */
 
 .theme-sea{
-    background: linear-gradient(135deg,#a5f3fc,#67e8f9,#c084fc);
-}
-/* ===== LAYOUT FIX ===== */
-
-html,
-body{
-    margin:0;
-    padding:0;
-    height:100%;
-    overflow-x:hidden;
-}
-
-/* MAIN APP */
-
-#appScreen{
-    display:flex;
-    align-items:flex-start;   /* IMPORTANT */
-    min-height:100vh;
-}
-
-/* SIDEBAR */
-
-#mainSidebar{
-    width:280px;
-    flex-shrink:0;
-    height:100vh;
-    position:sticky;
-    top:0;
-}
-
-/* DASHBOARD */
-
-#mainDashboard{
-    flex:1;
-    padding-top:20px;   /* thoda upar lane ke liye */
-    margin-top:0 !important;
-}
-
-/* REMOVE EXTRA GAP */
-
-.section{
-    margin-top:0 !important;
-    padding-top:0 !important;
-}
-/* FINAL DASHBOARD POSITION FIX */
-
-#mainDashboard{
-    margin:0 !important;
-    padding-top:10px !important;
-    align-self:flex-start;
-}
-
-#dashboard{
-    margin-top:0 !important;
-    padding-top:0 !important;
-}
-
-#globalSearchBox{
-    margin-top:0 !important;
-}
-
-#appScreen{
-    align-items:flex-start !important;
+    --sidebar-bg: linear-gradient(180deg,#0891b2,#67e8f9,#c084fc);
+    --dashboard-bg: #ecfeff;
 }
