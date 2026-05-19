@@ -13,7 +13,7 @@
     <script src="script.js"></script>
     
 </head>
-<body class="min-h-screen overflow-x-hidden">
+<body id="appBody" class="min-h-screen overflow-x-hidden bg-slate-100">
   <!-- LOGIN / REGISTER SCREEN -->
 <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1A2E5A] z-[9999]">
 
@@ -287,6 +287,14 @@
 
             <!-- MENU -->
             <div class="p-3">
+                <button onclick="openThemeSettings()"
+    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+
+    <i class="fas fa-palette"></i>
+
+    Settings
+
+</button>
 
                 <button onclick="logout()"
                     class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
@@ -698,5 +706,84 @@
     </main>
     </div>
     <script src="script.js"></script>
+    <!-- THEME SETTINGS MODAL -->
+
+<div id="themeModal"
+class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden">
+
+        <!-- HEADER -->
+        <div class="flex items-center justify-between p-6 border-b">
+
+            <h2 class="text-2xl font-black text-slate-800">
+                Background Themes
+            </h2>
+
+            <button onclick="closeThemeSettings()"
+                class="text-3xl text-slate-400 hover:text-red-500">
+
+                &times;
+
+            </button>
+
+        </div>
+
+        <!-- THEMES -->
+        <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 max-h-[80vh] overflow-y-auto">
+
+            <!-- THEME 1 -->
+            <div onclick="changeTheme('theme-ocean')"
+                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+                <div class="h-28 bg-gradient-to-r from-cyan-500 to-blue-700"></div>
+
+                <div class="p-3 font-bold text-center">
+                    Ocean Blue
+                </div>
+
+            </div>
+
+            <!-- THEME 2 -->
+            <div onclick="changeTheme('theme-dark')"
+                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+                <div class="h-28 bg-gradient-to-r from-slate-900 to-slate-700"></div>
+
+                <div class="p-3 font-bold text-center">
+                    Dark Mode
+                </div>
+
+            </div>
+
+            <!-- THEME 3 -->
+            <div onclick="changeTheme('theme-green')"
+                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+                <div class="h-28 bg-gradient-to-r from-emerald-500 to-teal-700"></div>
+
+                <div class="p-3 font-bold text-center">
+                    Green Nature
+                </div>
+
+            </div>
+
+            <!-- THEME 4 -->
+            <div onclick="changeTheme('theme-purple')"
+                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+                <div class="h-28 bg-gradient-to-r from-fuchsia-500 to-purple-800"></div>
+
+                <div class="p-3 font-bold text-center">
+                    Purple Dream
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 </body>
 </html>
