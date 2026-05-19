@@ -1,27 +1,6 @@
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-// =============================
-// SAFE SESSION LOADER FIX
-// =============================
-
-window.addEventListener("load", async () => {
-
-  const { data } = await supabaseClient.auth.getSession();
-
-  if (data.session) {
-
-    // agar already login hai
-    checkApproval(data.session.user);
-
-  } else {
-
-    // agar login nahi hai
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('appScreen').style.display = 'none';
-  }
-
-});
 
         let allRecords = [];
         let allClients = [];
@@ -32,6 +11,22 @@ window.addEventListener("load", async () => {
         let recordPage = 0;
         const PAGE_SIZE = 100;
         let isFetchingRecords = false;
+window.addEventListener("load", async () => {
+
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (data.session) {
+
+    checkApproval(data.session.user);
+
+  } else {
+
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('appScreen').style.display = 'none';
+  }
+
+});
+
 
         async function fetchRecords(reset = true) {
 
