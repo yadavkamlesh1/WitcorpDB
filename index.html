@@ -244,31 +244,66 @@
     </aside>
 
     <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
-        <div id="settingsPanel"
-class="p-5 bg-white rounded-2xl shadow mt-4">
+  <!-- TOP PROFILE -->
+<div class="flex justify-between items-center mb-6 relative">
 
-  <div class="font-bold text-lg mb-3">
-    Settings
-  </div>
+    <!-- LEFT SIDE PROFILE -->
+    <div class="relative">
 
-  <div class="text-sm text-slate-500">
-    Logged in as
-  </div>
+        <!-- PROFILE BUTTON -->
+        <button onclick="toggleProfileMenu()"
+            class="w-12 h-12 rounded-full bg-[#1e3a8a] text-white flex items-center justify-center font-black text-lg shadow-lg border-2 border-white">
 
-  <div id="userName"
-       class="font-black text-blue-800">
-  </div>
+            <span id="profileInitial">K</span>
 
-  <div id="userGmail"
-       class="text-xs text-slate-500 mb-4">
-  </div>
+        </button>
 
-  <button
-    onclick="logout()"
-    class="w-full bg-red-500 text-white py-3 rounded-xl font-bold">
-  Logout
+        <!-- DROPDOWN -->
+        <div id="profileMenu"
+            class="hidden absolute left-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50">
 
-  </button>
+            <!-- TOP -->
+            <div class="bg-[#1e3a8a] p-5 text-white">
+
+                <div class="flex items-center gap-4">
+
+                    <div class="w-14 h-14 rounded-full bg-white text-[#1e3a8a] flex items-center justify-center font-black text-2xl">
+
+                        <span id="profileInitial2">K</span>
+
+                    </div>
+
+                    <div>
+                        <div id="userName"
+                            class="font-black text-lg">
+                        </div>
+
+                        <div id="userGmail"
+                            class="text-xs text-blue-100 break-all">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- MENU -->
+            <div class="p-3">
+
+                <button onclick="logout()"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
+
+                    <i class="fas fa-right-from-bracket"></i>
+
+                    Logout
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
         
