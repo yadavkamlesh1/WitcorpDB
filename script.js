@@ -475,8 +475,13 @@ async function checkApproval(user) {
     return;
   }
 
-  currentUserName = data.full_name || user.email;
-showApp(user);
+  currentUserName =
+    data.full_name ||
+    user.user_metadata?.full_name ||
+    user.email.split("@")[0];
+        console.log(currentUserName);
+
+        showApp(user);
 }
 
 // SHOW APP
