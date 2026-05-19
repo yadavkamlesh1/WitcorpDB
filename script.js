@@ -11,23 +11,6 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         let recordPage = 0;
         const PAGE_SIZE = 100;
         let isFetchingRecords = false;
-window.addEventListener("load", async () => {
-
-  const { data } = await supabaseClient.auth.getSession();
-
-  if (data.session) {
-
-    checkApproval(data.session.user);
-
-  } else {
-
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('appScreen').style.display = 'none';
-  }
-
-});
-
-
         async function fetchRecords(reset = true) {
 
     if (isFetchingRecords) return;
@@ -499,27 +482,28 @@ showApp(user);
 // SHOW APP
 function showApp(user) {
 
-  // LOGIN SCREEN HIDE
   document.getElementById('authScreen').style.display = 'none';
 
-  // APP SCREEN SHOW
   document.getElementById('appScreen').style.display = 'flex';
 
-  // USER INFO SET
-  document.getElementById('userEmail').innerText = currentUserName;
-  document.getElementById('userGmail').innerText = user.email;
+  const gmailEl = document.getElementById('userGmail');
+  const userNameEl = document.getElementById('userName');
 
-  document.getElementById('userAvatar').src =
-    `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
+  if (gmailEl) {
+    gmailEl.innerText = user.email;
+  }
 
-  // PROFILE INITIALS
+  if (userNameEl) {
+    userNameEl.innerText = currentUserName;
+  }
+
   const name = currentUserName || "User";
 
-  document.getElementById("profileInitial").innerText =
-    name.charAt(0).toUpperCase();
+  const p1 = document.getElementById("profileInitial");
+  const p2 = document.getElementById("profileInitial2");
 
-  document.getElementById("profileInitial2").innerText =
-    name.charAt(0).toUpperCase();
+  if (p1) p1.innerText = name.charAt(0).toUpperCase();
+  if (p2) p2.innerText = name.charAt(0).toUpperCase();
 }
 
 // LOGOUT
