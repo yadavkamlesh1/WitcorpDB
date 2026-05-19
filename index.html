@@ -30,7 +30,8 @@
   <p class="text-xs text-green-500 font-bold mt-1">
     Strategic Wisdom. Global Growth.
   </p>
-
+  <input id="fullName" type="text" placeholder="Enter Full Name"
+   class="w-full mt-6 p-3 border rounded-xl">
   <input id="email" type="email" placeholder="Enter Email"
     class="w-full mt-6 p-3 border rounded-xl">
 
@@ -243,10 +244,32 @@
     </aside>
 
     <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
-      <div class="flex justify-end items-center mb-6 gap-3">
-  <img id="userAvatar" class="w-10 h-10 rounded-full border" />
-  <span id="userEmail" class="font-bold text-slate-700"></span>
-  <button onclick="logout()" class="text-red-500 font-bold">Logout</button>
+        <div id="settingsPanel"
+class="p-5 bg-white rounded-2xl shadow mt-4">
+
+  <div class="font-bold text-lg mb-3">
+    Settings
+  </div>
+
+  <div class="text-sm text-slate-500">
+    Logged in as
+  </div>
+
+  <div id="userName"
+       class="font-black text-blue-800">
+  </div>
+
+  <div id="userGmail"
+       class="text-xs text-slate-500 mb-4">
+  </div>
+
+  <button
+    onclick="logout()"
+    class="w-full bg-red-500 text-white py-3 rounded-xl font-bold">
+  Logout
+
+  </button>
+
 </div>
         
         <div id="globalSearchBox" class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
