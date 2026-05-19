@@ -495,28 +495,40 @@ function showApp(user) {
   document.getElementById('appScreen').style.display = 'flex';
 
   const gmailEl = document.getElementById('userGmail');
+
   const userNameEl = document.getElementById('userName');
 
-  const gmailEl = document.getElementById('userGmail');
-const userNameEl = document.getElementById('userName');
+  if (gmailEl) {
 
-if (gmailEl) {
     gmailEl.innerText = user.email;
-}
 
-if (userNameEl) {
+  }
+
+  if (userNameEl) {
+
     userNameEl.innerText = currentUserName;
-}
+
+  }
 
   const name = currentUserName || "User";
 
   const p1 = document.getElementById("profileInitial");
+
   const p2 = document.getElementById("profileInitial2");
 
-  if (p1) p1.innerText = name.charAt(0).toUpperCase();
-  if (p2) p2.innerText = name.charAt(0).toUpperCase();
-}
+  if (p1) {
 
+    p1.innerText = name.charAt(0).toUpperCase();
+
+  }
+
+  if (p2) {
+
+    p2.innerText = name.charAt(0).toUpperCase();
+
+  }
+
+}
 // LOGOUT
 async function logout() {
   await supabaseClient.auth.signOut();
