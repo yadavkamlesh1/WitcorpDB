@@ -13,7 +13,7 @@
     <script src="script.js"></script>
     
 </head>
-<body id="appBody" class="min-h-screen overflow-x-hidden transition-all duration-500">
+<body class="min-h-screen overflow-x-hidden">
   <!-- LOGIN / REGISTER SCREEN -->
 <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1A2E5A] z-[9999]">
 
@@ -161,9 +161,7 @@
 </div>
   </div>
 </div>
-   <aside id="mainSidebar"
-class="w-72 flex flex-col shadow-2xl z-50 hidden lg:flex transition-all duration-500"
-style="background: var(--sidebar-bg); color: white;">
+   <aside class="w-72 bg-[#1A2E5A] text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
         <div class="p-4 border-b border-white/10 text-center">
             <div class="logo-glow w-20 h-20 mx-auto mb-4">
     <img src="logo.png" class="w-full h-full object-cover">
@@ -244,11 +242,9 @@ style="background: var(--sidebar-bg); color: white;">
         </div>
     </aside>
 
-    <main id="mainDashboard"
-class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-6 transition-all duration-500"
-style="background: var(--dashboard-bg);">
+    <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
   <!-- TOP PROFILE -->
-<div class="flex justify-end items-center mb-2 relative">
+<div class="flex justify-end items-center mb-6 relative">
 
     <!-- LEFT SIDE PROFILE -->
     <div class="relative">
@@ -289,14 +285,8 @@ style="background: var(--dashboard-bg);">
 
             </div>
 
-            <button onclick="openThemePanel()"
-class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-
-    <i class="fas fa-palette"></i>
-
-    Background Theme
-
-</button>
+            <!-- MENU -->
+            <div class="p-3">
 
                 <button onclick="logout()"
                     class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
@@ -315,7 +305,7 @@ class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-
 
 </div>
         
-        <div id="globalSearchBox" class="mb-5 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
+        <div id="globalSearchBox" class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
             <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search Client, Service or Staff..." class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
         </div>
@@ -323,7 +313,7 @@ class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-
         <div id="dashboard" class="section active">
             <div id="topAnchor"></div>
             
-           <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-5">
+           <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-10">
 
     <h2 class="text-3xl font-black text-slate-800 tracking-tight">
         Workspace Overview
@@ -708,213 +698,5 @@ class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-
     </main>
     </div>
     <script src="script.js"></script>
- <!-- THEME PANEL -->
-
-<div id="themePanel"
-class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
-
-    <div class="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden">
-
-        <!-- TOP -->
-
-        <div class="flex items-center justify-between p-6 border-b">
-
-            <h2 class="text-3xl font-black text-slate-800">
-                Preferences
-            </h2>
-
-            <button onclick="closeThemePanel()"
-            class="text-3xl text-slate-400 hover:text-red-500">
-                ×
-            </button>
-
-        </div>
-
-        <!-- BODY -->
-
-        <div class="grid grid-cols-1 md:grid-cols-4">
-
-            <!-- LEFT MENU -->
-
-            <div class="border-r p-5 space-y-3 bg-slate-50">
-
-                <div class="font-bold text-blue-600 bg-blue-100 px-4 py-3 rounded-xl">
-                    🎨 Appearance
-                </div>
-
-            </div>
-
-            <!-- RIGHT -->
-
-            <div class="md:col-span-3 p-6 max-h-[80vh] overflow-y-auto">
-
-                <h3 class="text-xl font-black mb-6">
-                    Slack Themes
-                </h3>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                    <!-- AUBERGINE -->
-
-                    <div onclick="setTheme('aubergine')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-purple-900"></div>
-
-                            <span class="font-bold">
-                                Aubergine
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- CLEMENTINE -->
-
-                    <div onclick="setTheme('clementine')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-orange-600"></div>
-
-                            <span class="font-bold">
-                                Clementine
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- BANANA -->
-
-                    <div onclick="setTheme('banana')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-yellow-400"></div>
-
-                            <span class="font-bold">
-                                Banana
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- JADE -->
-
-                    <div onclick="setTheme('jade')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-emerald-600"></div>
-
-                            <span class="font-bold">
-                                Jade
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- LAGOON -->
-
-                    <div onclick="setTheme('lagoon')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-cyan-700"></div>
-
-                            <span class="font-bold">
-                                Lagoon
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- BARBRA -->
-
-                    <div onclick="setTheme('barbra')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-pink-400"></div>
-
-                            <span class="font-bold">
-                                Barbra
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- MOOD INDIGO -->
-
-                    <div onclick="setTheme('indigo')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-indigo-900"></div>
-
-                            <span class="font-bold">
-                                Mood Indigo
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- CHILL -->
-
-                    <div onclick="setTheme('chill')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-teal-700"></div>
-
-                            <span class="font-bold">
-                                Chill Vibes
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <!-- SEA -->
-
-                    <div onclick="setTheme('sea')"
-                    class="theme-card border rounded-2xl p-4 cursor-pointer">
-
-                        <div class="flex items-center gap-3">
-
-                            <div class="w-12 h-12 rounded-full bg-cyan-300"></div>
-
-                            <span class="font-bold">
-                                Sea Glass
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
 </body>
 </html>
