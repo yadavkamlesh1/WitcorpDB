@@ -481,6 +481,7 @@ async function checkApproval(user) {
     data.full_name ||
     user.user_metadata?.full_name ||
     user.email.split("@")[0];
+        localStorage.setItem("fullName", currentUserName);
         console.log(currentUserName);
 
         showApp(user);
@@ -496,14 +497,15 @@ function showApp(user) {
   const gmailEl = document.getElementById('userGmail');
   const userNameEl = document.getElementById('userName');
 
-  const savedName = localStorage.getItem("fullName");
+  const gmailEl = document.getElementById('userGmail');
+const userNameEl = document.getElementById('userName');
 
 if (gmailEl) {
     gmailEl.innerText = user.email;
 }
 
 if (userNameEl) {
-    userNameEl.innerText = savedName;
+    userNameEl.innerText = currentUserName;
 }
 
   const name = currentUserName || "User";
