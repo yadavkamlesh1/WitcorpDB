@@ -7,6 +7,7 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         let allVault = [];
         let allDSC = [];
         let currentUserEmail = "";
+        let currentUserName = "";
         let recordPage = 0;
         const PAGE_SIZE = 100;
         let isFetchingRecords = false;
@@ -100,7 +101,7 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
                 alloted_by: document.getElementById('allotedBy').value,
                 deadline: document.getElementById('deadline').value,
                 updated_at: new Date().toISOString(),
-                updated_by: currentUserEmail
+                updated_by: currentUserName
             };
 
             if (!payload.client_name) return alert("Error: Client Name is mandatory.");
@@ -198,7 +199,7 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
                 contact_number: document.getElementById('cPhone').value,
                 email_id: document.getElementById('cEmail').value,
                 entity_type: document.getElementById('cType').value,
-                updated_by: currentUserEmail
+                updated_by: currentUserName
             };
             if(!payload.client_name) return alert("Entity Name Required");
             const { error } = id 
@@ -261,7 +262,7 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
                 category: document.getElementById('vCat').value,
                 username: document.getElementById('vUser').value,
                 password: document.getElementById('vPass').value,
-                updated_by: currentUserEmail
+                updated_by: currentUserName
             };
             if(!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
             const { error } = id 
@@ -406,6 +407,7 @@ document.getElementById('filterTitle').innerText =
         }    
       // REGISTER
 async function registerUser() {
+  const fullName = document.getElementById('fullName').value;
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
@@ -423,13 +425,14 @@ async function registerUser() {
 
   // 🔥 AUTO INSERT
   await supabaseClient.from('witcorp_users').insert([
-    {
-      id: user.id,
-      email: user.email,
-      role: 'user',
-      approved: true
-    }
-  ]);
+  {
+    id: user.id,
+    email: user.email,
+    full_name: fullName,
+    role: 'user',
+    approved: true
+  }
+]);
 
   document.getElementById('authMsg').innerText =
     "Registered & Approved! Now login.";
@@ -457,7 +460,7 @@ async function loginUser() {
 async function checkApproval(user) {
   const { data } = await supabaseClient
     .from('witcorp_users')
-    .select('approved')
+    .select('approved, full_name')
     .eq('id', user.id)
     .single();
 
@@ -467,7 +470,8 @@ async function checkApproval(user) {
     return;
   }
 
-  showApp(user);
+  currentUserName = data.full_name || user.email;
+showApp(user);
 }
 
 // SHOW APP
@@ -475,8 +479,11 @@ function showApp(user) {
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').classList.remove('hidden');
 
-  document.getElementById('userEmail').innerText = user.email;
-    currentUserEmail = user.email;
+  document.getElementById('userEmail').innerText =
+  currentUserName;
+
+document.getElementById('userGmail').innerText =
+  user.email;
 
   document.getElementById('userAvatar').src =
     `https://ui-avatars.com/api/?name=${user.email}&background=1e3a8a&color=fff`;
@@ -754,7 +761,7 @@ async function saveDSC() {
 
         remarks: document.getElementById('dRemarks').value.trim(),
 
-        updated_by: currentUserEmail,
+        updated_by: currentUserName
 
         updated_at: new Date().toISOString()
     };
