@@ -484,7 +484,8 @@ function showApp(user) {
 
   document.getElementById('authScreen').style.display = 'none';
 
-  document.getElementById('appScreen').style.display = 'flex';
+  document.getElementById('appScreen').classList.remove('hidden');
+  document.getElementById('appScreen').classList.add('flex');
 
   const gmailEl = document.getElementById('userGmail');
 
