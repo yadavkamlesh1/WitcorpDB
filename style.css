@@ -142,6 +142,12 @@ body{
     transition: all 0.4s ease;
 }
 
+/* THEME ENGINE */
+
+body{
+    transition: all 0.4s ease;
+}
+
 /* THEME CARD */
 
 .theme-card{
@@ -210,39 +216,9 @@ body{
 .theme-chill{
     background: linear-gradient(135deg,#134e4a,#0f766e,#14b8a6);
 }
+
 /* SEA */
 
 .theme-sea{
     background: linear-gradient(135deg,#a5f3fc,#67e8f9,#c084fc);
-}
-
-/* MAIN APP LAYOUT FIX */
-
-#appScreen{
-    display:flex;
-    min-height:100vh;
-}
-
-/* SIDEBAR FIX */
-
-#mainSidebar{
-    width:280px;
-    flex-shrink:0;
-    transition:all .4s ease;
-}
-
-/* DASHBOARD FIX */
-
-#mainDashboard{
-    flex:1;
-    min-width:0;
-    transition:all .4s ease;
-}
-
-/* BODY SAFE */
-
-body{
-    margin:0;
-    padding:0;
-    overflow-x:hidden;
 }
