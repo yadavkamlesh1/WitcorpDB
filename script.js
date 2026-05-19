@@ -922,53 +922,65 @@ document.addEventListener("click", function(event) {
     }
 
 });
-// OPEN THEME MODAL
-function openThemeSettings() {
+// OPEN PANEL
 
-    document.getElementById("themeModal")
-    .classList.remove("hidden");
-
+function openThemePanel(){
+    document.getElementById("themePanel").classList.remove("hidden");
+    document.getElementById("themePanel").classList.add("flex");
 }
 
-// CLOSE THEME MODAL
-function closeThemeSettings() {
+// CLOSE PANEL
 
-    document.getElementById("themeModal")
-    .classList.add("hidden");
-
+function closeThemePanel(){
+    document.getElementById("themePanel").classList.add("hidden");
 }
 
-// CHANGE THEME
-function changeTheme(themeName){
+// APPLY THEME
 
-    const body = document.getElementById("appBody");
+function applyTheme(sidebar,dashboard){
 
-    // REMOVE OLD THEMES
-    body.classList.remove(
-        "theme-ocean",
-        "theme-dark",
-        "theme-green",
-        "theme-purple"
+    document.documentElement.style.setProperty(
+        '--sidebar-bg',
+        sidebar
     );
 
-    // ADD NEW THEME
-    body.classList.add(themeName);
+    document.documentElement.style.setProperty(
+        '--dashboard-bg',
+        dashboard
+    );
 
     // SAVE THEME
-    localStorage.setItem("witcorpTheme", themeName);
+
+    localStorage.setItem("sidebarTheme", sidebar);
+    localStorage.setItem("dashboardTheme", dashboard);
 
 }
 
 // LOAD SAVED THEME
-window.addEventListener("DOMContentLoaded", () => {
 
-    const savedTheme =
-    localStorage.getItem("witcorpTheme");
+window.addEventListener("load", ()=>{
 
-    if(savedTheme){
+    const savedSidebar =
+    localStorage.getItem("sidebarTheme");
 
-        document.getElementById("appBody")
-        .classList.add(savedTheme);
+    const savedDashboard =
+    localStorage.getItem("dashboardTheme");
+
+    if(savedSidebar){
+
+        document.documentElement.style.setProperty(
+            '--sidebar-bg',
+            savedSidebar
+        );
+
+    }
+
+    if(savedDashboard){
+
+        document.documentElement.style.setProperty(
+            '--dashboard-bg',
+            savedDashboard
+        );
 
     }
 
