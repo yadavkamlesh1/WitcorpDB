@@ -68,3 +68,17 @@
          #appScreen {
     overflow-x: hidden;
   }
+table {
+    background: white;
+}
+
+input,
+select {
+    background: #FFFFFF !important;
+}
+
+.stat-card,
+.lighting-border {
+    background: #FFFFFF;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+}
