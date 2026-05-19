@@ -129,3 +129,28 @@ box-shadow: 0 0 25px rgba(251, 191, 36, 0.7);
         transform: rotate(360deg);
     }
 }
+/* DEFAULT */
+body{
+    transition: all 0.4s ease;
+}
+
+/* OCEAN */
+.theme-ocean{
+    background: linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd);
+}
+
+/* DARK */
+.theme-dark{
+    background: linear-gradient(135deg,#0f172a,#1e293b,#334155);
+    color:white;
+}
+
+/* GREEN */
+.theme-green{
+    background: linear-gradient(135deg,#d1fae5,#6ee7b7,#047857);
+}
+
+/* PURPLE */
+.theme-purple{
+    background: linear-gradient(135deg,#f5d0fe,#c084fc,#7e22ce);
+}
