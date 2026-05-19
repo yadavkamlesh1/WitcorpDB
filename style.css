@@ -1,4 +1,12 @@
- body.menu-open {
+:root{
+    --sidebar-bg:#1A2E5A;
+    --dashboard-bg:#f8fafc;
+}
+
+body{
+    transition: all 0.4s ease;
+}
+body.menu-open {
       overflow: hidden;
     }
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
@@ -129,28 +137,41 @@ box-shadow: 0 0 25px rgba(251, 191, 36, 0.7);
         transform: rotate(360deg);
     }
 }
-/* DEFAULT */
 body{
     transition: all 0.4s ease;
 }
 
-/* OCEAN */
-.theme-ocean{
-    background: linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd);
+/* SIDEBAR */
+
+#mainSidebar{
+    transition: all 0.4s ease;
 }
 
-/* DARK */
-.theme-dark{
-    background: linear-gradient(135deg,#0f172a,#1e293b,#334155);
-    color:white;
+/* DASHBOARD */
+
+#mainDashboard{
+    transition: all 0.4s ease;
 }
 
-/* GREEN */
-.theme-green{
-    background: linear-gradient(135deg,#d1fae5,#6ee7b7,#047857);
+/* THEME CARD HOVER */
+
+.theme-card{
+    transition: all 0.3s ease;
 }
 
-/* PURPLE */
-.theme-purple{
-    background: linear-gradient(135deg,#f5d0fe,#c084fc,#7e22ce);
+.theme-card:hover{
+    transform: scale(1.05);
+}
+
+/* GLASS EFFECT */
+
+.lighting-border{
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.75);
+}
+
+/* SMOOTH BUTTONS */
+
+button{
+    transition: all 0.25s ease;
 }
