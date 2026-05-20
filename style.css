@@ -140,105 +140,93 @@ body{
     transition: all 0.4s ease;
 }
 
-/* OCEAN */
+/* ========================= */
+/* BACKGROUND THEMES */
+/* ========================= */
+
 .theme-ocean{
     background: linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd);
 }
-/* DARK */
+
 .theme-dark{
     background: linear-gradient(135deg,#0f172a,#1e293b,#334155);
     color:white;
 }
 
-/* DARK THEME INPUT FIX */
-.theme-dark input,
-.theme-dark select,
-.theme-dark textarea{
-
-    background:#0f172a !important;
-
-    color:white !important;
-
-    border:1px solid #475569 !important;
-
-}
-/* GREEN */
 .theme-green{
     background: linear-gradient(135deg,#d1fae5,#6ee7b7,#047857);
 }
 
-/* PURPLE */
 .theme-purple{
     background: linear-gradient(135deg,#f5d0fe,#c084fc,#7e22ce);
 }
+
 .theme-light{
     background:
     linear-gradient(135deg,#f8fafc 0%,#ffffff 50%,#e2e8f0 100%);
+
     color:#0f172a;
 }
-/* ============================= */
-/* SLACK STYLE SIDEBAR THEMES */
-/* ============================= */
+/* ========================= */
+/* SIDEBAR THEMES */
+/* ========================= */
 
-.sidebar-theme-ocean{
+.sidebar-theme-ocean aside{
     background:
     linear-gradient(180deg,#0f766e 0%,#0f766e 20%,#115e59 50%,#134e4a 100%);
 }
 
-.sidebar-theme-dark{
+.sidebar-theme-dark aside{
     background:
     linear-gradient(180deg,#1e293b 0%,#0f172a 50%,#020617 100%);
 }
 
-.sidebar-theme-green{
+.sidebar-theme-green aside{
     background:
     linear-gradient(180deg,#059669 0%,#047857 40%,#065f46 100%);
 }
 
-.sidebar-theme-purple{
+.sidebar-theme-purple aside{
     background:
     linear-gradient(180deg,#c026d3 0%,#9333ea 40%,#6b21a8 100%);
 }
 
-/* EXTRA SLACK COLORS */
-
-.sidebar-theme-raspberry{
+.sidebar-theme-raspberry aside{
     background:
     linear-gradient(180deg,#e11d48 0%,#fb7185 100%);
 }
 
-.sidebar-theme-mint{
+.sidebar-theme-mint aside{
     background:
     linear-gradient(180deg,#84cc16 0%,#60a5fa 100%);
 }
 
-.sidebar-theme-chill{
+.sidebar-theme-chill aside{
     background:
     linear-gradient(180deg,#0f766e 0%,#155e75 100%);
 }
 
-.sidebar-theme-forest{
+.sidebar-theme-forest aside{
     background:
     linear-gradient(180deg,#3f6212 0%,#78350f 100%);
 }
 
-.sidebar-theme-slackr{
+.sidebar-theme-slackr aside{
     background:
     linear-gradient(180deg,#f472b6 0%,#38bdf8 100%);
 }
 
-.sidebar-theme-seaglass{
+.sidebar-theme-seaglass aside{
     background:
     linear-gradient(180deg,#a5f3fc 0%,#d946ef 100%);
 }
 
-.sidebar-theme-lemon{
+.sidebar-theme-lemon aside{
     background:
     linear-gradient(180deg,#eab308 0%,#15803d 100%);
 }
-/* ===== NAVY PRO SIDEBAR ===== */
 
-.sidebar-theme-navypro{
+.sidebar-theme-navypro aside{
     background:
     linear-gradient(
     180deg,
@@ -247,14 +235,9 @@ body{
     #172a55 70%,
     #14244b 100%
     ) !important;
-
-    border-right:
-    1px solid rgba(255,255,255,0.05);
-
-    box-shadow:
-    10px 0 30px rgba(0,0,0,0.25);
 }
-.sidebar-theme-original{
+
+.sidebar-theme-original aside{
     background:
     linear-gradient(
     180deg,
@@ -263,68 +246,4 @@ body{
     #172969 70%,
     #1e3a8a 100%
     ) !important;
-
-    border-right:
-    1px solid rgba(255,255,255,0.05);
-
-    box-shadow:
-    8px 0 25px rgba(0,0,0,0.25);
-
-    position: relative;
-    overflow: hidden;
-}
-
-.sidebar-theme-original::before{
-    content:"";
-    position:absolute;
-    inset:0;
-
-    background:
-    radial-gradient(
-    circle at top left,
-    rgba(59,130,246,0.12),
-    transparent 40%
-    );
-
-    pointer-events:none;
-}
-
-/* glow effect */
-
-.sidebar-theme-navypro aside::before{
-    content: "";
-    position: absolute;
-    inset: 0;
-
-    background:
-    radial-gradient(
-    circle at top left,
-    rgba(59,130,246,0.18),
-    transparent 45%
-    );
-
-    pointer-events: none;
-}
-
-/* nav button hover */
-
-.sidebar-theme-navypro .nav-btn:hover{
-    background: rgba(255,255,255,0.06);
-    transform: translateX(4px);
-}
-
-/* active button */
-
-.sidebar-theme-navypro .nav-btn.active{
-    background:
-    linear-gradient(
-    135deg,
-    #fbbf24,
-    #f59e0b
-    );
-
-    color: #111827;
-
-    box-shadow:
-    0 8px 20px rgba(251,191,36,0.35);
 }
