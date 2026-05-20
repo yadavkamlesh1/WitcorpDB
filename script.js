@@ -1177,7 +1177,7 @@ function changeSidebarTheme(theme){
         'sidebar-theme-mint',
         'sidebar-theme-chill',
         'sidebar-theme-forest',
-        'sidebar-theme-slackr',
+        'sidebar-theme-damini',
         'sidebar-theme-seaglass',
         'sidebar-theme-lemon',
         'sidebar-theme-dark',
