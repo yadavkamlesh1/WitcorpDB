@@ -87,8 +87,7 @@
                     </tr>`;
             });
         }
-console.log("PAYLOAD:", payload);
-console.log("ID:", id);
+
 
         async function handleSubmit() {
             const id = document.getElementById('editId').value;
@@ -104,6 +103,8 @@ console.log("ID:", id);
                 updated_at: new Date().toISOString(),
                 updated_by: currentUserName
             };
+                console.log("PAYLOAD:", payload);
+                console.log("ID:", id);
 
             if (!payload.client_name) return alert("Error: Client Name is mandatory.");
 
