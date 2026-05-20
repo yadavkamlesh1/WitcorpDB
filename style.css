@@ -171,6 +171,11 @@ body{
 .theme-purple{
     background: linear-gradient(135deg,#f5d0fe,#c084fc,#7e22ce);
 }
+.theme-light{
+    background:
+    linear-gradient(135deg,#f8fafc 0%,#ffffff 50%,#e2e8f0 100%);
+    color:#0f172a;
+}
 /* ============================= */
 /* SLACK STYLE SIDEBAR THEMES */
 /* ============================= */
