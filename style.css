@@ -205,6 +205,10 @@ body{
     background:
     linear-gradient(180deg,#eab308 0%,#15803d 100%);
 }
+.sidebar-theme-dark aside{
+    background:
+    linear-gradient(180deg,#1e293b 0%,#0f172a 50%,#020617 100%);
+}
 
 .sidebar-theme-navypro aside{
     background:
