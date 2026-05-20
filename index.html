@@ -244,6 +244,36 @@
     <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
   <!-- TOP PROFILE -->
 <div class="flex justify-end items-center mb-6 relative">
+    <!-- NOTIFICATION -->
+<div class="relative mr-5">
+
+    <button onclick="toggleNotificationPanel()"
+        class="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-slate-700 relative">
+
+        <i class="fas fa-bell text-lg"></i>
+
+        <span id="notificationCount"
+            class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center hidden">
+            0
+        </span>
+
+    </button>
+
+    <!-- PANEL -->
+    <div id="notificationPanel"
+        class="hidden absolute right-0 mt-3 w-[380px] max-w-[95vw] bg-white rounded-2xl shadow-2xl border overflow-hidden z-50">
+
+        <div class="p-4 border-b font-black text-slate-700">
+            Notifications
+        </div>
+
+        <div id="notificationList"
+            class="max-h-[500px] overflow-y-auto divide-y">
+        </div>
+
+    </div>
+
+</div>
 
     <!-- LEFT SIDE PROFILE -->
     <div class="relative">
