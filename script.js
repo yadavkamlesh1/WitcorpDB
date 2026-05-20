@@ -1,4 +1,4 @@
-const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
+        const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
@@ -98,7 +98,7 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
                 service_detail: document.getElementById('serviceDetail').value,
                 assigned_staff: document.getElementById('assignedStaff').value,
                 alloted_by: document.getElementById('allotedBy').value,
-                deadline: document.getElementById('deadline').value,
+                deadline: document.getElementById('deadline').value || null,
                 updated_at: new Date().toISOString(),
                 updated_by: currentUserName
             };
@@ -133,7 +133,7 @@ const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
             document.getElementById('serviceDetail').value = row.service_detail;
             document.getElementById('assignedStaff').value = row.assigned_staff;
             document.getElementById('allotedBy').value = row.alloted_by;
-            document.getElementById('deadline').value = row.deadline;
+            document.getElementById('deadline').value = row.deadline? row.deadline.split('T')[0]: "";
             document.getElementById('status').value = row.status;
             document.getElementById('remarks').value = row.remarks;
             document.getElementById('formTitle').innerText = "Modify Existing Profile";
