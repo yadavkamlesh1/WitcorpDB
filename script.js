@@ -1180,6 +1180,7 @@ function changeSidebarTheme(theme){
         'sidebar-theme-slackr',
         'sidebar-theme-seaglass',
         'sidebar-theme-lemon',
+        'sidebar-theme-dark',
         'sidebar-theme-navypro',
         'sidebar-theme-original'
     ];
