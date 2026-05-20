@@ -231,3 +231,61 @@ body{
     background:
     linear-gradient(180deg,#eab308 0%,#15803d 100%);
 }
+/* ===== NAVY PRO SIDEBAR ===== */
+
+.sidebar-theme-navypro aside{
+    background:
+    linear-gradient(
+    180deg,
+    #1f376d 0%,
+    #1a2f5f 35%,
+    #172a55 70%,
+    #14244b 100%
+    ) !important;
+
+    border-right:
+    1px solid rgba(255,255,255,0.05);
+
+    box-shadow:
+    10px 0 30px rgba(0,0,0,0.25);
+}
+
+/* glow effect */
+
+.sidebar-theme-navypro aside::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background:
+    radial-gradient(
+    circle at top left,
+    rgba(59,130,246,0.18),
+    transparent 45%
+    );
+
+    pointer-events: none;
+}
+
+/* nav button hover */
+
+.sidebar-theme-navypro .nav-btn:hover{
+    background: rgba(255,255,255,0.06);
+    transform: translateX(4px);
+}
+
+/* active button */
+
+.sidebar-theme-navypro .nav-btn.active{
+    background:
+    linear-gradient(
+    135deg,
+    #fbbf24,
+    #f59e0b
+    );
+
+    color: #111827;
+
+    box-shadow:
+    0 8px 20px rgba(251,191,36,0.35);
+}
