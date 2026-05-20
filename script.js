@@ -1160,6 +1160,7 @@ function changeSidebarTheme(theme){
         'sidebar-theme-seaglass',
         'sidebar-theme-lemon',
         'sidebar-theme-navypro',
+        'sidebar-theme-original',
     ];
 
     allThemes.forEach(t => {
