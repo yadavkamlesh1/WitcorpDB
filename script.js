@@ -6,6 +6,8 @@
         let allClients = [];
         let allVault = [];
         let allDSC = [];
+        let allNotifications = [];
+        let unreadCount = 0;
         let currentUserEmail = "";
         let currentUserName = "";
         let recordPage = 0;
@@ -113,6 +115,15 @@
                 : await supabaseClient.from('witcorp_records').insert([payload]);
 
             if (!error) { 
+                    await createNotification(
+
+    id ? "Record Updated" : "New Record Added",
+
+    `${payload.client_name} - ${payload.service_category} updated by ${currentUserName}`,
+
+    "record"
+
+);
 
     alert(id ? "Record Updated!" : "Record Successfully Added!");
 
@@ -208,6 +219,15 @@
                 ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', id)
                 : await supabaseClient.from('witcorp_clients').insert([payload]);
             if(!error) { 
+                    await createNotification(
+
+    id ? "Client Updated" : "New Client Added",
+
+    `${payload.client_name} profile updated by ${currentUserName}`,
+
+    "client"
+
+);
                 fetchClients(); 
                 document.getElementById('cEditId').value = "";
                 ['cName','cPhone','cEmail'].forEach(i => document.getElementById(i).value = ""); 
@@ -271,6 +291,15 @@
                 ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', id)
                 : await supabaseClient.from('witcorp_credentials').insert([payload]);
             if(!error) { 
+                    await createNotification(
+
+    id ? "Vault Updated" : "Credentials Added",
+
+    `${payload.client_name} credentials updated by ${currentUserName}`,
+
+    "vault"
+
+);
                 fetchVault(); 
                 document.getElementById('vEditId').value = "";
                 ['vClient','vCat','vUser','vPass'].forEach(i => document.getElementById(i).value = ""); 
@@ -817,6 +846,15 @@ async function saveDSC() {
     console.log("DSC ERROR:", JSON.stringify(error));
 
     if (!error) {
+            await createNotification(
+
+    id ? "DSC Updated" : "New DSC Added",
+
+    `${payload.company_name} DSC updated by ${currentUserName}`,
+
+    "dsc"
+
+);
 
         alert(id ? "DSC Updated Successfully" : "DSC Saved Successfully");
 
@@ -974,5 +1012,125 @@ window.addEventListener("DOMContentLoaded", () => {
         .classList.add(savedTheme);
 
     }
+
+});
+async function createNotification(title, message, type = "info") {
+
+    await supabaseClient
+        .from('witcorp_notifications')
+        .insert([{
+            title,
+            message,
+            type,
+            created_by: currentUserName
+        }]);
+
+}
+async function fetchNotifications() {
+
+    const { data, error } = await supabaseClient
+        .from('witcorp_notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+    if(error) return;
+
+    allNotifications = data;
+
+    renderNotifications();
+
+}
+function renderNotifications() {
+
+    const list =
+        document.getElementById('notificationList');
+
+    const count =
+        document.getElementById('notificationCount');
+
+    list.innerHTML = "";
+
+    unreadCount = allNotifications.length;
+
+    if(unreadCount > 0){
+
+        count.classList.remove('hidden');
+
+        count.innerText = unreadCount;
+
+    }
+
+    allNotifications.forEach(n => {
+
+        list.innerHTML += `
+
+            <div class="p-4 hover:bg-slate-50">
+
+                <div class="font-black text-sm text-slate-800">
+                    ${n.title}
+                </div>
+
+                <div class="text-xs text-slate-500 mt-1">
+                    ${n.message}
+                </div>
+
+                <div class="text-[10px] text-blue-600 mt-2 font-bold">
+                    ${new Date(n.created_at).toLocaleString('en-IN')}
+                </div>
+
+            </div>
+
+        `;
+    });
+
+}
+function toggleNotificationPanel(){
+
+    document.getElementById('notificationPanel')
+    .classList.toggle('hidden');
+
+}
+supabaseClient
+.channel('live-notifications')
+
+.on(
+    'postgres_changes',
+    {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'witcorp_notifications'
+    },
+
+    async (payload) => {
+
+        console.log("NEW NOTIFICATION:", payload);
+
+        allNotifications.unshift(payload.new);
+
+        renderNotifications();
+
+        // SOUND
+        const audio = new Audio(
+            'https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3'
+        );
+
+        audio.play();
+
+        // AUTO REFRESH
+        fetchRecords(true);
+
+    }
+
+)
+
+.subscribe((status) => {
+
+    console.log("NOTIFICATION STATUS:", status);
+
+});
+window.addEventListener('DOMContentLoaded', () => {
+
+    fetchNotifications();
 
 });
