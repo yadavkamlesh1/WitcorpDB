@@ -144,13 +144,24 @@ body{
 .theme-ocean{
     background: linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd);
 }
-
 /* DARK */
 .theme-dark{
     background: linear-gradient(135deg,#0f172a,#1e293b,#334155);
     color:white;
 }
 
+/* DARK THEME INPUT FIX */
+.theme-dark input,
+.theme-dark select,
+.theme-dark textarea{
+
+    background:#0f172a !important;
+
+    color:white !important;
+
+    border:1px solid #475569 !important;
+
+}
 /* GREEN */
 .theme-green{
     background: linear-gradient(135deg,#d1fae5,#6ee7b7,#047857);
