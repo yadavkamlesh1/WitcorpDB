@@ -258,17 +258,31 @@ body{
     background:
     linear-gradient(
     180deg,
-    #064e4a 0%,
-    #0b4a6f 35%,
-    #1e3a8a 75%,
-    #1d4ed8 100%
+    #0b1433 0%,
+    #101b45 35%,
+    #172969 70%,
+    #1e3a8a 100%
     ) !important;
 
     border-right:
-    1px solid rgba(255,255,255,0.06);
+    1px solid rgba(255,255,255,0.05);
 
     box-shadow:
-    10px 0 30px rgba(0,0,0,0.25);
+    8px 0 25px rgba(0,0,0,0.25);
+}
+.sidebar-theme-original aside::before{
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background:
+    radial-gradient(
+    circle at top left,
+    rgba(59,130,246,0.12),
+    transparent 40%
+    );
+
+    pointer-events:none;
 }
 
 /* glow effect */
