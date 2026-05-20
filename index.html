@@ -57,7 +57,8 @@
 
 <div id="mobileMenu" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-50">
   
-  <div class="w-[75%] max-w-[280px] bg-[#1A2E5A] h-full p-4 text-white overflow-y-auto"
+  <div id="mobileSidebar"
+class="sidebar-theme-chill w-[75%] max-w-[280px] h-full p-4 text-white overflow-y-auto"
        onclick="event.stopPropagation()">
 
     <div class="text-center mb-4">
@@ -160,7 +161,8 @@
 </div>
   </div>
 </div>
-   <aside class="w-72 bg-[#1A2E5A] text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
+   <aside id="sidebar"
+class="sidebar-theme-chill w-72 text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
         <div class="p-4 border-b border-white/10 text-center">
             <div class="logo-glow w-20 h-20 mx-auto mb-4">
     <img src="logo.png" class="w-full h-full object-cover">
@@ -798,6 +800,67 @@ class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-cent
             </div>
 
             <!-- THEME 4 -->
+            <!-- SIDEBAR THEMES TITLE -->
+
+<div class="col-span-full mt-8 mb-2">
+
+<h3 class="text-xl font-black text-slate-700">
+Sidebar Themes
+</h3>
+
+</div>
+
+<!-- RASPBERRY -->
+
+<div onclick="changeSidebarTheme('sidebar-theme-raspberry')"
+class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+<div class="h-28 bg-gradient-to-r from-pink-300 to-pink-500"></div>
+
+<div class="p-3 font-bold text-center">
+Raspberry Beret
+</div>
+
+</div>
+
+<!-- CHILL -->
+
+<div onclick="changeSidebarTheme('sidebar-theme-chill')"
+class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+<div class="h-28 bg-gradient-to-r from-emerald-700 to-cyan-700"></div>
+
+<div class="p-3 font-bold text-center">
+Chill Vibes
+</div>
+
+</div>
+
+<!-- SLACKR -->
+
+<div onclick="changeSidebarTheme('sidebar-theme-slackr')"
+class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+<div class="h-28 bg-gradient-to-r from-pink-300 to-sky-400"></div>
+
+<div class="p-3 font-bold text-center">
+Slackr
+</div>
+
+</div>
+
+<!-- FOREST -->
+
+<div onclick="changeSidebarTheme('sidebar-theme-forest')"
+class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+
+<div class="h-28 bg-gradient-to-r from-lime-700 to-amber-900"></div>
+
+<div class="p-3 font-bold text-center">
+Forest Floor
+</div>
+
+</div>
             <div onclick="changeTheme('theme-purple')"
                 class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
 
