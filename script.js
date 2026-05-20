@@ -1157,7 +1157,8 @@ function changeSidebarTheme(theme){
         'sidebar-theme-forest',
         'sidebar-theme-slackr',
         'sidebar-theme-seaglass',
-        'sidebar-theme-lemon'
+        'sidebar-theme-lemon',
+        'sidebar-theme-navypro',
     ];
 
     allThemes.forEach(t => {
