@@ -171,26 +171,6 @@ body{
 /* SIDEBAR THEMES */
 /* ========================= */
 
-.sidebar-theme-ocean aside{
-    background:
-    linear-gradient(180deg,#0f766e 0%,#0f766e 20%,#115e59 50%,#134e4a 100%);
-}
-
-.sidebar-theme-dark aside{
-    background:
-    linear-gradient(180deg,#1e293b 0%,#0f172a 50%,#020617 100%);
-}
-
-.sidebar-theme-green aside{
-    background:
-    linear-gradient(180deg,#059669 0%,#047857 40%,#065f46 100%);
-}
-
-.sidebar-theme-purple aside{
-    background:
-    linear-gradient(180deg,#c026d3 0%,#9333ea 40%,#6b21a8 100%);
-}
-
 .sidebar-theme-raspberry aside{
     background:
     linear-gradient(180deg,#e11d48 0%,#fb7185 100%);
