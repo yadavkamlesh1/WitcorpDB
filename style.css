@@ -238,7 +238,7 @@ body{
 }
 /* ===== NAVY PRO SIDEBAR ===== */
 
-.sidebar-theme-navypro aside{
+.sidebar-theme-navypro{
     background:
     linear-gradient(
     180deg,
@@ -254,7 +254,7 @@ body{
     box-shadow:
     10px 0 30px rgba(0,0,0,0.25);
 }
-.sidebar-theme-original aside{
+.sidebar-theme-original{
     background:
     linear-gradient(
     180deg,
@@ -269,8 +269,12 @@ body{
 
     box-shadow:
     8px 0 25px rgba(0,0,0,0.25);
+
+    position: relative;
+    overflow: hidden;
 }
-.sidebar-theme-original aside::before{
+
+.sidebar-theme-original::before{
     content:"";
     position:absolute;
     inset:0;
