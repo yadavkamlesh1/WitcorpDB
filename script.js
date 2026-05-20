@@ -1134,3 +1134,61 @@ window.addEventListener('DOMContentLoaded', () => {
     fetchNotifications();
 
 });
+/* ========================= */
+/* SIDEBAR THEME SYSTEM */
+/* ========================= */
+
+function changeSidebarTheme(theme){
+
+    const sidebar =
+    document.getElementById('sidebar');
+
+    const mobileSidebar =
+    document.getElementById('mobileSidebar');
+
+    const allThemes = [
+        'sidebar-theme-ocean',
+        'sidebar-theme-dark',
+        'sidebar-theme-green',
+        'sidebar-theme-purple',
+        'sidebar-theme-raspberry',
+        'sidebar-theme-mint',
+        'sidebar-theme-chill',
+        'sidebar-theme-forest',
+        'sidebar-theme-slackr',
+        'sidebar-theme-seaglass',
+        'sidebar-theme-lemon'
+    ];
+
+    allThemes.forEach(t => {
+
+        sidebar.classList.remove(t);
+
+        mobileSidebar.classList.remove(t);
+
+    });
+
+    sidebar.classList.add(theme);
+
+    mobileSidebar.classList.add(theme);
+
+    localStorage.setItem(
+        'sidebarTheme',
+        theme
+    );
+}
+
+/* LOAD SAVED SIDEBAR THEME */
+
+window.addEventListener('load', ()=>{
+
+    const saved =
+    localStorage.getItem('sidebarTheme');
+
+    if(saved){
+
+        changeSidebarTheme(saved);
+
+    }
+
+});
