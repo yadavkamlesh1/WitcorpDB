@@ -87,6 +87,8 @@
                     </tr>`;
             });
         }
+console.log("PAYLOAD:", payload);
+console.log("ID:", id);
 
         async function handleSubmit() {
             const id = document.getElementById('editId').value;
