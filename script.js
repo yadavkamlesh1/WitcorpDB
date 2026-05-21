@@ -1077,7 +1077,6 @@ function renderNotifications() {
         list.innerHTML += `
 
             <div
-                <div
     onclick="openNotification(${n.id}, '${n.type}', '${n.reference || ''}')"
     class="p-4 cursor-pointer border-b border-slate-100 transition-all hover:bg-slate-50
     ${!n.is_read ? 'bg-blue-50' : 'bg-white'}
