@@ -380,7 +380,9 @@ if (
     PT: "Professional Tax",
     TDS: "TDS Compliance",
     DIRECTORKYC: "Director KYC",
-    UDIN: "UDIN/Certification",  
+    UDIN: "UDIN/Certification", 
+    FOOD: "Food License", 
+    MSME: "MSME Certification",
     PAYROLL: "Payroll",
     REPORTS: "Reports"
                     
@@ -396,8 +398,13 @@ document.getElementById('filterTitle').innerText =
             const filtered = allRecords.filter(r => 
     r.client_name?.toLowerCase().includes(q) ||
     r.service_detail?.toLowerCase().includes(q) ||
-    r.assigned_staff?.toLowerCase().includes(q)
+    r.assigned_staff?.toLowerCase().includes(q) ||
+    r.service_category?.toLowerCase().includes(q) ||
+    r.status?.toLowerCase().includes(q) ||
+    r.alloted_by?.toLowerCase().includes(q)
 );
+                renderTable(filtered, 'filterTableBody');
+}
             if (query.trim() !== "") {
                 showSection('filterView');
                 document.getElementById('filterTitle').innerText = `Results for: "${query}"`;
