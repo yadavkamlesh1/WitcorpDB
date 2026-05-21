@@ -168,6 +168,15 @@ class="sidebar-theme-chill w-[75%] max-w-[280px] h-full p-4 text-white overflow-
 <button onclick="filterByField('service_category','DIRECTOR KYC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
     Director KYC
 </button>
+    <button onclick="filterByField('service_category','UDIN');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    UDIN/Certification
+</button>
+     <button onclick="filterByField('service_category','Payroll');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    Payroll
+</button>
+     <button onclick="filterByField('service_category','Reports');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
+    Reports
+</button>
 
 </div>
 
@@ -265,6 +274,15 @@ class="sidebar-theme-chill w-72 text-white flex flex-col shadow-2xl z-50 hidden 
 
 <button onclick="filterByField('service_category', 'DIRECTOR KYC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
     <i class="fas fa-id-card w-5 text-pink-400"></i> Director KYC
+</button>
+<button onclick="filterByField('service_category', 'UDIN')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <i class="fas fa-id-card w-5 text-pink-400"></i> UDIN/Certification
+</button>
+<button onclick="filterByField('service_category', 'PAYROLL')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <i class="fas fa-id-card w-5 text-pink-400"></i> Payroll
+</button>
+<button onclick="filterByField('service_category', 'REPORTS')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <i class="fas fa-id-card w-5 text-pink-400"></i> Reports
 </button>
         </nav>
 
@@ -466,6 +484,9 @@ class="sidebar-theme-chill w-72 text-white flex flex-col shadow-2xl z-50 hidden 
                             <option value="PT">Professional Tax</option>
                             <option value="TDS">TDS Compliance</option>
                             <option value="DIRECTOR KYC">Director KYC</option>
+                            <option value="UDIN">UDIN/Certification</option>
+                            <option value="PAYROLL">Payroll</option>
+                            <option value="REPORTS">Reports</option>
                         </select>
                     </div>
                     <div class="space-y-3">
