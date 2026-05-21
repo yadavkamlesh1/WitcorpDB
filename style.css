@@ -5,7 +5,10 @@ body{
 body.menu-open {
       overflow: hidden;
     }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F4F6F9; scroll-behavior: smooth;
+        body{
+    font-family: Calibri, sans-serif;
+    background-color: #F4F6F9;
+    scroll-behavior: smooth;
 }
         
         /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
@@ -237,30 +240,4 @@ body{
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-}
-
-/* PROFESSIONAL TABLE FONT */
-
-table th{
-    font-family: Calibri, sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-table td{
-    font-family: Calibri, sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    color: #475569;
-}
-
-/* REMARKS LOOK */
-
-table td:nth-child(9){
-    line-height: 1.5;
-    color: #52525b;
-}
-
-#appScreen {
-    overflow-x: hidden;
 }
