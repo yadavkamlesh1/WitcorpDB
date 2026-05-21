@@ -96,33 +96,48 @@ class="sidebar-theme-chill w-[75%] max-w-[280px] h-full p-4 text-white overflow-
   <div class="mt-4 text-[10px] text-blue-200 uppercase">
     Managements
   </div>
-    <!-- BOOKKEEPING START -->
+    <!-- Accounting Hub START -->
 
 <div class="mt-2">
 
-    <button onclick="toggleBookkeeping()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm">
-        <i class="fas fa-book mr-2"></i> Bookkeeping
+    <button onclick="toggleAccountingHub()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm">
+        <i class="fas fa-book mr-2"></i> Accounting Hub
         </button>
-       <div id="bookkeepingMenu" class="hidden mt-2 space-y-2">
+       <div id="accountinghubMenu" class="hidden mt-2 space-y-2">
 
-     <button onclick="filterByField('service_category', 'Current Liabilities')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
-         Current Liabilities
+     <button onclick="filterByField('service_category', 'Sales')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Sales
          </button>
 
-      <button onclick="filterByField('service_category', 'Loans')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
-         Loans
+      <button onclick="filterByField('service_category', 'Purchases')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Purchases
          </button>
 
-      <button onclick="filterByField('service_category', 'Suspense Account')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
-         Suspense Account
+      <button onclick="filterByField('service_category', 'Sundry Debtors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Sundry Debtors
          </button>
 
-      <button onclick="filterByField('service_category', 'Fixed Assets')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
-         Fixed Assets
+      <button onclick="filterByField('service_category', 'Sundry Creditors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Sundry Creditors
          </button>
 
-       <button onclick="filterByField('service_category', 'P/L Account')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
-         P/L Account
+       <button onclick="filterByField('service_category', 'Payroll Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+         Payroll Entries
+         </button>
+           <button onclick="filterByField('service_category', 'Bank Statement')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+          Bank Statement
+         </button>
+           <button onclick="filterByField('service_category', 'GST Transfer Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+          GST Transfer Entries
+         </button>
+           <button onclick="filterByField('service_category', 'Depreciation Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+          Depreciation Entries
+         </button>
+           <button onclick="filterByField('service_category', 'TDS Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+          TDS Entries
+         </button>
+           <button onclick="filterByField('service_category', 'Miscellaneous Ledgers')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold">
+          Miscellaneous Ledgers
          </button>
 
     </div>
@@ -188,35 +203,50 @@ class="sidebar-theme-chill w-72 text-white flex flex-col shadow-2xl z-50 hidden 
                 <i class="fas fa-key w-5 text-cyan-300"></i> DSC Status
             </button>
             <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Managements</div>
-            <!-- BOOKKEEPING START -->
+            <!-- AccountingHub START -->
 
 <div class="mt-2">
 
-    <button onclick="toggleBookkeepingDesktop()" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-book w-5 text-white"></i> Bookkeeping
+    <button onclick="toggleAccountingHubDesktop()" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+    <i class="fas fa-book w-5 text-white"></i> Accounting Hub
     </button>
-    <div id="bookkeepingDesktopMenu" class="hidden mt-2 space-y-2 px-2">
-<button onclick="filterByField('service_category', 'Current Liabilities')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Current Liabilities
+    <div id="accountinghubDesktopMenu" class="hidden mt-2 space-y-2 px-2">
+<button onclick="filterByField('service_category', 'Sales')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Sales
             </button>
-<button onclick="filterByField('service_category', 'Loans')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Loans
+<button onclick="filterByField('service_category', 'Purchases')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Purchases
             </button>
-<button onclick="filterByField('service_category', 'Suspense Account')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Suspense Account
+<button onclick="filterByField('service_category', 'Sundry Debtors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Sundry Debtors
             </button>
-<button onclick="filterByField('service_category', 'Fixed Assets')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Fixed Assets
+<button onclick="filterByField('service_category', 'Sundry Creditors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Sundry Creditors
             </button>
-<button onclick="filterByField('service_category', 'P/L Account')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            P/L Account
+<button onclick="filterByField('service_category', 'Payroll Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Payroll Entries
+            </button>
+        <button onclick="filterByField('service_category', 'Bank Statement')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Bank Statement
+            </button>
+        <button onclick="filterByField('service_category', 'GST Transfer Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            GST Transfer Entries
+            </button>
+        <button onclick="filterByField('service_category', 'Depreciation Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Depreciation Entries
+            </button>
+        <button onclick="filterByField('service_category', 'TDS Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            TDS Entries
+            </button>
+        <button onclick="filterByField('service_category', 'Miscellaneous Ledgers')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
+            Miscellaneous Ledgers
             </button>
 
     </div>
 
 </div>
 
-<!-- BOOKKEEPING END -->
+<!-- Accounting Hub END -->
             <button onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
                 <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> GST Management
             </button>
@@ -420,11 +450,16 @@ class="sidebar-theme-chill w-72 text-white flex flex-col shadow-2xl z-50 hidden 
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
                         <select id="serviceCategory" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                            <option value="Current Liabilities">Current Liabilities</option>
-                            <option value="Loans">Loans</option>
-                            <option value="Suspense Account">Suspense Account</option>
-                            <option value="Fixed Assets">Fixed Assets</option>
-                            <option value="P/L Account">P/L Account</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Purchases">Purchases</option>
+                            <option value="Sundry Debtors">Sundry Debtors</option>
+                            <option value="Sundry Creditors">Sundry Creditors</option>
+                            <option value="Payroll Entries">Payroll Entries</option>
+                            <option value="Bank Statement">Bank Statement</option>
+                            <option value="GST Transfer Entries">GST Transfer Entries</option>
+                            <option value="Depreciation Entries">Depreciation Entries</option>
+                            <option value="TDS Entries">TDS Entries</option>
+                            <option value="Miscellaneous Ledgers">Miscellaneous Ledgers</option>
                             <option value="GST">GST Management</option>
                             <option value="ROC">ROC / MCA Desk</option>
                             <option value="IT">Income Tax</option>
