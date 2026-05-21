@@ -310,18 +310,18 @@
                 fetchVault();
             }
         }
-        function toggleBookkeeping() {
+        function toggleAccountingHub() {
 
     const menu =
-        document.getElementById('bookkeepingMenu');
+        document.getElementById('accountinghubMenu');
 
     menu.classList.toggle('hidden');
 
 }
-        function toggleBookkeepingDesktop() {
+        function toggleAccountingHubDesktop() {
 
     const menu =
-        document.getElementById('bookkeepingDesktopMenu');
+        document.getElementById('accountinghubDesktopMenu');
 
     menu.classList.toggle('hidden');
 
@@ -364,11 +364,16 @@ if (
             showSection('filterView');
             let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
             const titles = {
-    "Current Liabilities": "Current Liabilities",
-    "Loans": "Loans Management",
-    "Suspense Account": "Suspense Account",
-    "Fixed Assets": "Fixed Assets Register",
-    "P/L Account": "Profit & Loss Account",
+    "Sales": "Sales",
+    "Purchases": "Purchases",
+    "Sundry Debtors": "Sundry Debtors",
+    "Sundry Creditors": "Sundry Creditors",
+    "Payroll Entries": "Payroll Entries",
+    "Bank Statement": "Bank Statement",
+    "GST Transfer Entries": "GST Transfer Entries",
+    "Depreciation Entries": "Depreciation Entries",
+    "TDS Entries": "TDS Entries",
+    "Miscellaneous Ledgers": "Miscellaneous Ledgers",   
     GST: "GST Management",
     ROC: "ROC / MCA Desk",
     IT: "Income Tax",
