@@ -1102,25 +1102,39 @@ supabaseClient
         table: 'witcorp_notifications'
     },
 
-    async (payload) => {
+   async (payload) => {
 
-        console.log("NEW NOTIFICATION:", payload);
+    console.log("NEW NOTIFICATION:", payload);
 
-        allNotifications.unshift(payload.new);
+    allNotifications.unshift(payload.new);
 
-        renderNotifications();
+    renderNotifications();
 
-        // SOUND
-        const audio = new Audio(
-            'https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3'
+    // SOUND
+    const audio = new Audio(
+        'https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3'
+    );
+
+    audio.play();
+
+    // PUSH NOTIFICATION
+    navigator.serviceWorker.ready.then(reg => {
+
+        reg.showNotification(
+            payload.new.title || "New Update",
+            {
+                body: payload.new.message || "Database updated",
+                icon: "./logo.png",
+                badge: "./logo.png"
+            }
         );
 
-        audio.play();
+    });
 
-        // AUTO REFRESH
-        fetchRecords(true);
+    // AUTO REFRESH
+    fetchRecords(true);
 
-    }
+}
 
 )
 
