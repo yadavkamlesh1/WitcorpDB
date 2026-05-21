@@ -374,12 +374,16 @@ if (
     "Depreciation Entries": "Depreciation Entries",
     "TDS Entries": "TDS Entries",
     "Miscellaneous Ledgers": "Miscellaneous Ledgers",   
-    GST: "GST Management",
-    ROC: "ROC / MCA Desk",
+    GST: "GST Compliance",
+    ROC: "Corporate Compliance (ROC)",
     IT: "Income Tax",
     PT: "Professional Tax",
-    TDS: "TDS Management",
-    DIR3KYC: "DIR3 KYC"
+    TDS: "TDS Compliance",
+    DIRECTORKYC: "Director KYC",
+    UDIN: "UDIN/Certification",  
+    PAYROLL: "Payroll",
+    REPORTS: "Reports"
+                    
 };
 
 document.getElementById('filterTitle').innerText =
