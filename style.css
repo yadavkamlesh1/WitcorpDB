@@ -232,3 +232,35 @@ body{
     #1e3a8a 100%
     ) !important;
 }
+/* Table Responsive Scroll Fix */
+.scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* PROFESSIONAL TABLE FONT */
+
+table th{
+    font-family: Calibri, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+table td{
+    font-family: Calibri, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+}
+
+/* REMARKS LOOK */
+
+table td:nth-child(9){
+    line-height: 1.5;
+    color: #52525b;
+}
+
+#appScreen {
+    overflow-x: hidden;
+}
