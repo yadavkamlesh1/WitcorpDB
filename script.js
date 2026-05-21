@@ -403,8 +403,6 @@ document.getElementById('filterTitle').innerText =
     r.status?.toLowerCase().includes(q) ||
     r.alloted_by?.toLowerCase().includes(q)
 );
-                renderTable(filtered, 'filterTableBody');
-}
             if (query.trim() !== "") {
                 showSection('filterView');
                 document.getElementById('filterTitle').innerText = `Results for: "${query}"`;
