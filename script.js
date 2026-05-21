@@ -116,13 +116,10 @@
 
             if (!error) { 
                     await createNotification(
-
     id ? "Record Updated" : "New Record Added",
-
     `${payload.client_name} - ${payload.service_category} updated by ${currentUserName}`,
-
-    "record"
-
+    "record",
+    payload.client_name
 );
 
     alert(id ? "Record Updated!" : "Record Successfully Added!");
@@ -1014,7 +1011,12 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
 });
-async function createNotification(title, message, type = "info") {
+async function createNotification(
+    title,
+    message,
+    type = "info",
+    reference = ""
+) {
 
     await supabaseClient
         .from('witcorp_notifications')
@@ -1022,7 +1024,9 @@ async function createNotification(title, message, type = "info") {
             title,
             message,
             type,
-            created_by: currentUserName
+            reference,
+            created_by: currentUserName,
+            is_read: false
         }]);
 
 }
@@ -1051,7 +1055,10 @@ function renderNotifications() {
 
     list.innerHTML = "";
 
-    unreadCount = allNotifications.length;
+    const unread =
+        allNotifications.filter(n => !n.is_read);
+
+    unreadCount = unread.length;
 
     if(unreadCount > 0){
 
@@ -1059,13 +1066,22 @@ function renderNotifications() {
 
         count.innerText = unreadCount;
 
+    } else {
+
+        count.classList.add('hidden');
+
     }
 
     allNotifications.forEach(n => {
 
         list.innerHTML += `
 
-            <div class="p-4 hover:bg-slate-50">
+            <div
+                <div
+    onclick="openNotification(${n.id}, '${n.type}', '${n.reference || ''}')"
+    class="p-4 cursor-pointer border-b border-slate-100 transition-all hover:bg-slate-50
+    ${!n.is_read ? 'bg-blue-50' : 'bg-white'}
+    ${n.is_read ? 'opacity-60' : ''}">
 
                 <div class="font-black text-sm text-slate-800">
                     ${n.title}
@@ -1089,6 +1105,68 @@ function toggleNotificationPanel(){
 
     document.getElementById('notificationPanel')
     .classList.toggle('hidden');
+
+}
+async function openNotification(id, type, reference) {
+
+    // MARK AS READ
+
+    await supabaseClient
+        .from('witcorp_notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+
+    // LOCAL UPDATE
+
+    const target =
+        allNotifications.find(n => n.id === id);
+
+    if(target){
+
+        target.is_read = true;
+
+    }
+
+    renderNotifications();
+
+    // OPEN RELATED SECTION
+
+    if(type === "record"){
+
+        showSection('dashboard');
+
+        handleSearch(reference);
+
+    }
+
+    if(type === "client"){
+
+        showSection('clientManagement');
+
+        searchClients(reference);
+
+    }
+
+    if(type === "vault"){
+
+        showSection('vaultManagement');
+
+        searchVault(reference);
+
+    }
+
+    if(type === "dsc"){
+
+        showSection('dscManagement');
+
+        searchDSC(reference);
+
+    }
+
+    // CLOSE PANEL
+
+    document.getElementById('notificationPanel')
+    .classList.add('hidden');
 
 }
 supabaseClient
