@@ -235,9 +235,3 @@ body{
     #1e3a8a 100%
     ) !important;
 }
-/* Table Responsive Scroll Fix */
-.scroll-container {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
