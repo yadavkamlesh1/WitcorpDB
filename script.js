@@ -1333,3 +1333,143 @@ window.addEventListener('load', ()=>{
     }
 
 });
+// OPEN SETTINGS
+
+function openCompanySettings(){
+
+document
+.getElementById("companySettingsModal")
+.classList.remove("hidden");
+
+loadCompanySettings();
+
+}
+
+// CLOSE SETTINGS
+
+function closeCompanySettings(){
+
+document
+.getElementById("companySettingsModal")
+.classList.add("hidden");
+
+}
+
+// SAVE SETTINGS
+
+function saveCompanySettings(){
+
+const settings = {
+
+company_name:
+document.getElementById("company_name").value,
+
+tagline:
+document.getElementById("tagline").value,
+
+logo_url:
+document.getElementById("logo_url").value,
+
+company_email:
+document.getElementById("company_email").value,
+
+company_phone:
+document.getElementById("company_phone").value,
+
+company_address:
+document.getElementById("company_address").value
+
+};
+
+localStorage.setItem(
+"companySettings",
+JSON.stringify(settings)
+);
+
+applyCompanySettings();
+
+alert("Settings Saved");
+
+closeCompanySettings();
+
+}
+
+// LOAD SETTINGS
+
+function loadCompanySettings(){
+
+const settings =
+JSON.parse(localStorage.getItem("companySettings")) || {};
+
+document.getElementById("company_name").value =
+settings.company_name || "";
+
+document.getElementById("tagline").value =
+settings.tagline || "";
+
+document.getElementById("logo_url").value =
+settings.logo_url || "";
+
+document.getElementById("company_email").value =
+settings.company_email || "";
+
+document.getElementById("company_phone").value =
+settings.company_phone || "";
+
+document.getElementById("company_address").value =
+settings.company_address || "";
+
+}
+
+// APPLY SETTINGS
+
+function applyCompanySettings(){
+
+const settings =
+JSON.parse(localStorage.getItem("companySettings")) || {};
+
+
+// COMPANY NAME
+
+document.querySelectorAll("h1").forEach(el => {
+
+if(settings.company_name){
+
+el.innerText = settings.company_name;
+
+}
+
+});
+
+
+// TAGLINE
+
+document.querySelectorAll(".motto-text").forEach(el => {
+
+if(settings.tagline){
+
+el.innerText = settings.tagline;
+
+}
+
+});
+
+
+// LOGO
+
+document.querySelectorAll("img[src='logo.png']")
+.forEach(img => {
+
+if(settings.logo_url){
+
+img.src = settings.logo_url;
+
+}
+
+});
+
+}
+
+// AUTO LOAD
+
+applyCompanySettings();
