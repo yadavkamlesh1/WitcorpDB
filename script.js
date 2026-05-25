@@ -46,7 +46,9 @@
         renderTable(allRecords, 'mainTableBody');
 
         updateStats(allRecords);
-        enableGlobalSuggestions();
+        setTimeout(() => {
+    enableGlobalSuggestions();
+}, 500);
 
         recordPage++;
 
@@ -1336,9 +1338,21 @@ window.addEventListener('load', ()=>{
 });
 function enableGlobalSuggestions() {
 
-    const allInputs =
-        document.querySelectorAll('input[type="text"]');
+    // datalist create agar exist nahi kare
+    let datalist =
+        document.getElementById("globalSuggestions");
 
+    if (!datalist) {
+
+        datalist = document.createElement("datalist");
+
+        datalist.id = "globalSuggestions";
+
+        document.body.appendChild(datalist);
+
+    }
+
+    // all suggestions
     let allSuggestions = [];
 
     allRecords.forEach(record => {
@@ -1359,31 +1373,27 @@ function enableGlobalSuggestions() {
 
     });
 
+    // duplicate remove
     allSuggestions =
         [...new Set(allSuggestions)];
 
-    document.getElementById(
-        "globalSuggestions"
-    ).innerHTML = allSuggestions.map(v =>
+    // fill datalist
+    datalist.innerHTML =
+        allSuggestions.map(v =>
+            `<option value="${v}">`
+        ).join("");
 
-        `<option value="${v}">`
+    // ALL INPUTS + TEXTAREAS
+    const fields = document.querySelectorAll(
+        'input[type="text"], textarea'
+    );
 
-    ).join("");
+    fields.forEach(field => {
 
-    allInputs.forEach(input => {
-
-        if (
-            input.type !== "password" &&
-            input.type !== "email" &&
-            input.type !== "date"
-        ) {
-
-            input.setAttribute(
-                "list",
-                "globalSuggestions"
-            );
-
-        }
+        field.setAttribute(
+            "list",
+            "globalSuggestions"
+        );
 
     });
 
