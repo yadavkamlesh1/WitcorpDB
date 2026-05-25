@@ -1338,63 +1338,90 @@ window.addEventListener('load', ()=>{
 });
 function enableGlobalSuggestions() {
 
-    // datalist create agar exist nahi kare
-    let datalist =
-        document.getElementById("globalSuggestions");
+    // CLIENT NAME
+    createSuggestionList(
+        "clientNameSuggestions",
+        "clientName",
+        allRecords.map(r => r.client_name)
+    );
 
+    // SERVICE CATEGORY
+    createSuggestionList(
+        "serviceCategorySuggestions",
+        "serviceCategory",
+        allRecords.map(r => r.service_category)
+    );
+
+    // SERVICE DETAIL
+    createSuggestionList(
+        "serviceDetailSuggestions",
+        "serviceDetail",
+        allRecords.map(r => r.service_detail)
+    );
+
+    // ASSIGNED STAFF
+    createSuggestionList(
+        "assignedStaffSuggestions",
+        "assignedStaff",
+        allRecords.map(r => r.assigned_staff)
+    );
+
+    // ALLOTED BY
+    createSuggestionList(
+        "allotedBySuggestions",
+        "allotedBy",
+        allRecords.map(r => r.alloted_by)
+    );
+
+}
+
+function createSuggestionList(
+    listId,
+    inputId,
+    values
+) {
+
+    let datalist =
+        document.getElementById(listId);
+
+    // CREATE IF NOT EXIST
     if (!datalist) {
 
-        datalist = document.createElement("datalist");
+        datalist =
+            document.createElement("datalist");
 
-        datalist.id = "globalSuggestions";
+        datalist.id = listId;
 
         document.body.appendChild(datalist);
 
     }
 
-    // all suggestions
-    let allSuggestions = [];
+    // REMOVE EMPTY + DUPLICATES
+    values = [...new Set(
+        values.filter(v =>
+            v &&
+            typeof v === "string" &&
+            v.trim() !== ""
+        )
+    )];
 
-    allRecords.forEach(record => {
-
-        Object.values(record).forEach(value => {
-
-            if (
-                typeof value === "string" &&
-                value.trim() !== "" &&
-                value.length > 2
-            ) {
-
-                allSuggestions.push(value.trim());
-
-            }
-
-        });
-
-    });
-
-    // duplicate remove
-    allSuggestions =
-        [...new Set(allSuggestions)];
-
-    // fill datalist
+    // FILL OPTIONS
     datalist.innerHTML =
-        allSuggestions.map(v =>
-            `<option value="${v}">`
+        values.map(v =>
+            `<option value="${v}"></option>`
         ).join("");
 
-    // ALL INPUTS + TEXTAREAS
-    const fields = document.querySelectorAll(
-        'input[type="text"], textarea'
-    );
+    // ATTACH TO INPUT
+    const input =
+        document.getElementById(inputId);
 
-    fields.forEach(field => {
+    if (input) {
 
-        field.setAttribute(
+        input.setAttribute(
             "list",
-            "globalSuggestions"
+            listId
         );
 
-    });
+    }
 
 }
