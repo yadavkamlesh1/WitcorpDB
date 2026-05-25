@@ -46,6 +46,7 @@
         renderTable(allRecords, 'mainTableBody');
 
         updateStats(allRecords);
+            setupPredictions();
         recordPage++;
 
         const btn = document.getElementById("loadMoreBtn");
@@ -169,6 +170,7 @@
             const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true }).limit(300);
             if (error) return;
             allClients = data;
+                setupPredictions();
             const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
             Object.values(containers).forEach(id => document.getElementById(id).innerHTML = "");
             
@@ -242,6 +244,7 @@
             const { data, error } = await supabaseClient.from('witcorp_credentials').select('*').limit(300);
             if (error) return;
             allVault = data;
+           setupPredictions();
             const tbody = document.getElementById('vaultTableBody');
             tbody.innerHTML = "";
             data.forEach(v => {
@@ -726,6 +729,7 @@ supabaseClient.auth.getSession().then(({ data }) => {
     }
 
     allDSC = data || [];
+    setupPredictions();
 
     renderDSC(allDSC);
 }
@@ -1332,3 +1336,106 @@ window.addEventListener('load', ()=>{
     }
 
 });
+/* ========================= */
+/* GLOBAL AUTOCOMPLETE SYSTEM */
+/* ========================= */
+
+function setupPredictions() {
+
+    // CLIENT NAMES
+    const clientList =
+        document.getElementById('clientSuggestions');
+
+    const uniqueClients =
+        [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
+
+    clientList.innerHTML = "";
+
+    uniqueClients.forEach(name => {
+
+        clientList.innerHTML +=
+            `<option value="${name}">`;
+
+    });
+
+    // SERVICE DETAILS
+    const serviceList =
+        document.getElementById('serviceSuggestions');
+
+    const uniqueServices =
+        [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
+
+    serviceList.innerHTML = "";
+
+    uniqueServices.forEach(name => {
+
+        serviceList.innerHTML +=
+            `<option value="${name}">`;
+
+    });
+
+    // STAFF
+    const staffList =
+        document.getElementById('staffSuggestions');
+
+    const uniqueStaff =
+        [...new Set(allRecords.map(r => r.assigned_staff).filter(Boolean))];
+
+    staffList.innerHTML = "";
+
+    uniqueStaff.forEach(name => {
+
+        staffList.innerHTML +=
+            `<option value="${name}">`;
+
+    });
+
+    // ALLOTED BY
+    const allotList =
+        document.getElementById('allotedSuggestions');
+
+    const uniqueAlloted =
+        [...new Set(allRecords.map(r => r.alloted_by).filter(Boolean))];
+
+    allotList.innerHTML = "";
+
+    uniqueAlloted.forEach(name => {
+
+        allotList.innerHTML +=
+            `<option value="${name}">`;
+
+    });
+
+    // DSC COMPANY
+    const companyList =
+        document.getElementById('companySuggestions');
+
+    const uniqueCompany =
+        [...new Set(allDSC.map(d => d.company_name).filter(Boolean))];
+
+    companyList.innerHTML = "";
+
+    uniqueCompany.forEach(name => {
+
+        companyList.innerHTML +=
+            `<option value="${name}">`;
+
+    });
+
+    // VAULT CATEGORY
+    const vaultList =
+        document.getElementById('vaultCategorySuggestions');
+
+    const uniqueVault =
+        [...new Set(allVault.map(v => v.category).filter(Boolean))];
+
+    vaultList.innerHTML = "";
+
+    uniqueVault.forEach(name => {
+
+        vaultList.innerHTML +=
+            `<option value="${name}">`;
+
+    });
+
+}
