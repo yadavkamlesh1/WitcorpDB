@@ -477,7 +477,7 @@ class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-wh
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Client Name</label>
-                        <input type="text" id="clientName" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
+                        <input type="text" id="clientName" list="clientSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
                     </div>
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
@@ -507,11 +507,11 @@ class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-wh
                     </div>
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Service Detail</label>
-                        <input type="text" id="serviceDetail" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                        <input type="text" id="serviceDetail" list="serviceSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
                     </div>
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Assign Staff</label>
-                        <input type="text" id="assignedStaff" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                        <input type="text" id="assignedStaff" list="staffSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
                     </div>
                     <div class="space-y-3">
 
@@ -519,9 +519,7 @@ class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-wh
         Alloted By
     </label>
 
-    <input type="text"
-        id="allotedBy"
-        class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+    <input type="text" id="allotedBy" list="allotedSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
 
 </div>
                     <div class="space-y-3">
@@ -646,7 +644,7 @@ class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-wh
                 <input type="hidden" id="vEditId">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <input type="text" id="vClient" placeholder="Select Client" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                    <input type="text" id="vCat" placeholder="System/Portal Category" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+                    <input type="text" id="vCat" list="vaultCategorySuggestions" placeholder="System/Portal Category" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
                     <input type="text" id="vUser" placeholder="Login ID" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
                     <input type="text" id="vPass" placeholder="Access Password" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
                 </div>
@@ -697,7 +695,7 @@ class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-wh
         <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
 
             <input type="text"
-                id="dCompany"
+                id="dCompany" list="companySuggestions"
                 placeholder="Company Name"
                 class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
 
@@ -1057,5 +1055,18 @@ Original Blue
     </div>
 
 </div>
+    <!-- GLOBAL AUTOCOMPLETE LISTS -->
+
+<datalist id="clientSuggestions"></datalist>
+
+<datalist id="serviceSuggestions"></datalist>
+
+<datalist id="staffSuggestions"></datalist>
+
+<datalist id="allotedSuggestions"></datalist>
+
+<datalist id="companySuggestions"></datalist>
+
+<datalist id="vaultCategorySuggestions"></datalist>
 </body>
 </html>
