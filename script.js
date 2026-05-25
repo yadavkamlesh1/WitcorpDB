@@ -46,6 +46,7 @@
         renderTable(allRecords, 'mainTableBody');
 
         updateStats(allRecords);
+        enableGlobalSuggestions();
 
         recordPage++;
 
@@ -1333,3 +1334,57 @@ window.addEventListener('load', ()=>{
     }
 
 });
+function enableGlobalSuggestions() {
+
+    const allInputs =
+        document.querySelectorAll('input[type="text"]');
+
+    let allSuggestions = [];
+
+    allRecords.forEach(record => {
+
+        Object.values(record).forEach(value => {
+
+            if (
+                typeof value === "string" &&
+                value.trim() !== "" &&
+                value.length > 2
+            ) {
+
+                allSuggestions.push(value.trim());
+
+            }
+
+        });
+
+    });
+
+    allSuggestions =
+        [...new Set(allSuggestions)];
+
+    document.getElementById(
+        "globalSuggestions"
+    ).innerHTML = allSuggestions.map(v =>
+
+        `<option value="${v}">`
+
+    ).join("");
+
+    allInputs.forEach(input => {
+
+        if (
+            input.type !== "password" &&
+            input.type !== "email" &&
+            input.type !== "date"
+        ) {
+
+            input.setAttribute(
+                "list",
+                "globalSuggestions"
+            );
+
+        }
+
+    });
+
+}
