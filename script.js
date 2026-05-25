@@ -46,10 +46,6 @@
         renderTable(allRecords, 'mainTableBody');
 
         updateStats(allRecords);
-        setTimeout(() => {
-    enableGlobalSuggestions();
-}, 500);
-
         recordPage++;
 
         const btn = document.getElementById("loadMoreBtn");
@@ -1336,92 +1332,3 @@ window.addEventListener('load', ()=>{
     }
 
 });
-function enableGlobalSuggestions() {
-
-    // CLIENT NAME
-    createSuggestionList(
-        "clientNameSuggestions",
-        "clientName",
-        allRecords.map(r => r.client_name)
-    );
-
-    // SERVICE CATEGORY
-    createSuggestionList(
-        "serviceCategorySuggestions",
-        "serviceCategory",
-        allRecords.map(r => r.service_category)
-    );
-
-    // SERVICE DETAIL
-    createSuggestionList(
-        "serviceDetailSuggestions",
-        "serviceDetail",
-        allRecords.map(r => r.service_detail)
-    );
-
-    // ASSIGNED STAFF
-    createSuggestionList(
-        "assignedStaffSuggestions",
-        "assignedStaff",
-        allRecords.map(r => r.assigned_staff)
-    );
-
-    // ALLOTED BY
-    createSuggestionList(
-        "allotedBySuggestions",
-        "allotedBy",
-        allRecords.map(r => r.alloted_by)
-    );
-
-}
-
-function createSuggestionList(
-    listId,
-    inputId,
-    values
-) {
-
-    let datalist =
-        document.getElementById(listId);
-
-    // CREATE IF NOT EXIST
-    if (!datalist) {
-
-        datalist =
-            document.createElement("datalist");
-
-        datalist.id = listId;
-
-        document.body.appendChild(datalist);
-
-    }
-
-    // REMOVE EMPTY + DUPLICATES
-    values = [...new Set(
-        values.filter(v =>
-            v &&
-            typeof v === "string" &&
-            v.trim() !== ""
-        )
-    )];
-
-    // FILL OPTIONS
-    datalist.innerHTML =
-        values.map(v =>
-            `<option value="${v}"></option>`
-        ).join("");
-
-    // ATTACH TO INPUT
-    const input =
-        document.getElementById(inputId);
-
-    if (input) {
-
-        input.setAttribute(
-            "list",
-            listId
-        );
-
-    }
-
-}
