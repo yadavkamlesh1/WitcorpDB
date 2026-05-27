@@ -531,7 +531,6 @@ function showApp(user) {
 
   document.getElementById('appScreen').classList.remove('hidden');
   document.getElementById('appScreen').classList.add('flex');
-  setProfileAvatar(user);
 
   const gmailEl = document.getElementById('userGmail');
 
@@ -1520,38 +1519,3 @@ window.addEventListener('load', async () => {
     }
 
 });
-function setProfileAvatar(user) {
-
-    const img = document.getElementById("profileImage");
-    const initial = document.getElementById("profileInitial2");
-
-    const email = user?.email || "";
-    const firstLetter = email.charAt(0).toUpperCase();
-
-    // reset UI
-    img.classList.add("hidden");
-    initial.classList.remove("hidden");
-    initial.innerText = firstLetter;
-
-    // 🔥 Google / Supabase avatar detection (IMPORTANT FIX)
-    const avatar =
-        user?.user_metadata?.avatar_url ||
-        user?.user_metadata?.picture ||
-        user?.user_metadata?.avatar ||
-        null;
-
-    if (avatar) {
-
-        img.src = avatar;
-
-        img.onload = () => {
-            img.classList.remove("hidden");
-            initial.classList.add("hidden");
-        };
-
-        img.onerror = () => {
-            img.classList.add("hidden");
-            initial.classList.remove("hidden");
-        };
-    }
-}
