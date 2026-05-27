@@ -1204,6 +1204,13 @@ supabaseClient
 
     renderNotifications();
 
+   // NOTIFICATION SETTING CHECK
+
+const notificationEnabled =
+    localStorage.getItem("notificationEnabled");
+
+if (notificationEnabled !== "off") {
+
     // SOUND
     const audio = new Audio(
         'https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3'
@@ -1225,6 +1232,7 @@ supabaseClient
 
     });
 
+}
     // AUTO REFRESH
     fetchRecords(true);
 
@@ -1334,6 +1342,7 @@ window.addEventListener('load', ()=>{
         changeSidebarTheme(savedSidebar);
 
     }
+        loadNotificationSetting();
 
 });
 /* ========================= */
@@ -1519,3 +1528,55 @@ window.addEventListener('load', async () => {
     }
 
 });
+/* ========================= */
+/* NOTIFICATION SOUND SETTING */
+/* ========================= */
+
+function loadNotificationSetting(){
+
+    const sound =
+        localStorage.getItem("notificationSound");
+
+    const status =
+        document.getElementById("notificationStatus");
+
+    if(sound === "off"){
+
+        status.innerText = "OFF";
+        status.classList.remove("text-green-600");
+        status.classList.add("text-red-500");
+
+    }else{
+
+        status.innerText = "ON";
+        status.classList.remove("text-red-500");
+        status.classList.add("text-green-600");
+
+    }
+
+}
+
+function toggleNotificationSetting(){
+
+    const current =
+        localStorage.getItem("notificationSound");
+
+    if(current === "off"){
+
+        localStorage.setItem(
+            "notificationSound",
+            "on"
+        );
+
+    }else{
+
+        localStorage.setItem(
+            "notificationSound",
+            "off"
+        );
+
+    }
+
+    loadNotificationSetting();
+
+}
