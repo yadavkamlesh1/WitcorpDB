@@ -1528,21 +1528,26 @@ function setProfileAvatar(user) {
     const email = user?.email || "";
     const firstLetter = email.charAt(0).toUpperCase();
 
-    // default state
+    // fallback first
     img.classList.add("hidden");
     initial.classList.remove("hidden");
     initial.innerText = firstLetter;
 
-    const avatar = user?.user_metadata?.avatar_url;
+    // 🔥 Google avatar multiple sources check
+    const avatar =
+        user?.user_metadata?.avatar_url ||
+        user?.user_metadata?.picture ||
+        user?.identities?.[0]?.identity_data?.avatar_url;
 
     if (avatar) {
 
         img.src = avatar;
 
-        img.classList.remove("hidden");
-        initial.classList.add("hidden");
+        img.onload = () => {
+            img.classList.remove("hidden");
+            initial.classList.add("hidden");
+        };
 
-        // 🔥 THIS IS THE EXACT PLACE
         img.onerror = () => {
             img.classList.add("hidden");
             initial.classList.remove("hidden");
