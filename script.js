@@ -1674,3 +1674,50 @@ document.getElementById("activityList").innerHTML =
 html || "<p>No activity found</p>";
 
 }
+function exportCSV(){
+
+let rows = allRecords || [];
+
+if(rows.length === 0){
+alert("No records found");
+return;
+}
+
+let csv =
+"Client,Category,Service,Staff,Status,Deadline\n";
+
+rows.forEach(r=>{
+
+csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.status || ""}","${r.deadline || ""}"\n`;
+
+});
+
+const blob = new Blob([csv], {
+type: "text/csv"
+});
+
+const a = document.createElement("a");
+
+a.href = URL.createObjectURL(blob);
+
+a.download = "WitcorpData.csv";
+
+a.click();
+
+saveActivity("Exported CSV Report");
+
+}
+function exportExcel(){
+
+exportCSV();
+
+saveActivity("Exported Excel Report");
+
+}
+function exportPDF(){
+
+window.print();
+
+saveActivity("Exported PDF Report");
+
+}
