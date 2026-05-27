@@ -7,6 +7,7 @@
         let allVault = [];
         let allDSC = [];
         let allNotifications = [];
+        let currentExportData = [];
         let unreadCount = 0;
         let currentUserEmail = "";
         let currentUserName = "";
@@ -65,6 +66,7 @@
     isFetchingRecords = false;
 }
         function renderTable(data, targetId) {
+                currentExportData = data;
             const tbody = document.getElementById(targetId);
             if (!tbody) return;
             tbody.innerHTML = data.length === 0 ? `<tr><td colspan="9" class="p-20 text-center text-slate-400 font-bold">No active records found.</td></tr>` : "";
@@ -1676,7 +1678,7 @@ html || "<p>No activity found</p>";
 }
 function exportCSV(){
 
-let rows = allRecords || [];
+let rows = currentExportData || [];
 
 if(rows.length === 0){
 alert("No records found");
@@ -1716,7 +1718,50 @@ saveActivity("Exported Excel Report");
 }
 function exportPDF(){
 
-window.print();
+const { jsPDF } = window.jspdf;
+
+const doc = new jsPDF("landscape");
+
+let rows = currentExportData || [];
+
+if(rows.length === 0){
+    alert("No records found");
+    return;
+}
+
+const tableData = rows.map(r => [
+
+    r.client_name || "",
+    r.service_category || "",
+    r.service_detail || "",
+    r.assigned_staff || "",
+    r.status || "",
+    r.deadline || ""
+
+]);
+
+doc.setFontSize(16);
+
+doc.text("Witcorp Hub Report", 14, 15);
+
+doc.autoTable({
+
+    head: [[
+        "Client",
+        "Category",
+        "Service",
+        "Staff",
+        "Status",
+        "Deadline"
+    ]],
+
+    body: tableData,
+
+    startY: 25
+
+});
+
+doc.save("Witcorp_Report.pdf");
 
 saveActivity("Exported PDF Report");
 
