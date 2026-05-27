@@ -121,6 +121,10 @@
     "record",
     payload.client_name
 );
+                    saveActivity(
+    (id ? "Updated Record : " : "Added Record : ")
+    + payload.client_name
+);
 
     alert(id ? "Record Updated!" : "Record Successfully Added!");
 
@@ -160,11 +164,23 @@
         }
 
         async function deleteRecord(id) {
-            if(confirm("Confirm: Are you sure you want to delete this record?")) {
-                await supabaseClient.from('witcorp_records').delete().eq('id', id);
-                fetchRecords();
-            }
-        }
+
+    if(confirm("Confirm: Are you sure you want to delete this record?")) {
+
+        await supabaseClient
+        .from('witcorp_records')
+        .delete()
+        .eq('id', id);
+
+        saveActivity(
+            "Deleted Record ID : " + id
+        );
+
+        fetchRecords();
+
+    }
+
+}
 
         async function fetchClients() {
             const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true }).limit(300);
@@ -290,7 +306,7 @@
                 ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', id)
                 : await supabaseClient.from('witcorp_credentials').insert([payload]);
             if(!error) { 
-                    await createNotification(
+ await createNotification(
 
     id ? "Vault Updated" : "Credentials Added",
 
@@ -1585,5 +1601,76 @@ function toggleNotificationSetting(){
     }
 
     loadNotificationSetting();
+
+}
+function openExportModal(){
+document.getElementById("exportModal").classList.remove("hidden");
+}
+
+function closeExportModal(){
+document.getElementById("exportModal").classList.add("hidden");
+}
+
+function openMyActivity(){
+document.getElementById("activityModal").classList.remove("hidden");
+loadMyActivity();
+}
+
+function closeActivityModal(){
+document.getElementById("activityModal").classList.add("hidden");
+}
+
+function saveActivity(text){
+
+let activity =
+JSON.parse(
+localStorage.getItem("myActivity")
+|| "[]"
+);
+
+activity.unshift({
+
+text:text,
+
+time:new Date().toLocaleString()
+
+});
+
+localStorage.setItem(
+"myActivity",
+JSON.stringify(activity)
+);
+
+}
+function loadMyActivity(){
+
+let activity =
+JSON.parse(
+localStorage.getItem("myActivity")
+|| "[]"
+);
+
+let html = "";
+
+activity.forEach(item=>{
+
+html += `
+<div class="border-b py-3">
+
+<div class="font-bold">
+${item.text}
+</div>
+
+<div class="text-xs text-slate-500 mt-1">
+${item.time}
+</div>
+
+</div>
+`;
+
+});
+
+document.getElementById("activityList").innerHTML =
+html || "<p>No activity found</p>";
 
 }
