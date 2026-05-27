@@ -408,15 +408,36 @@ ON
 </span>
 
 </button>
+                <!-- MY ACTIVITY -->
 
-                <button onclick="logout()"
-                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
+<button onclick="openMyActivity()"
+class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
 
-                    <i class="fas fa-right-from-bracket"></i>
+<i class="fas fa-clock-rotate-left"></i>
 
-                    Logout
+My Activity
 
-                </button>
+</button>
+
+<!-- EXPORT DATA -->
+
+<button onclick="openExportModal()"
+class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+
+<i class="fas fa-file-export"></i>
+
+Export Data
+
+</button>
+
+  <button onclick="logout()"
+     class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
+
+     <i class="fas fa-right-from-bracket"></i>
+
+      Logout
+
+      </button>
 
             </div>
 
@@ -1087,5 +1108,75 @@ Original Blue
 <datalist id="companySuggestions"></datalist>
 
 <datalist id="vaultCategorySuggestions"></datalist>
+    <div id="activityModal"
+class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
+
+<div class="bg-white w-full max-w-3xl rounded-3xl overflow-hidden">
+
+<div class="p-5 border-b flex justify-between">
+
+<h2 class="text-2xl font-black">
+My Activity
+</h2>
+
+<button onclick="closeActivityModal()">
+✕
+</button>
+
+</div>
+
+<div id="activityList"
+class="p-5 max-h-[500px] overflow-y-auto">
+
+</div>
+
+</div>
+
+</div>
+    <div id="exportModal"
+class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
+
+<div class="bg-white w-full max-w-md rounded-3xl overflow-hidden">
+
+<div class="p-5 border-b flex justify-between">
+
+<h2 class="text-xl font-black">
+Export Records
+</h2>
+
+<button onclick="closeExportModal()">
+✕
+</button>
+
+</div>
+
+<div class="p-6 space-y-3">
+
+<button onclick="exportExcel()"
+class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">
+
+📊 Export Excel
+
+</button>
+
+<button onclick="exportPDF()"
+class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">
+
+📄 Export PDF
+
+</button>
+
+<button onclick="exportCSV()"
+class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">
+
+📁 Export CSV
+
+</button>
+
+</div>
+
+</div>
+
+</div>
 </body>
 </html>
