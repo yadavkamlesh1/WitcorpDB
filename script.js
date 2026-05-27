@@ -531,6 +531,7 @@ function showApp(user) {
 
   document.getElementById('appScreen').classList.remove('hidden');
   document.getElementById('appScreen').classList.add('flex');
+  setProfileAvatar(user);
 
   const gmailEl = document.getElementById('userGmail');
 
@@ -1519,3 +1520,32 @@ window.addEventListener('load', async () => {
     }
 
 });
+function setProfileAvatar(user) {
+
+    const img = document.getElementById("profileImage");
+    const initial = document.getElementById("profileInitial2");
+
+    const email = user?.email || "";
+    const firstLetter = email.charAt(0).toUpperCase();
+
+    // default state
+    img.classList.add("hidden");
+    initial.classList.remove("hidden");
+    initial.innerText = firstLetter;
+
+    const avatar = user?.user_metadata?.avatar_url;
+
+    if (avatar) {
+
+        img.src = avatar;
+
+        img.classList.remove("hidden");
+        initial.classList.add("hidden");
+
+        // 🔥 THIS IS THE EXACT PLACE
+        img.onerror = () => {
+            img.classList.add("hidden");
+            initial.classList.remove("hidden");
+        };
+    }
+}
