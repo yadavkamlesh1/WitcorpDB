@@ -1439,3 +1439,83 @@ function setupPredictions() {
     });
 
 }
+/* ========================= */
+/* FORGOT PASSWORD SYSTEM */
+/* ========================= */
+
+async function forgotPassword() {
+
+    const email =
+        document.getElementById("email").value;
+
+    if (!email) {
+
+        return alert("Please enter your email first");
+
+    }
+
+    const { error } =
+        await supabaseClient.auth.resetPasswordForEmail(email, {
+
+            redirectTo:
+                window.location.origin + window.location.pathname + "?reset=true"
+
+        });
+
+    if (error) {
+
+        alert(error.message);
+
+    } else {
+
+        alert(
+            "Password reset link sent to your email."
+        );
+
+    }
+
+}
+/* ========================= */
+/* RESET PASSWORD DETECTION */
+/* ========================= */
+
+window.addEventListener('load', async () => {
+
+    const hash =
+        window.location.hash;
+
+    if (
+        hash.includes("access_token") &&
+        hash.includes("type=recovery")
+    ) {
+
+        const newPassword =
+            prompt("Enter New Password");
+
+        if (!newPassword) return;
+
+        const { error } =
+            await supabaseClient.auth.updateUser({
+
+                password: newPassword
+
+            });
+
+        if (error) {
+
+            alert(error.message);
+
+        } else {
+
+            alert(
+                "Password updated successfully!"
+            );
+
+            window.location.href =
+                window.location.pathname;
+
+        }
+
+    }
+
+});
