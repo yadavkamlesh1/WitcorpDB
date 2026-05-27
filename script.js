@@ -1197,6 +1197,13 @@ supabaseClient
     },
 
    async (payload) => {
+           // DON'T SHOW OWN NOTIFICATION
+
+if (
+    payload.new.created_by === currentUserName
+) {
+    return;
+}
 
     console.log("NEW NOTIFICATION:", payload);
 
