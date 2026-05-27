@@ -1528,16 +1528,17 @@ function setProfileAvatar(user) {
     const email = user?.email || "";
     const firstLetter = email.charAt(0).toUpperCase();
 
-    // fallback first
+    // reset UI
     img.classList.add("hidden");
     initial.classList.remove("hidden");
     initial.innerText = firstLetter;
 
-    // 🔥 Google avatar multiple sources check
+    // 🔥 Google / Supabase avatar detection (IMPORTANT FIX)
     const avatar =
         user?.user_metadata?.avatar_url ||
         user?.user_metadata?.picture ||
-        user?.identities?.[0]?.identity_data?.avatar_url;
+        user?.user_metadata?.avatar ||
+        null;
 
     if (avatar) {
 
