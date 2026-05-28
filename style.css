@@ -2,11 +2,12 @@
 body.menu-open {
       overflow: hidden;
     }
-        body { 
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: #F4F6F9;
-    scroll-behavior: smooth;
-    transition: all .4s ease;
+        body{
+    font-family:'Plus Jakarta Sans',sans-serif;
+    background-color:#F4F6F9;
+    scroll-behavior:smooth;
+    transition:all .4s ease;
+    background-attachment:fixed;
 }
         
         /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
@@ -58,11 +59,6 @@ body.menu-open {
         .st-processing { background-color: #fffbeb; color: #d97706; }
         .st-completed { background-color: #f0fdf4; color: #16a34a; }
         
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
         /* Branding Motto Style */
         .motto-text { font-size: 9px; letter-spacing: 2px; font-weight: 800; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-top: 8px; position: relative; display: inline-block; }
         .motto-text::after { content: ''; position: absolute; bottom: -4px; left: 25%; width: 50%; height: 1.5px; background: #fbbf24; border-radius: 10px; }
@@ -266,11 +262,11 @@ table,
 
 .stat-card:hover{
 
-    transform:
-    translateY(-8px);
+transform:
+translateY(-8px) scale(1.02);
 
-    box-shadow:
-    0 20px 40px rgba(15,23,42,.12);
+box-shadow:
+0 20px 40px rgba(15,23,42,.12);
 
 }
 
@@ -382,14 +378,6 @@ transform:translateY(0);
 /* ULTRA PREMIUM UPGRADE */
 /* ========================= */
 
-/* PAGE BACKGROUND DEPTH */
-
-body{
-
-background-attachment: fixed;
-
-}
-
 /* CARD SHINE EFFECT */
 
 .stat-card,
@@ -400,8 +388,8 @@ overflow:hidden;
 
 }
 
-.stat-card::before,
-.lighting-border::before{
+.stat-card::after,
+.lighting-border::after{
 
 content:"";
 
@@ -427,8 +415,8 @@ pointer-events:none;
 
 }
 
-.stat-card:hover::before,
-.lighting-border:hover::before{
+.stat-card:hover::after,
+.lighting-border:hover::after{
 
 left:140%;
 
