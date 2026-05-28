@@ -1,7 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-body{
-    transition: all 0.4s ease;
-}
 body.menu-open {
       overflow: hidden;
     }
@@ -9,6 +6,7 @@ body.menu-open {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background-color: #F4F6F9;
     scroll-behavior: smooth;
+    transition: all .4s ease;
 }
         
         /* --- DYNAMIC BORDER LIGHTING EFFECT --- */
@@ -74,8 +72,14 @@ body.menu-open {
          #appScreen {
     overflow-x: hidden;
   }
-table {
-    background: white;
+table{
+
+    background:white;
+
+    border-radius:16px;
+
+    overflow:hidden;
+
 }
 
 input,
@@ -84,9 +88,20 @@ select {
 }
 
 .stat-card,
-.lighting-border {
-    background: #FFFFFF;
-    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+.lighting-border{
+
+    background:
+    rgba(255,255,255,.95);
+
+    backdrop-filter:
+    blur(18px);
+
+    border:
+    1px solid rgba(255,255,255,.5);
+
+    box-shadow:
+    0 10px 35px rgba(15,23,42,.08);
+
 }
 .logo-glow {
     position: relative;
@@ -110,8 +125,8 @@ select {
 );
     animation: rotateGlow 3s linear infinite;
     z-index: 0;
-    filter: blur(2px);
-box-shadow: 0 0 25px rgba(251, 191, 36, 0.7);
+    filter: blur(6px);
+box-shadow: 0 0 40px rgba(251,191,36,.8);
 }
 
 .logo-glow::after {
@@ -134,13 +149,6 @@ box-shadow: 0 0 25px rgba(251, 191, 36, 0.7);
     100% {
         transform: rotate(360deg);
     }
-}
-body{
-    transition: all 0.4s ease;
-}
-/* DEFAULT */
-body{
-    transition: all 0.4s ease;
 }
 
 /* ========================= */
@@ -226,12 +234,150 @@ body{
 }
 
 .sidebar-theme-original{
+background:
+linear-gradient(
+180deg,
+#081225 0%,
+#10224a 40%,
+#16336f 75%,
+#2563eb 100%
+) !important;
+}
+/* ========================= */
+/* PREMIUM UI UPGRADE */
+/* ========================= */
+
+.stat-card,
+.lighting-border,
+table,
+.modal-content{
+
+    backdrop-filter: blur(16px);
+
+    background:
+    rgba(255,255,255,0.92);
+
+    border:
+    1px solid rgba(255,255,255,0.5);
+
+    box-shadow:
+    0 8px 32px rgba(15,23,42,.08);
+
+}
+
+/* CARD HOVER */
+
+.stat-card:hover{
+
+    transform:
+    translateY(-8px);
+
+    box-shadow:
+    0 20px 40px rgba(15,23,42,.12);
+
+}
+
+/* BUTTON EFFECT */
+
+button{
+
+    transition:
+    all .25s ease;
+
+}
+
+button:hover{
+
+    transform:
+    translateY(-2px);
+
+}
+
+/* INPUT PREMIUM */
+
+input,
+select,
+textarea{
+
+    transition:
+    all .25s ease;
+
+    border:
+    1px solid #e2e8f0;
+
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+
+    border-color:#3b82f6;
+
+    box-shadow:
+    0 0 0 4px rgba(59,130,246,.12);
+
+}
+
+/* TABLE HOVER */
+
+tbody tr{
+
+    transition:
+    all .2s ease;
+
+}
+
+tbody tr:hover{
+
+    background:
+    #eff6ff;
+
+}
+
+/* MODERN SCROLLBAR */
+
+::-webkit-scrollbar{
+
+    width:8px;
+    height:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
     background:
     linear-gradient(
-    180deg,
-    #0b1433 0%,
-    #101b45 35%,
-    #172969 70%,
-    #1e3a8a 100%
-    ) !important;
+    #3b82f6,
+    #2563eb
+    );
+
+    border-radius:20px;
+
+}
+
+/* SMOOTH SECTION LOAD */
+
+.section.active{
+
+    animation:
+    premiumFade .35s ease;
+
+}
+
+@keyframes premiumFade{
+
+from{
+
+opacity:0;
+transform:translateY(15px);
+
+}
+
+to{
+
+opacity:1;
+transform:translateY(0);
+
+}
+
 }
