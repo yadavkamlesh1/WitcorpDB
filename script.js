@@ -1716,53 +1716,85 @@ exportCSV();
 saveActivity("Exported Excel Report");
 
 }
-function exportPDF(){
+function exportPDF() {
 
-const { jsPDF } = window.jspdf;
+    const { jsPDF } = window.jspdf;
 
-const doc = new jsPDF("landscape");
+    const doc = new jsPDF("landscape");
 
-let rows = currentExportData || [];
+    let rows = currentExportData || [];
 
-if(rows.length === 0){
-    alert("No records found");
-    return;
+    if(rows.length === 0){
+        alert("No records found");
+        return;
+    }
+
+    const tableData = rows.map(r => [
+
+        r.client_name || "",
+        r.service_category || "",
+        r.service_detail || "",
+        r.assigned_staff || "",
+        r.alloted_by || "",
+        r.status || "",
+        r.deadline || "",
+        r.remarks || "",
+        r.updated_by || ""
+
+    ]);
+
+    doc.setFontSize(16);
+
+    doc.text("Witcorp Hub Report", 14, 15);
+
+    doc.autoTable({
+
+        head: [[
+            "Client",
+            "Category",
+            "Service",
+            "Staff",
+            "Alloted By",
+            "Status",
+            "Deadline",
+            "Remarks",
+            "Updated By"
+        ]],
+
+        body: tableData,
+
+        startY: 25,
+
+        styles: {
+            fontSize: 8,
+            cellPadding: 3,
+            overflow: 'linebreak'
+        },
+
+        columnStyles: {
+            2: { cellWidth: 40 },
+            7: { cellWidth: 60 }
+        },
+
+        headStyles: {
+            fontStyle: 'bold'
+        }
+            didDrawPage: function(data) {
+
+    doc.setFontSize(10);
+
+    doc.text(
+        "Generated : " +
+        new Date().toLocaleString(),
+        14,
+        10
+    );
+
 }
 
-const tableData = rows.map(r => [
+    });
 
-    r.client_name || "",
-    r.service_category || "",
-    r.service_detail || "",
-    r.assigned_staff || "",
-    r.status || "",
-    r.deadline || ""
+    doc.save("Witcorp_Report.pdf");
 
-]);
-
-doc.setFontSize(16);
-
-doc.text("Witcorp Hub Report", 14, 15);
-
-doc.autoTable({
-
-    head: [[
-        "Client",
-        "Category",
-        "Service",
-        "Staff",
-        "Status",
-        "Deadline"
-    ]],
-
-    body: tableData,
-
-    startY: 25
-
-});
-
-doc.save("Witcorp_Report.pdf");
-
-saveActivity("Exported PDF Report");
-
+    saveActivity("Exported PDF Report");
 }
