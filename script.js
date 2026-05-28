@@ -1664,91 +1664,63 @@ function exportCSV() {
 
     if(currentExportType === "records"){
 
-        csv =
-        "Client,Category,Service,Staff,Status,Deadline\n";
+        csv = "Client,Category,Service,Staff,Status,Deadline\n";
 
         rows.forEach(r=>{
-
-            csv += `"${r.client_name || ""}",
-"${r.service_category || ""}",
-"${r.service_detail || ""}",
-"${r.assigned_staff || ""}",
-"${r.status || ""}",
-"${r.deadline || ""}"\n`;
-
+            csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.status || ""}","${r.deadline || ""}"\n`;
         });
 
     }
 
     else if(currentExportType === "clients"){
 
-        csv =
-        "Client Name,Phone,Email,Type\n";
+        csv = "Client Name,Phone,Email,Type\n";
 
         rows.forEach(r=>{
-
-            csv += `"${r.client_name || ""}",
-"${r.contact_number || ""}",
-"${r.email_id || ""}",
-"${r.entity_type || ""}"\n`;
-
+            csv += `"${r.client_name || ""}","${r.contact_number || ""}","${r.email_id || ""}","${r.entity_type || ""}"\n`;
         });
 
     }
 
     else if(currentExportType === "vault"){
 
-        csv =
-        "Client,Category,Username,Password\n";
+        csv = "Client,Category,Username,Password,Updated By\n";
 
         rows.forEach(r=>{
-
-            csv += `"${r.client_name || ""}",
-"${r.category || ""}",
-"${r.username || ""}",
-"${r.password || ""}"\n`;
-
+            csv += `"${r.client_name || ""}","${r.category || ""}","${r.username || ""}","${r.password || ""}","${r.updated_by || ""}"\n`;
         });
 
     }
 
     else if(currentExportType === "dsc"){
 
-        csv =
-        "Company,Client,Status,Expiry Date,Remarks\n";
+        csv = "Company,Client,Status,Expiry Date,Remarks\n";
 
         rows.forEach(r=>{
-
-            csv += `"${r.company_name || ""}",
-"${r.client_name || ""}",
-"${r.status || ""}",
-"${r.expiry_date || ""}",
-"${r.remarks || ""}"\n`;
-
+            csv += `"${r.company_name || ""}","${r.client_name || ""}","${r.status || ""}","${r.expiry_date || ""}","${r.remarks || ""}"\n`;
         });
 
     }
 
     const blob = new Blob([csv], {
-        type: "text/csv"
+        type: "text/csv;charset=utf-8;"
     });
 
     const a = document.createElement("a");
 
     a.href = URL.createObjectURL(blob);
-
     a.download = currentExportType + ".csv";
-
     a.click();
-
 }
+
 function exportExcel(){
 
-exportCSV();
+    exportCSV();
 
-saveActivity("Exported Excel Report");
+    saveActivity("Exported Excel Report");
 
 }
+
 function exportPDF() {
 
     const { jsPDF } = window.jspdf;
@@ -1762,56 +1734,120 @@ function exportPDF() {
         return;
     }
 
-    const tableData = rows.map(r => [
+    let tableHead = [];
+    let tableData = [];
 
-        r.client_name || "",
-        r.service_category || "",
-        r.service_detail || "",
-        r.assigned_staff || "",
-        r.alloted_by || "",
-        r.status || "",
-        r.deadline || "",
-        r.remarks || "",
-        r.updated_by || ""
+    if(currentExportType === "vault"){
 
-    ]);
+        tableHead = [[
+            "Client",
+            "Category",
+            "Username",
+            "Password",
+            "Updated By"
+        ]];
 
-    doc.setFontSize(16);
-
-    doc.text("Witcorp Hub Report", 14, 15);
-
-   doc.autoTable({
-
-    head: [[
-    "Client",
-    "Category",
-    "Service",
-    "Staff",
-    "Alloted By",
-    "Status",
-    "Deadline",
-    "Remarks",
-    "Updated By"
-    ]],
-
-    body: tableData,
-
-    startY: 25,
-
-    didDrawPage: function () {
-
-        doc.setFontSize(10);
-
-        doc.text(
-            "Generated : " +
-            new Date().toLocaleString(),
-            14,
-            10
-        );
+        tableData = rows.map(r => [
+            r.client_name || "",
+            r.category || "",
+            r.username || "",
+            r.password || "",
+            r.updated_by || ""
+        ]);
 
     }
 
-});
+    else if(currentExportType === "clients"){
+
+        tableHead = [[
+            "Client",
+            "Phone",
+            "Email",
+            "Type"
+        ]];
+
+        tableData = rows.map(r => [
+            r.client_name || "",
+            r.contact_number || "",
+            r.email_id || "",
+            r.entity_type || ""
+        ]);
+
+    }
+
+    else if(currentExportType === "dsc"){
+
+        tableHead = [[
+            "Company",
+            "Client",
+            "Status",
+            "Expiry Date",
+            "Remarks"
+        ]];
+
+        tableData = rows.map(r => [
+            r.company_name || "",
+            r.client_name || "",
+            r.status || "",
+            r.expiry_date || "",
+            r.remarks || ""
+        ]);
+
+    }
+
+    else {
+
+        tableHead = [[
+            "Client",
+            "Category",
+            "Service",
+            "Staff",
+            "Alloted By",
+            "Status",
+            "Deadline",
+            "Remarks",
+            "Updated By"
+        ]];
+
+        tableData = rows.map(r => [
+            r.client_name || "",
+            r.service_category || "",
+            r.service_detail || "",
+            r.assigned_staff || "",
+            r.alloted_by || "",
+            r.status || "",
+            r.deadline || "",
+            r.remarks || "",
+            r.updated_by || ""
+        ]);
+
+    }
+
+    doc.setFontSize(16);
+    doc.text("Witcorp Hub Report", 14, 15);
+
+    doc.autoTable({
+
+        head: tableHead,
+
+        body: tableData,
+
+        startY: 25,
+
+        didDrawPage: function () {
+
+            doc.setFontSize(10);
+
+            doc.text(
+                "Generated : " +
+                new Date().toLocaleString(),
+                14,
+                10
+            );
+
+        }
+
+    });
 
     doc.save("Witcorp_Report.pdf");
 
