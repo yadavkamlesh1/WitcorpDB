@@ -156,7 +156,7 @@ box-shadow: 0 0 40px rgba(251,191,36,.8);
 /* ========================= */
 
 .theme-ocean{
-    background: linear-gradient(135deg,#dbeafe,#bfdbfe,#93c5fd);
+background: linear-gradient(135deg,#eff6ff 0%,#dbeafe 35%,#93c5fd 100%);
 }
 
 .theme-dark{
@@ -173,10 +173,7 @@ box-shadow: 0 0 40px rgba(251,191,36,.8);
 }
 
 .theme-light{
-    background:
-    linear-gradient(135deg,#f8fafc 0%,#ffffff 50%,#e2e8f0 100%);
-
-    color:#0f172a;
+      background: linear-gradient(135deg,#ffffff 0%,#f8fafc 45%,#e2e8f0 100%);
 }
 /* ========================= */
 /* SIDEBAR THEMES */
@@ -252,7 +249,7 @@ linear-gradient(
 table,
 .modal-content{
 
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
 
     background:
     rgba(255,255,255,0.92);
@@ -379,5 +376,142 @@ opacity:1;
 transform:translateY(0);
 
 }
+
+}
+/* ========================= */
+/* ULTRA PREMIUM UPGRADE */
+/* ========================= */
+
+/* PAGE BACKGROUND DEPTH */
+
+body{
+
+background-attachment: fixed;
+
+}
+
+/* CARD SHINE EFFECT */
+
+.stat-card,
+.lighting-border{
+
+position:relative;
+overflow:hidden;
+
+}
+
+.stat-card::before,
+.lighting-border::before{
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:-120%;
+
+width:80%;
+height:100%;
+
+background:
+linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.35),
+transparent
+);
+
+transition:.8s;
+
+pointer-events:none;
+
+}
+
+.stat-card:hover::before,
+.lighting-border:hover::before{
+
+left:140%;
+
+}
+
+/* PREMIUM NAV BUTTON */
+
+.nav-btn{
+
+border-radius:14px;
+
+}
+
+.nav-btn:hover{
+
+transform:
+translateX(4px);
+
+}
+
+/* TABLE LOOK */
+
+table{
+
+border-collapse:separate;
+border-spacing:0;
+
+}
+
+thead{
+
+position:sticky;
+top:0;
+z-index:5;
+
+backdrop-filter:blur(10px);
+
+}
+
+/* MODERN INPUTS */
+
+input,
+select,
+textarea{
+
+border-radius:12px;
+
+}
+
+input:hover,
+select:hover,
+textarea:hover{
+
+border-color:#93c5fd;
+
+}
+
+/* MODAL GLASS EFFECT */
+
+.fixed > div{
+
+backdrop-filter:blur(20px);
+
+}
+
+/* LOGO PREMIUM */
+
+.logo-glow img{
+
+transition:.4s ease;
+
+}
+
+.logo-glow:hover img{
+
+transform:scale(1.05);
+
+}
+
+/* SMOOTH EVERYTHING */
+
+*{
+
+scroll-behavior:smooth;
 
 }
