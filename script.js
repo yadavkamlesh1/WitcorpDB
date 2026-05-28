@@ -8,6 +8,7 @@
         let allDSC = [];
         let allNotifications = [];
         let currentExportData = [];
+        let currentExportType = "records";
         let unreadCount = 0;
         let currentUserEmail = "";
         let currentUserName = "";
@@ -67,6 +68,7 @@
 }
         function renderTable(data, targetId) {
                 currentExportData = data;
+                currentExportType = "records";
             const tbody = document.getElementById(targetId);
             if (!tbody) return;
             tbody.innerHTML = data.length === 0 ? `<tr><td colspan="9" class="p-20 text-center text-slate-400 font-bold">No active records found.</td></tr>` : "";
@@ -188,6 +190,8 @@
             const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true }).limit(300);
             if (error) return;
             allClients = data;
+                currentExportData = data;
+                currentExportType = "clients";
                 setupPredictions();
             const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
             Object.values(containers).forEach(id => document.getElementById(id).innerHTML = "");
@@ -262,6 +266,8 @@
             const { data, error } = await supabaseClient.from('witcorp_credentials').select('*').limit(300);
             if (error) return;
             allVault = data;
+                currentExportData = data;
+                currentExportType = "vault";
            setupPredictions();
             const tbody = document.getElementById('vaultTableBody');
             tbody.innerHTML = "";
@@ -706,6 +712,9 @@ supabaseClient.auth.getSession().then(({ data }) => {
                         ${v.password}
                     </span>
                 </td>
+                <td class="p-4 text-[11px] font-bold text-blue-700">
+                 ${v.updated_by || 'N/A'}
+                 </td>
 
                 <td class="p-4 text-right flex gap-3 justify-end items-center">
 
@@ -747,6 +756,8 @@ supabaseClient.auth.getSession().then(({ data }) => {
     }
 
     allDSC = data || [];
+     currentExportData = allDSC;
+     currentExportType = "dsc";
     setupPredictions();
 
     renderDSC(allDSC);
@@ -1010,42 +1021,6 @@ function closeThemeSettings() {
     .classList.add("hidden");
 
 }
-
-// CHANGE THEME
-function changeTheme(themeName){
-
-    const body = document.getElementById("appBody");
-
-    // REMOVE OLD THEMES
-    body.classList.remove(
-        "theme-ocean",
-        "theme-dark",
-        "theme-green",
-        "theme-purple"
-    );
-
-    // ADD NEW THEME
-    body.classList.add(themeName);
-
-    // SAVE THEME
-    localStorage.setItem("witcorpTheme", themeName);
-
-}
-
-// LOAD SAVED THEME
-window.addEventListener("DOMContentLoaded", () => {
-
-    const savedTheme =
-    localStorage.getItem("witcorpTheme");
-
-    if(savedTheme){
-
-        document.getElementById("appBody")
-        .classList.add(savedTheme);
-
-    }
-
-});
 async function createNotification(
     title,
     message,
@@ -1232,7 +1207,7 @@ if (
    // NOTIFICATION SETTING CHECK
 
 const notificationEnabled =
-    localStorage.getItem("notificationEnabled");
+    localStorage.getItem("notificationSound");
 
 if (notificationEnabled !== "off") {
 
@@ -1676,37 +1651,95 @@ document.getElementById("activityList").innerHTML =
 html || "<p>No activity found</p>";
 
 }
-function exportCSV(){
+function exportCSV() {
 
-let rows = currentExportData || [];
+    let rows = currentExportData || [];
 
-if(rows.length === 0){
-alert("No records found");
-return;
-}
+    if(rows.length === 0){
+        alert("No records found");
+        return;
+    }
 
-let csv =
-"Client,Category,Service,Staff,Status,Deadline\n";
+    let csv = "";
 
-rows.forEach(r=>{
+    if(currentExportType === "records"){
 
-csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.status || ""}","${r.deadline || ""}"\n`;
+        csv =
+        "Client,Category,Service,Staff,Status,Deadline\n";
 
-});
+        rows.forEach(r=>{
 
-const blob = new Blob([csv], {
-type: "text/csv"
-});
+            csv += `"${r.client_name || ""}",
+"${r.service_category || ""}",
+"${r.service_detail || ""}",
+"${r.assigned_staff || ""}",
+"${r.status || ""}",
+"${r.deadline || ""}"\n`;
 
-const a = document.createElement("a");
+        });
 
-a.href = URL.createObjectURL(blob);
+    }
 
-a.download = "WitcorpData.csv";
+    else if(currentExportType === "clients"){
 
-a.click();
+        csv =
+        "Client Name,Phone,Email,Type\n";
 
-saveActivity("Exported CSV Report");
+        rows.forEach(r=>{
+
+            csv += `"${r.client_name || ""}",
+"${r.contact_number || ""}",
+"${r.email_id || ""}",
+"${r.entity_type || ""}"\n`;
+
+        });
+
+    }
+
+    else if(currentExportType === "vault"){
+
+        csv =
+        "Client,Category,Username,Password\n";
+
+        rows.forEach(r=>{
+
+            csv += `"${r.client_name || ""}",
+"${r.category || ""}",
+"${r.username || ""}",
+"${r.password || ""}"\n`;
+
+        });
+
+    }
+
+    else if(currentExportType === "dsc"){
+
+        csv =
+        "Company,Client,Status,Expiry Date,Remarks\n";
+
+        rows.forEach(r=>{
+
+            csv += `"${r.company_name || ""}",
+"${r.client_name || ""}",
+"${r.status || ""}",
+"${r.expiry_date || ""}",
+"${r.remarks || ""}"\n`;
+
+        });
+
+    }
+
+    const blob = new Blob([csv], {
+        type: "text/csv"
+    });
+
+    const a = document.createElement("a");
+
+    a.href = URL.createObjectURL(blob);
+
+    a.download = currentExportType + ".csv";
+
+    a.click();
 
 }
 function exportExcel(){
@@ -1747,52 +1780,38 @@ function exportPDF() {
 
     doc.text("Witcorp Hub Report", 14, 15);
 
-    doc.autoTable({
+   doc.autoTable({
 
-        head: [[
-            "Client",
-            "Category",
-            "Service",
-            "Staff",
-            "Alloted By",
-            "Status",
-            "Deadline",
-            "Remarks",
-            "Updated By"
-        ]],
+    head: [[
+    "Client",
+    "Category",
+    "Service",
+    "Staff",
+    "Alloted By",
+    "Status",
+    "Deadline",
+    "Remarks",
+    "Updated By"
+    ]],
 
-        body: tableData,
+    body: tableData,
 
-        startY: 25,
+    startY: 25,
 
-        styles: {
-            fontSize: 8,
-            cellPadding: 3,
-            overflow: 'linebreak'
-        },
+    didDrawPage: function () {
 
-        columnStyles: {
-            2: { cellWidth: 40 },
-            7: { cellWidth: 60 }
-        },
+        doc.setFontSize(10);
 
-        headStyles: {
-            fontStyle: 'bold'
-        }
-            didDrawPage: function(data) {
+        doc.text(
+            "Generated : " +
+            new Date().toLocaleString(),
+            14,
+            10
+        );
 
-    doc.setFontSize(10);
+    }
 
-    doc.text(
-        "Generated : " +
-        new Date().toLocaleString(),
-        14,
-        10
-    );
-
-}
-
-    });
+});
 
     doc.save("Witcorp_Report.pdf");
 
