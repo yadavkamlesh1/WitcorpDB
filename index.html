@@ -11,1174 +11,659 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
 </head>
 <body id="appBody" class="min-h-screen overflow-x-hidden bg-slate-100">
+
   <!-- LOGIN / REGISTER SCREEN -->
-<div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1A2E5A] z-[9999]">
+  <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1A2E5A] z-[9999]">
+    <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center">
+      <div class="logo-glow w-20 h-20 mx-auto mb-4">
+        <img src="logo.png" class="w-full h-full object-cover">
+      </div>
+      <h1 class="text-lg font-black text-[#1e3a8a] uppercase">Witcorp India Advisors LLP</h1>
+      <p class="text-xs text-green-500 font-bold mt-1">Strategic Wisdom. Global Growth.</p>
+      <input id="email" type="email" placeholder="Enter Email" class="w-full mt-6 p-3 border rounded-xl">
+      <input id="password" type="password" placeholder="Enter Password" class="w-full mt-3 p-3 border rounded-xl">
+      <button onclick="registerUser()" class="w-full mt-4 bg-yellow-400 text-blue-900 py-3 rounded-xl font-bold">Register</button>
+      <button onclick="loginUser()" class="w-full mt-2 bg-[#1A2E5A] text-white py-3 rounded-xl font-bold">Login</button>
+      <div class="mt-4 text-center">
+        <button onclick="forgotPassword()" class="text-sm font-bold text-blue-500 hover:text-blue-700 transition-all">Forgot Password?</button>
+      </div>
+      <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
+    </div>
+  </div>
 
- <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center">
-
-  <!-- LOGO -->
-  <div class="logo-glow w-20 h-20 mx-auto mb-4">
-    <img src="logo.png" class="w-full h-full object-cover">
-</div>
-
-  <h1 class="text-lg font-black text-[#1e3a8a] uppercase">
-    Witcorp India Advisors LLP
-  </h1>
-
-  <p class="text-xs text-green-500 font-bold mt-1">
-    Strategic Wisdom. Global Growth.
-  </p>
-  <input id="email" type="email" placeholder="Enter Email"
-    class="w-full mt-6 p-3 border rounded-xl">
-
-  <input id="password" type="password" placeholder="Enter Password"
-    class="w-full mt-3 p-3 border rounded-xl">
-
-  <button onclick="registerUser()"
-    class="w-full mt-4 bg-yellow-400 text-blue-900 py-3 rounded-xl font-bold">
-    Register
-  </button>
-
-  <button onclick="loginUser()"
-    class="w-full mt-2 bg-[#1A2E5A] text-white py-3 rounded-xl font-bold">
-    Login
-  </button>
-     <div class="mt-4 text-center">
-    <button
-        onclick="forgotPassword()"
-        class="text-sm font-bold text-blue-500 hover:text-blue-700 transition-all">
-        Forgot Password?
-    </button>
-</div>
-
-  <p id="authMsg" class="text-sm mt-3 text-red-500"></p>
-</div>
-</div>
   <div id="appScreen" class="hidden flex-col lg:flex-row w-full min-h-screen">
-      <div class="lg:hidden flex items-center justify-between p-3 bg-[#1A2E5A] text-white">
-  <button onclick="toggleMenu()">☰</button>
-  <span class="font-bold text-sm">Witcorp India Advisors LLP</span>
-</div>
 
-<div id="mobileMenu" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-50">
-  
-  <div id="mobileSidebar"
-class="sidebar-theme-chill w-[75%] max-w-[280px] h-full p-4 text-white overflow-y-auto"
-       onclick="event.stopPropagation()">
+    <!-- MOBILE TOPBAR -->
+    <div class="lg:hidden flex items-center justify-between p-3 bg-[#1A2E5A] text-white">
+      <button onclick="toggleMenu()">☰</button>
+      <span class="font-bold text-sm">Witcorp India Advisors LLP</span>
+    </div>
 
-    <div class="text-center mb-4">
-  <div class="logo-glow w-16 h-16 mx-auto mb-2">
-    <img src="logo.png" class="w-full h-full object-cover">
-</div>
+    <!-- MOBILE MENU OVERLAY -->
+    <div id="mobileMenu" onclick="toggleMenu()" class="fixed inset-0 bg-black/40 hidden z-50">
+      <div id="mobileSidebar" class="sidebar-theme-chill w-[75%] max-w-[280px] h-full p-4 text-white overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="text-center mb-4">
+          <div class="logo-glow w-16 h-16 mx-auto mb-2">
+            <img src="logo.png" class="w-full h-full object-cover">
+          </div>
+          <h1 class="text-sm font-black text-yellow-400 uppercase leading-tight">Witcorp India Advisors LLP</h1>
+          <p class="text-[9px] text-green-400 font-bold mt-1">Strategic Wisdom. Global Growth.</p>
+        </div>
 
-  <h1 class="text-sm font-black text-yellow-400 uppercase leading-tight">
-    Witcorp India Advisors LLP
-  </h1>
+        <div class="mt-4 space-y-2 text-sm">
+          <button onclick="showSection('dashboard');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">Dashboard Home</button>
+          <button onclick="showSection('clientManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">Client Details</button>
+          <button onclick="showSection('vaultManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">Credentials Vault</button>
+          <button onclick="showSection('dscManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">DSC Status</button>
 
-  <p class="text-[9px] text-green-400 font-bold mt-1">
-    Strategic Wisdom. Global Growth.
-  </p>
-</div>
+          <div class="mt-4 text-[10px] text-blue-200 uppercase">Managements</div>
 
-<div class="mt-4 space-y-2 text-sm">
+          <!-- Accounting Hub Mobile -->
+          <div class="mt-2">
+            <button onclick="toggleAccountingHub()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm">
+              <i class="fas fa-book mr-2"></i> Accounting Hub👇
+            </button>
+            <div id="accountinghubMenu" class="hidden mt-2 space-y-2">
+              <button onclick="filterByField('service_category', 'Sales');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Sales</button>
+              <button onclick="filterByField('service_category', 'Purchases');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Purchases</button>
+              <button onclick="filterByField('service_category', 'Sundry Debtors');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Sundry Debtors</button>
+              <button onclick="filterByField('service_category', 'Sundry Creditors');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Sundry Creditors</button>
+              <button onclick="filterByField('service_category', 'Payroll Entries');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Payroll Entries</button>
+              <button onclick="filterByField('service_category', 'Bank Statement');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Bank Statement</button>
+              <button onclick="filterByField('service_category', 'GST Transfer Entries');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">GST Transfer Entries</button>
+              <button onclick="filterByField('service_category', 'Depreciation Entries');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Depreciation Entries</button>
+              <button onclick="filterByField('service_category', 'TDS Entries');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">TDS Entries</button>
+              <button onclick="filterByField('service_category', 'Miscellaneous Ledgers');toggleMenu()" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">Miscellaneous Ledgers</button>
+            </div>
+          </div>
 
-  <button onclick="showSection('dashboard');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
-    Dashboard Home
-  </button>
+          <button onclick="filterByField('service_category','GST');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">GST Compliance</button>
+          <button onclick="filterByField('service_category','ROC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Corporate Compliance (ROC)</button>
+          <button onclick="filterByField('service_category','IT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Income Tax</button>
+          <button onclick="filterByField('service_category','PT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Professional Tax</button>
+          <button onclick="filterByField('service_category','TDS');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">TDS Compliance</button>
+          <button onclick="filterByField('service_category','DIRECTOR KYC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Director KYC</button>
+          <button onclick="filterByField('service_category','UDIN');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">UDIN/Certification</button>
+          <button onclick="filterByField('service_category','FOOD');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Food License</button>
+          <button onclick="filterByField('service_category','MSME');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">MSME Certification</button>
+          <button onclick="filterByField('service_category','PAYROLL');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Payroll</button>
+          <button onclick="filterByField('service_category','REPORTS');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Reports</button>
+        </div>
 
-  <button onclick="showSection('clientManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
-    Client Details
-  </button>
+        <div class="mt-6 pt-4 border-t border-white/20 text-center">
+          <p class="text-[10px] text-blue-200">Developed By</p>
+          <p class="text-sm font-bold text-yellow-400">Kamlesh Yadav</p>
+        </div>
+      </div>
+    </div>
 
-  <button onclick="showSection('vaultManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
-    Credentials Vault
-  </button>
-    <button onclick="showSection('dscManagement');toggleMenu()" class="block w-full text-left p-3 rounded-lg hover:bg-white/10">
-    DSC Status
-  </button>
-    
-  <div class="mt-4 text-[10px] text-blue-200 uppercase">
-    Managements
-  </div>
-    <!-- Accounting Hub START -->
+    <!-- DESKTOP SIDEBAR -->
+    <aside id="sidebar" class="sidebar-theme-chill w-72 text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
+      <div class="p-4 border-b border-white/10 text-center">
+        <div class="logo-glow w-20 h-20 mx-auto mb-4">
+          <img src="logo.png" class="w-full h-full object-cover">
+        </div>
+        <h1 class="text-lg font-black text-yellow-400 tracking-tighter uppercase leading-tight">Witcorp India Advisors LLP</h1>
+        <div class="motto-text animate-pulse text-green-400">Strategic Wisdom. Global Growth.</div>
+      </div>
 
-<div class="mt-2">
-
-    <button onclick="toggleAccountingHub()" class="w-full px-4 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm">
-        <i class="fas fa-book mr-2"></i> Accounting Hub👇
+      <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+        <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn active w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-house-chimney-window w-5 text-yellow-400"></i> Dashboard Home
         </button>
-       <div id="accountinghubMenu" class="hidden mt-2 space-y-2">
 
-     <button onclick="filterByField('service_category', 'Sales')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-         Sales
-         </button>
+        <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Client & Security</div>
+        <button onclick="showSection('clientManagement')" id="nav-client" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-address-card w-5 text-blue-300"></i> Client Details
+        </button>
+        <button onclick="showSection('vaultManagement')" id="nav-vault" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-shield-halved w-5 text-blue-300"></i> Credentials Vault
+        </button>
+        <button onclick="showSection('dscManagement')" id="nav-dsc" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-key w-5 text-cyan-300"></i> DSC Status
+        </button>
 
-      <button onclick="filterByField('service_category', 'Purchases')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-         Purchases
-         </button>
+        <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Managements</div>
 
-      <button onclick="filterByField('service_category', 'Sundry Debtors')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-         Sundry Debtors
-         </button>
-
-      <button onclick="filterByField('service_category', 'Sundry Creditors')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-         Sundry Creditors
-         </button>
-
-       <button onclick="filterByField('service_category', 'Payroll Entries')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-         Payroll Entries
-         </button>
-           <button onclick="filterByField('service_category', 'Bank Statement')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-          Bank Statement
-         </button>
-           <button onclick="filterByField('service_category', 'GST Transfer Entries')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-          GST Transfer Entries
-         </button>
-           <button onclick="filterByField('service_category', 'Depreciation Entries')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-          Depreciation Entries
-         </button>
-           <button onclick="filterByField('service_category', 'TDS Entries')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-          TDS Entries
-         </button>
-           <button onclick="filterByField('service_category', 'Miscellaneous Ledgers')" class="w-full px-4 py-2 rounded-lg bg-white text-slate-800 text-left font-bold shadow-sm">
-          Miscellaneous Ledgers
-         </button>
-
-    </div>
-
-</div>
-
-<!-- BOOKKEEPING END -->
-
-  <button onclick="filterByField('service_category','GST');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    GST Compliance
-  </button>
-
-  <button onclick="filterByField('service_category','ROC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    Corporate Compliance (ROC)
-  </button>
-
-  <button onclick="filterByField('service_category','IT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    Income Tax
-  </button>
-
-  <button onclick="filterByField('service_category','PT');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    Professional Tax
-  </button>
- <button onclick="filterByField('service_category','TDS');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-   TDS Compliance
-</button>
-
-<button onclick="filterByField('service_category','DIRECTOR KYC');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    Director KYC
-</button>
-    <button onclick="filterByField('service_category','UDIN');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    UDIN/Certification
-</button>
-    <button onclick="filterByField('service_category','FOOD');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    Food License
-</button>
-    <button onclick="filterByField('service_category','MSME');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    MSME Certification
-</button>
-     <button onclick="filterByField('service_category','PAYROLL');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    Payroll
-</button>
-     <button onclick="filterByField('service_category','REPORTS');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">
-    Reports
-</button>
-
-</div>
-
-<div class="mt-6 pt-4 border-t border-white/20 text-center">
-  <p class="text-[10px] text-blue-200">Developed By</p>
-  <p class="text-sm font-bold text-yellow-400">Kamlesh Yadav</p>
-</div>
-  </div>
-</div>
-   <aside id="sidebar"
-class="sidebar-theme-chill w-72 text-white flex flex-col shadow-2xl z-50 hidden lg:flex">
-        <div class="p-4 border-b border-white/10 text-center">
-            <div class="logo-glow w-20 h-20 mx-auto mb-4">
-    <img src="logo.png" class="w-full h-full object-cover">
-</div>
-            <h1 class="text-lg font-black text-yellow-400 tracking-tighter uppercase leading-tight">Witcorp India Advisors LLP</h1>
-            <div class="motto-text animate-pulse text-green-400">Strategic Wisdom. Global Growth.</div>
+        <!-- Accounting Hub Desktop -->
+        <div class="mt-2">
+          <button onclick="toggleAccountingHubDesktop()" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+            <i class="fas fa-book w-5 text-white"></i> Accounting Hub👇
+          </button>
+          <div id="accountinghubDesktopMenu" class="hidden mt-2 space-y-2 px-2">
+            <button onclick="filterByField('service_category', 'Sales')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Sales</button>
+            <button onclick="filterByField('service_category', 'Purchases')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Purchases</button>
+            <button onclick="filterByField('service_category', 'Sundry Debtors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Sundry Debtors</button>
+            <button onclick="filterByField('service_category', 'Sundry Creditors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Sundry Creditors</button>
+            <button onclick="filterByField('service_category', 'Payroll Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Payroll Entries</button>
+            <button onclick="filterByField('service_category', 'Bank Statement')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Bank Statement</button>
+            <button onclick="filterByField('service_category', 'GST Transfer Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">GST Transfer Entries</button>
+            <button onclick="filterByField('service_category', 'Depreciation Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Depreciation Entries</button>
+            <button onclick="filterByField('service_category', 'TDS Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">TDS Entries</button>
+            <button onclick="filterByField('service_category', 'Miscellaneous Ledgers')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">Miscellaneous Ledgers</button>
+          </div>
         </div>
-        
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-btn active w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-house-chimney-window w-5 text-yellow-400"></i> Dashboard Home
-            </button>
 
-            <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Client & Security</div>
-            <button onclick="showSection('clientManagement')" id="nav-client" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-address-card w-5 text-blue-300"></i> Client Details
-            </button>
-            <button onclick="showSection('vaultManagement')" id="nav-vault" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-shield-halved w-5 text-blue-300"></i> Credentials Vault
-            </button>
-            <button onclick="showSection('dscManagement')" id="nav-dsc" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-key w-5 text-cyan-300"></i> DSC Status
-            </button>
-            <div class="pt-6 pb-2 px-4 text-[10px] font-black text-blue-300 uppercase tracking-widest opacity-70">Managements</div>
-            <!-- AccountingHub START -->
+        <button onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> GST Compliance
+        </button>
+        <button onclick="filterByField('service_category', 'ROC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-landmark-dome w-5 text-amber-500"></i> Corporate Compliance (ROC)
+        </button>
+        <button onclick="filterByField('service_category', 'IT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-piggy-bank w-5 text-rose-400"></i> Income Tax
+        </button>
+        <button onclick="filterByField('service_category', 'PT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-briefcase w-5 text-sky-400"></i> Professional Tax
+        </button>
+        <button onclick="filterByField('service_category', 'TDS')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-file-invoice w-5 text-orange-400"></i> TDS Compliance
+        </button>
+        <button onclick="filterByField('service_category', 'DIRECTOR KYC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-id-card w-5 text-pink-400"></i> Director KYC
+        </button>
+        <button onclick="filterByField('service_category', 'UDIN')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-certificate w-5 text-yellow-300"></i> UDIN/Certification
+        </button>
+        <button onclick="filterByField('service_category', 'FOOD')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-shield-alt w-5 text-red-400"></i> Food License
+        </button>
+        <button onclick="filterByField('service_category', 'MSME')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-industry w-5 text-cyan-300"></i> MSME Certification
+        </button>
+        <button onclick="filterByField('service_category', 'PAYROLL')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-money-check-dollar w-5 text-green-400"></i> Payroll
+        </button>
+        <button onclick="filterByField('service_category', 'REPORTS')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+          <i class="fas fa-chart-line w-5 text-red-400"></i> Reports
+        </button>
+      </nav>
 
-<div class="mt-2">
-
-    <button onclick="toggleAccountingHubDesktop()" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-book w-5 text-white"></i> Accounting Hub👇
-    </button>
-    <div id="accountinghubDesktopMenu" class="hidden mt-2 space-y-2 px-2">
-<button onclick="filterByField('service_category', 'Sales')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Sales
-            </button>
-<button onclick="filterByField('service_category', 'Purchases')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Purchases
-            </button>
-<button onclick="filterByField('service_category', 'Sundry Debtors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Sundry Debtors
-            </button>
-<button onclick="filterByField('service_category', 'Sundry Creditors')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Sundry Creditors
-            </button>
-<button onclick="filterByField('service_category', 'Payroll Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Payroll Entries
-            </button>
-        <button onclick="filterByField('service_category', 'Bank Statement')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Bank Statement
-            </button>
-        <button onclick="filterByField('service_category', 'GST Transfer Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            GST Transfer Entries
-            </button>
-        <button onclick="filterByField('service_category', 'Depreciation Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Depreciation Entries
-            </button>
-        <button onclick="filterByField('service_category', 'TDS Entries')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            TDS Entries
-            </button>
-        <button onclick="filterByField('service_category', 'Miscellaneous Ledgers')" class="w-full px-4 py-2 rounded-lg bg-slate-100 text-left font-bold text-black">
-            Miscellaneous Ledgers
-            </button>
-
-    </div>
-
-</div>
-
-<!-- Accounting Hub END -->
-            <button onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> GST Compliance
-            </button>
-            <button onclick="filterByField('service_category', 'ROC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-landmark-dome w-5 text-amber-500"></i> Corporate Compliance (ROC)
-            </button>
-            <button onclick="filterByField('service_category', 'IT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-piggy-bank w-5 text-rose-400"></i> Income Tax
-            </button>
-            <button onclick="filterByField('service_category', 'PT')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-                <i class="fas fa-briefcase w-5 text-sky-400"></i> Professional Tax
-            </button>
-            <button onclick="filterByField('service_category', 'TDS')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-file-invoice w-5 text-orange-400"></i> TDS Compliance
-</button>
-
-<button onclick="filterByField('service_category', 'DIRECTOR KYC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-id-card w-5 text-pink-400"></i> Director KYC
-</button>
-<button onclick="filterByField('service_category', 'UDIN')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-certificate w-5 text-yellow-300"></i> UDIN/Certification
-</button>
-<button onclick="filterByField('service_category', 'FOOD')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-shield-alt w-5 text-red-400"></i> Food License
-</button>
-
-<button onclick="filterByField('service_category', 'MSME')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-industry w-5 text-cyan-300"></i> MSME Certification
-</button>
-
-<button onclick="filterByField('service_category', 'PAYROLL')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-money-check-dollar w-5 text-green-400"></i> Payroll
-</button>
-
-<button onclick="filterByField('service_category', 'REPORTS')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
-    <i class="fas fa-chart-line w-5 text-red-400"></i> Reports
-</button>
-        </nav>
-
-        <div class="p-6 bg-black/20 text-center border-t border-white/10">
-            <p class="text-[10px] uppercase text-blue-300 mb-1 tracking-widest">Developed By</p>
-            <p class="font-bold text-sm text-yellow-400">Kamlesh Yadav</p>
-        </div>
+      <div class="p-6 bg-black/20 text-center border-t border-white/10">
+        <p class="text-[10px] uppercase text-blue-300 mb-1 tracking-widest">Developed By</p>
+        <p class="font-bold text-sm text-yellow-400">Kamlesh Yadav</p>
+      </div>
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
-  <!-- TOP PROFILE -->
-<div class="flex justify-end items-center mb-6 relative">
-    <!-- NOTIFICATION -->
-<div class="relative mr-5">
 
-    <button onclick="toggleNotificationPanel()"
-        class="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-slate-700 relative">
+      <!-- TOP PROFILE BAR -->
+      <div class="flex justify-end items-center mb-6 relative">
 
-        <i class="fas fa-bell text-lg"></i>
-
-        <span id="notificationCount"
-            class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center hidden">
-            0
-        </span>
-
-    </button>
-
-    <!-- PANEL -->
-    <div id="notificationPanel"
-class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
-        <div class="p-4 border-b font-black text-slate-700">
-            Notifications
+        <!-- NOTIFICATION BELL -->
+        <div class="relative mr-5">
+          <button onclick="toggleNotificationPanel()" class="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-slate-700 relative">
+            <i class="fas fa-bell text-lg"></i>
+            <span id="notificationCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+          </button>
+          <!-- NOTIFICATION PANEL -->
+          <div id="notificationPanel" class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
+            <div class="p-4 border-b font-black text-slate-700">Notifications</div>
+            <div id="notificationList" class="max-h-[500px] overflow-y-auto divide-y"></div>
+          </div>
         </div>
-
-        <div id="notificationList"
-            class="max-h-[500px] overflow-y-auto divide-y">
-        </div>
-
-    </div>
-
-</div>
-
-    <!-- LEFT SIDE PROFILE -->
-    <div class="relative">
 
         <!-- PROFILE BUTTON -->
-        <button onclick="toggleProfileMenu()"
-            class="w-12 h-12 rounded-full bg-[#1A2E5A] text-white flex items-center justify-center font-black text-lg shadow-lg border-2 border-white">
-
+        <div class="relative">
+          <button onclick="toggleProfileMenu()" class="w-12 h-12 rounded-full bg-[#1A2E5A] text-white flex items-center justify-center font-black text-lg shadow-lg border-2 border-white">
             <span id="profileInitial">K</span>
-            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-600">
-    Profile
-</div>
+            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-600">Profile</div>
+          </button>
 
-        </button>
-
-        <!-- DROPDOWN -->
-        <div id="profileMenu"
-             class="hidden absolute right-0 mt-3 w-[340px] max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50">
-
-            <!-- TOP -->
+          <!-- PROFILE DROPDOWN -->
+          <div id="profileMenu" class="hidden absolute right-0 mt-3 w-[340px] max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50">
             <div class="bg-[#1A2E5A] p-5 text-white">
-
-                <div class="flex items-start gap-4">
-
-                   <div class="w-14 h-14 rounded-full bg-white text-[#1e3a8a] flex items-center justify-center font-black text-2xl">
-                   <span id="profileInitial2">K</span>
-                    </div>
-
-                    <div class="flex-1 min-w-0">
-                        <div id="userGmail"
-                            class="text-xs text-blue-100 break-words leading-5 mt-1 overflow-hidden">
-                        </div>
-                    </div>
-
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-full bg-white text-[#1e3a8a] flex items-center justify-center font-black text-2xl">
+                  <span id="profileInitial2">K</span>
                 </div>
-
+                <div class="flex-1 min-w-0">
+                  <div id="userGmail" class="text-xs text-blue-100 break-words leading-5 mt-1 overflow-hidden"></div>
+                </div>
+              </div>
             </div>
-
-            <!-- MENU -->
             <div class="p-3">
-                <button onclick="openThemeSettings()"
-    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-
-    <i class="fas fa-palette"></i>
-
-    Theme Settings
-
-</button>
-                <button onclick="toggleNotificationSetting()"
-class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-
-<div class="flex items-center gap-3">
-<i class="fas fa-bell"></i>
-Notification Sound
-</div>
-
-<span id="notificationStatus"
-class="text-green-600 font-black">
-ON
-</span>
-
-</button>
-                <!-- MY ACTIVITY -->
-
-<button onclick="openMyActivity()"
-class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-
-<i class="fas fa-clock-rotate-left"></i>
-
-My Activity
-
-</button>
-
-<!-- EXPORT DATA -->
-
-<button onclick="openExportModal()"
-class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-
-<i class="fas fa-file-export"></i>
-
-Export Data
-
-</button>
-
-  <button onclick="logout()"
-     class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
-
-     <i class="fas fa-right-from-bracket"></i>
-
-      Logout
-
-      </button>
-
+              <button onclick="openThemeSettings()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                <i class="fas fa-palette"></i> Theme Settings
+              </button>
+              <button onclick="toggleNotificationSetting()" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                <div class="flex items-center gap-3"><i class="fas fa-bell"></i> Notification Sound</div>
+                <span id="notificationStatus" class="text-green-600 font-black">ON</span>
+              </button>
+              <button onclick="openMyActivity()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                <i class="fas fa-clock-rotate-left"></i> My Activity
+              </button>
+              <button onclick="openExportModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                <i class="fas fa-file-export"></i> Export Data
+              </button>
+              <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
+                <i class="fas fa-right-from-bracket"></i> Logout
+              </button>
             </div>
-
+          </div>
         </div>
+      </div>
 
-    </div>
-
-</div>
-        
-        <div id="globalSearchBox" class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
-            <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search Client, Service or Staff..." class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
-        </div>
-
-        <div id="dashboard" class="section active">
-            <div id="topAnchor"></div>
-            
-           <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-10">
-
-    <h2 class="text-3xl font-black text-slate-800 tracking-tight">
-        Workspace Overview
-    </h2>
-
-    <div class="flex items-center gap-3 flex-wrap">
-
-        <button onclick="refreshData()"
-            id="refreshBtn"
-            class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow">
-
-            <i class="fas fa-rotate-right mr-1"></i>
-            Refresh
-
-        </button>
-
-        <div class="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black border border-emerald-200 shadow-sm">
-
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-
-            SYSTEM LIVE SYNC
-
-        </div>
-
-    </div>
-
-</div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-                <div onclick="filterByField('all')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group">
-                    <i class="fas fa-folder-tree absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Portfolios</p>
-                    <h3 id="statTotal" class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 mt-2">0</h3>
-                </div>
-                <div onclick="filterByField('status', 'Completed')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-emerald-500 group relative overflow-hidden">
-                    <i class="fas fa-circle-check absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Completed</p>
-                    <h3 id="statDone" class="text-3xl sm:text-4xl lg:text-5xl font-black text-emerald-600 mt-2">0</h3>
-                </div>
-                <div onclick="filterByField('status', 'Pending')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-rose-500 group relative overflow-hidden">
-                    <i class="fas fa-clock absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
-                    <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Pending Action</p>
-                    <h3 id="statPending" class="text-3xl sm:text-4xl lg:text-5xl font-black text-rose-600 mt-2">0</h3>
-                </div>
-            </div>
-
-            <div id="entryFormAnchor" class="lighting-border p-10 shadow-2xl mb-14 relative">
-                <div class="flex items-center justify-between mb-10">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
-                            <i class="fas fa-pen-to-square text-xl"></i>
-                        </div>
-                        <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight" id="formTitle">Management Portal</h3>
-                    </div>
-                    <div id="editBadge" class="hidden px-5 py-2 bg-amber-50 text-amber-700 rounded-xl text-[10px] font-black border border-amber-200 uppercase tracking-widest animate-pulse">
-                        <i class="fas fa-lock mr-2"></i> Edit Mode Active
-                    </div>
-                </div>
-                <input type="hidden" id="editId">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Client Name</label>
-                        <input type="text" id="clientName" list="clientSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
-                        <select id="serviceCategory" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                            <option value="Sales">Sales</option>
-                            <option value="Purchases">Purchases</option>
-                            <option value="Sundry Debtors">Sundry Debtors</option>
-                            <option value="Sundry Creditors">Sundry Creditors</option>
-                            <option value="Payroll Entries">Payroll Entries</option>
-                            <option value="Bank Statement">Bank Statement</option>
-                            <option value="GST Transfer Entries">GST Transfer Entries</option>
-                            <option value="Depreciation Entries">Depreciation Entries</option>
-                            <option value="TDS Entries">TDS Entries</option>
-                            <option value="Miscellaneous Ledgers">Miscellaneous Ledgers</option>
-                            <option value="GST">GST Compliance</option>
-                            <option value="ROC">Corporate Compliance (ROC)</option>
-                            <option value="IT">Income Tax</option>
-                            <option value="PT">Professional Tax</option>
-                            <option value="TDS">TDS Compliance</option>
-                            <option value="DIRECTOR KYC">Director KYC</option>
-                            <option value="UDIN">UDIN/Certification</option>
-                            <option value="FOOD">Food License</option>
-                            <option value="MSME">MSME Certification</option>
-                            <option value="PAYROLL">Payroll</option>
-                            <option value="REPORTS">Reports</option>
-                        </select>
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Service Detail</label>
-                        <input type="text" id="serviceDetail" list="serviceSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Assign Staff</label>
-                        <input type="text" id="assignedStaff" list="staffSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                    </div>
-                    <div class="space-y-3">
-
-    <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">
-        Alloted By
-    </label>
-
-    <input type="text" id="allotedBy" list="allotedSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-
-</div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Deadline</label>
-                        <input type="date" id="deadline" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Current Status</label>
-                        <select id="status" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                            <option value="Pending">Pending 🚫</option>
-                            <option value="Processing">Processing ⏳</option>
-                            <option value="Completed">Completed 🟢</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2 space-y-3">
-                        <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Remarks / Notes</label>
-                        <input type="text" id="remarks" placeholder="Add specific case notes here..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
-                    </div>
-                </div>
-                <div class="mt-10 flex gap-5">
-                    <button onclick="handleSubmit()" id="submitBtn" class="flex-1 bg-[#1A2E5A] text-white py-6 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-800 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3">
-                        <i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB
-                    </button>
-                    <button onclick="clearForm()" class="px-10 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel / Clear</button>
-                </div>
-            </div>
-
-            <div class="lighting-border bg-white overflow-hidden border border-slate-100 shadow-lg">
-                <div class="p-4 border-b flex justify-between items-center bg-slate-50/30">
-                    <h4 class="font-black text-slate-800 uppercase text-xs tracking-[0.2em]">Live Records Database</h4>
-                </div>
-                <div class="scroll-container">
-                    <table class="w-full text-left border-collapse min-w-[900px] text-xs sm:text-sm">
-                        <thead>
-                            <tr class="bg-slate-50/50">
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Client</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Last Update</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Service</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Category</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Assigned Staff</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Alloted By</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Updated By</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-right tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mainTableBody" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                    <div class="p-6 text-center">
-    <button 
-        id="loadMoreBtn"
-        onclick="fetchRecords(false)"
-        class="bg-[#1A2E5A] text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-800">
-        Load More
-    </button>
-</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="clientManagement" class="section">
-            <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Client Directory</h2>
-            <div class="mb-8 relative max-w-xl">
-    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-
-    <input 
-        type="text"
-        id="clientSearch"
-        oninput="searchClients(this.value)"
-        placeholder="Search Client Name, Phone or Email..."
-        class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all"
-    >
-</div>
-            <div class="lighting-border p-10 shadow-xl mb-12">
-                <input type="hidden" id="cEditId">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <input type="text" id="cName" placeholder="Legal Entity Name" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
-                    <input type="text" id="cPhone" placeholder="Contact Mobile" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
-                    <input type="email" id="cEmail" placeholder="Official Email ID" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
-                    <select id="cType" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
-                        <option value="Pvt Ltd">Private Limited</option>
-                        <option value="LLP">LLP Organization</option>
-                        <option value="Others">Proprietor / Others</option>
-                    </select>
-                </div>
-                <button onclick="saveClient()" id="clientBtn" class="mt-6 w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Save Client Profile</button>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                    <div class="p-6 bg-blue-600 text-white font-black uppercase text-center text-xs tracking-widest">Private Limited</div>
-                    <div id="pvtLtdList" class="p-6 space-y-4"></div>
-                </div>
-                <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                    <div class="p-6 bg-purple-600 text-white font-black uppercase text-center text-xs tracking-widest">LLP Organization</div>
-                    <div id="llpList" class="p-6 space-y-4"></div>
-                </div>
-                <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                    <div class="p-6 bg-slate-700 text-white font-black uppercase text-center text-xs tracking-widest">Proprietor / Others</div>
-                    <div id="othersList" class="p-6 space-y-4"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="vaultManagement" class="section">
-            <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Credential Vault</h2>
-            <div class="mb-8 relative max-w-xl">
-    
-    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-
-    <input 
-        type="text"
-        id="vaultSearch"
-        oninput="searchVault(this.value)"
-        placeholder="Search Client, Username or Category..."
-        class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all"
-    >
-
-</div>
-            <div class="lighting-border p-10 shadow-xl mb-12">
-                <input type="hidden" id="vEditId">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <input type="text" id="vClient" placeholder="Select Client" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                    <input type="text" id="vCat" list="vaultCategorySuggestions" placeholder="System/Portal Category" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                    <input type="text" id="vUser" placeholder="Login ID" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                    <input type="text" id="vPass" placeholder="Access Password" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-                </div>
-                <button onclick="saveVault()" id="vaultBtn" class="mt-6 w-full bg-yellow-500 text-blue-900 p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 transition-all">Store Securely</button>
-            </div>
-            <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-                <div class="scroll-container">
-                    <table class="w-full text-left min-w-[900px]">
-                        <thead class="bg-slate-50/50 border-b">
-                            <tr>
-                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Entity</th>
-                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Access Category</th>
-                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Username</th>
-                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Password</th>
-                                <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Updated By</th>
-                                <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400 tracking-wider">Secure Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="vaultTableBody" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div id="dscManagement" class="section">
-
-    <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">
-        DSC Status
-    </h2>
-
-    <div class="mb-8 relative max-w-xl">
-
+      <!-- GLOBAL SEARCH -->
+      <div id="globalSearchBox" class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
         <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search Client, Service or Staff..." class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
+      </div>
 
-        <input
-            type="text"
-            id="dscSearch"
-            oninput="searchDSC(this.value)"
-            placeholder="Search Company, Client or Status..."
-            class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all"
-        >
+      <!-- DASHBOARD SECTION -->
+      <div id="dashboard" class="section active">
+        <div id="topAnchor"></div>
 
-    </div>
-
-    <div class="lighting-border p-10 shadow-xl mb-12">
-
-        <input type="hidden" id="dEditId">
-
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-
-            <input type="text"
-                id="dCompany" list="companySuggestions"
-                placeholder="Company Name"
-                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-
-            <input type="text"
-                id="dClient"
-                placeholder="Client Name"
-                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-
-            <select
-                id="dStatus"
-                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-
-                <option value="Valid">Valid</option>
-                <option value="Expired">Expired</option>
-                <option value="No DSC">No DSC</option>
-
-            </select>
-
-            <input type="date"
-                id="dExpiry"
-                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-
-            <input type="text"
-                id="dRemarks"
-                placeholder="Remarks"
-                class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
-
-        </div>
-
-        <button onclick="saveDSC()"
-            id="dscBtn"
-            class="mt-6 w-full bg-cyan-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-cyan-700 transition-all">
-
-            Save DSC Status
-
-        </button>
-
-    </div>
-
-    <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-
-        <div class="scroll-container">
-
-            <table class="w-full text-left min-w-[1200px]">
-
-                <thead class="bg-slate-50/50 border-b">
-
-                    <tr>
-
-                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Company</th>
-
-                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Client</th>
-
-                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Status</th>
-
-                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Expiry</th>
-
-                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Remarks</th>
-
-                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Updated By</th>
-                        
-                        <th class="p-4 font-black text-[10px] uppercase text-slate-400">Updated At</th>
-                        
-                        <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400">Action</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="dscTableBody" class="divide-y divide-slate-100"></tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-
-        <div id="filterView" class="section">
-            <div class="flex items-center gap-6 mb-12">
-                <button onclick="showSection('dashboard')" class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-md text-slate-400 hover:text-blue-600 transition-all transform hover:-translate-x-1">
-                    <i class="fas fa-arrow-left text-xl"></i>
-                </button>
-                <h2 id="filterTitle" class="text-3xl font-black text-slate-800 uppercase">Records Filtered</h2>
-            </div>
-            <div class="lighting-border bg-white shadow-xl overflow-hidden border" id="filterTableContainer">
-                <div class="scroll-container">
-                    <table class="w-full text-left border-collapse min-w-[1200px]">
-                        <thead class="bg-slate-50/50">
-                            <tr>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Info</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Service Desk</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Category</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Assigned Staff</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Alloted By</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Deadline</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Status</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Updated By</th>
-                                <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-right tracking-widest">Manage</th>
-                            </tr>
-                        </thead>
-                        <tbody id="filterTableBody" class="divide-y divide-slate-50"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
-    </div>
-    <!-- THEME SETTINGS MODAL -->
-
-<div id="themeModal"
-class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
-
-    <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden">
-
-        <!-- HEADER -->
-        <div class="flex items-center justify-between p-6 border-b">
-
-            <h2 class="text-2xl font-black text-slate-800">
-                Background Themes
-            </h2>
-
-            <button onclick="closeThemeSettings()"
-                class="text-3xl text-slate-400 hover:text-red-500">
-
-                &times;
-
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-10">
+          <h2 class="text-3xl font-black text-slate-800 tracking-tight">Workspace Overview</h2>
+          <div class="flex items-center gap-3 flex-wrap">
+            <button onclick="refreshData()" id="refreshBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow">
+              <i class="fas fa-rotate-right mr-1"></i> Refresh
             </button>
-
+            <div class="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black border border-emerald-200 shadow-sm">
+              <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> SYSTEM LIVE SYNC
+            </div>
+          </div>
         </div>
 
-        <!-- THEMES -->
-        <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 max-h-[80vh] overflow-y-auto">
-
-            <!-- THEME 1 -->
-            <div onclick="changeTheme('theme-ocean')"
-                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-                <div class="h-28 bg-gradient-to-r from-cyan-500 to-blue-700"></div>
-
-                <div class="p-3 font-bold text-center">
-                    Ocean Blue
-                </div>
-
-            </div>
-
-            <!-- THEME 2 -->
-            <div onclick="changeTheme('theme-dark')"
-                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-                <div class="h-28 bg-gradient-to-r from-slate-900 to-slate-700"></div>
-
-                <div class="p-3 font-bold text-center">
-                    Dark Mode
-                </div>
-
-            </div>
-
-            <!-- THEME 3 -->
-            <div onclick="changeTheme('theme-green')"
-                class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-                <div class="h-28 bg-gradient-to-r from-emerald-500 to-teal-700"></div>
-
-                <div class="p-3 font-bold text-center">
-                    Green Nature
-                </div>
-
-            </div>
-            <!-- THEME 4 -->
-
-<div onclick="changeTheme('theme-purple')"
-    class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-    <div class="h-28 bg-gradient-to-r from-fuchsia-500 to-purple-700"></div>
-
-    <div class="p-3 font-bold text-center">
-        Purple Dream
-    </div>
-
-</div>
-            <!-- THEME 5 -->
-
-<div onclick="changeTheme('theme-light')"
-    class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-    <div class="h-28 bg-gradient-to-r from-slate-100 to-white"></div>
-
-    <div class="p-3 font-bold text-center">
-        Light Mode
-    </div>
-
-</div>
-
-            <!-- THEME 4 -->
-            <!-- SIDEBAR THEMES TITLE -->
-
-<div class="col-span-full mt-8 mb-2">
-
-<h3 class="text-xl font-black text-slate-700">
-Sidebar Themes
-</h3>
-
-</div>
-
-<!-- RASPBERRY -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-raspberry')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-pink-300 to-pink-500"></div>
-
-<div class="p-3 font-bold text-center">
-Raspberry Beret
-</div>
-
-</div>
-
-<!-- CHILL -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-chill')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-emerald-700 to-cyan-700"></div>
-
-<div class="p-3 font-bold text-center">
-Chill Vibes
-</div>
-
-</div>
-
-<!-- Damini -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-damini')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-pink-300 to-sky-400"></div>
-
-<div class="p-3 font-bold text-center">
-Damini
-</div>
-
-</div>
-
-<!-- FOREST -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-forest')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-lime-700 to-amber-900"></div>
-
-<div class="p-3 font-bold text-center">
-Forest Floor
-</div>
-
-</div>
-            <!-- MINT -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-mint')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-lime-300 to-blue-400"></div>
-
-<div class="p-3 font-bold text-center">
-Mint Chip
-</div>
-
-</div>
-
-<!-- SEA GLASS -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-seaglass')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-cyan-200 to-fuchsia-300"></div>
-
-<div class="p-3 font-bold text-center">
-Sea Glass
-</div>
-
-</div>
-
-<!-- LEMON -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-lemon')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-yellow-400 to-green-700"></div>
-
-<div class="p-3 font-bold text-center">
-Lemon Lime
-</div>
-
-</div>
-           <!-- DARK SIDEBAR -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-dark')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28 bg-gradient-to-r from-slate-900 to-slate-700"></div>
-
-<div class="p-3 font-bold text-center">
-Dark Sidebar
-</div>
-
-</div>
-            <!-- NAVY PRO -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-navypro')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28"
-style="
-background:
-linear-gradient(
-180deg,
-#1f376d 0%,
-#1a2f5f 35%,
-#172a55 70%,
-#14244b 100%
-);
-"></div>
-
-<div class="p-3 font-bold text-center">
-Navy Pro
-</div>
-
-</div>
-            <!-- ORIGINAL SIDEBAR -->
-
-<div onclick="changeSidebarTheme('sidebar-theme-original')"
-class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
-
-<div class="h-28"
-style="
-background:
-linear-gradient(
-180deg,
-#0f172a 0%,
-#14213d 45%,
-#1e3a8a 100%
-);
-"></div>
-
-<div class="p-3 font-bold text-center">
-Original Blue
-</div>
-
-</div>
-
+        <!-- STAT CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+          <div onclick="filterByField('all')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group cursor-pointer">
+            <i class="fas fa-folder-tree absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
+            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Portfolios</p>
+            <h3 id="statTotal" class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 mt-2">0</h3>
+          </div>
+          <div onclick="filterByField('status', 'Completed')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-emerald-500 group relative overflow-hidden cursor-pointer">
+            <i class="fas fa-circle-check absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
+            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Completed</p>
+            <h3 id="statDone" class="text-3xl sm:text-4xl lg:text-5xl font-black text-emerald-600 mt-2">0</h3>
+          </div>
+          <div onclick="filterByField('status', 'Pending')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-rose-500 group relative overflow-hidden cursor-pointer">
+            <i class="fas fa-clock absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
+            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Pending Action</p>
+            <h3 id="statPending" class="text-3xl sm:text-4xl lg:text-5xl font-black text-rose-600 mt-2">0</h3>
+          </div>
         </div>
 
+        <!-- ENTRY FORM -->
+        <div id="entryFormAnchor" class="lighting-border p-10 shadow-2xl mb-14 relative">
+          <div class="flex items-center justify-between mb-10">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-pen-to-square text-xl"></i>
+              </div>
+              <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight" id="formTitle">Management Portal</h3>
+            </div>
+            <div id="editBadge" class="hidden px-5 py-2 bg-amber-50 text-amber-700 rounded-xl text-[10px] font-black border border-amber-200 uppercase tracking-widest animate-pulse">
+              <i class="fas fa-lock mr-2"></i> Edit Mode Active
+            </div>
+          </div>
+          <input type="hidden" id="editId">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Client Name</label>
+              <input type="text" id="clientName" list="clientSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
+            </div>
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
+              <select id="serviceCategory" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                <option value="Sales">Sales</option>
+                <option value="Purchases">Purchases</option>
+                <option value="Sundry Debtors">Sundry Debtors</option>
+                <option value="Sundry Creditors">Sundry Creditors</option>
+                <option value="Payroll Entries">Payroll Entries</option>
+                <option value="Bank Statement">Bank Statement</option>
+                <option value="GST Transfer Entries">GST Transfer Entries</option>
+                <option value="Depreciation Entries">Depreciation Entries</option>
+                <option value="TDS Entries">TDS Entries</option>
+                <option value="Miscellaneous Ledgers">Miscellaneous Ledgers</option>
+                <option value="GST">GST Compliance</option>
+                <option value="ROC">Corporate Compliance (ROC)</option>
+                <option value="IT">Income Tax</option>
+                <option value="PT">Professional Tax</option>
+                <option value="TDS">TDS Compliance</option>
+                <option value="DIRECTOR KYC">Director KYC</option>
+                <option value="UDIN">UDIN/Certification</option>
+                <option value="FOOD">Food License</option>
+                <option value="MSME">MSME Certification</option>
+                <option value="PAYROLL">Payroll</option>
+                <option value="REPORTS">Reports</option>
+              </select>
+            </div>
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Service Detail</label>
+              <input type="text" id="serviceDetail" list="serviceSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+            </div>
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Assign Staff</label>
+              <input type="text" id="assignedStaff" list="staffSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+            </div>
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Alloted By</label>
+              <input type="text" id="allotedBy" list="allotedSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+            </div>
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Deadline</label>
+              <input type="date" id="deadline" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+            </div>
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Current Status</label>
+              <select id="status" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                <option value="Pending">Pending 🚫</option>
+                <option value="Processing">Processing ⏳</option>
+                <option value="Completed">Completed 🟢</option>
+              </select>
+            </div>
+            <div class="md:col-span-2 space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Remarks / Notes</label>
+              <input type="text" id="remarks" placeholder="Add specific case notes here..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+            </div>
+          </div>
+          <div class="mt-10 flex gap-5">
+            <button onclick="handleSubmit()" id="submitBtn" class="flex-1 bg-[#1A2E5A] text-white py-6 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-800 transition-all shadow-xl shadow-blue-200 flex items-center justify-center gap-3">
+              <i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB
+            </button>
+            <button onclick="clearForm()" class="px-10 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-colors">Cancel / Clear</button>
+          </div>
+        </div>
+
+        <!-- RECORDS TABLE -->
+        <div class="lighting-border bg-white overflow-hidden border border-slate-100 shadow-lg">
+          <div class="p-4 border-b flex justify-between items-center bg-slate-50/30">
+            <h4 class="font-black text-slate-800 uppercase text-xs tracking-[0.2em]">Live Records Database</h4>
+          </div>
+          <div class="scroll-container">
+            <table class="w-full text-left border-collapse min-w-[900px] text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-slate-50/50">
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Client</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Last Update</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Service</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Category</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Assigned Staff</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Alloted By</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Updated By</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-right tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="mainTableBody" class="divide-y divide-slate-50"></tbody>
+            </table>
+            <div class="p-6 text-center">
+              <button id="loadMoreBtn" onclick="fetchRecords(false)" class="bg-[#1A2E5A] text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-800">Load More</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENT MANAGEMENT SECTION -->
+      <div id="clientManagement" class="section">
+        <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Client Directory</h2>
+        <div class="mb-8 relative max-w-xl">
+          <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="clientSearch" oninput="searchClients(this.value)" placeholder="Search Client Name, Phone or Email..." class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
+        </div>
+        <div class="lighting-border p-10 shadow-xl mb-12">
+          <input type="hidden" id="cEditId">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <input type="text" id="cName" placeholder="Legal Entity Name" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
+            <input type="text" id="cPhone" placeholder="Contact Mobile" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
+            <input type="email" id="cEmail" placeholder="Official Email ID" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
+            <select id="cType" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold outline-none focus:border-blue-500">
+              <option value="Pvt Ltd">Private Limited</option>
+              <option value="LLP">LLP Organization</option>
+              <option value="Others">Proprietor / Others</option>
+            </select>
+          </div>
+          <button onclick="saveClient()" id="clientBtn" class="mt-6 w-full bg-blue-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all">Save Client Profile</button>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
+            <div class="p-6 bg-blue-600 text-white font-black uppercase text-center text-xs tracking-widest">Private Limited</div>
+            <div id="pvtLtdList" class="p-6 space-y-4"></div>
+          </div>
+          <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
+            <div class="p-6 bg-purple-600 text-white font-black uppercase text-center text-xs tracking-widest">LLP Organization</div>
+            <div id="llpList" class="p-6 space-y-4"></div>
+          </div>
+          <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
+            <div class="p-6 bg-slate-700 text-white font-black uppercase text-center text-xs tracking-widest">Proprietor / Others</div>
+            <div id="othersList" class="p-6 space-y-4"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VAULT MANAGEMENT SECTION -->
+      <div id="vaultManagement" class="section">
+        <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">Credential Vault</h2>
+        <div class="mb-8 relative max-w-xl">
+          <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="vaultSearch" oninput="searchVault(this.value)" placeholder="Search Client, Username or Category..." class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
+        </div>
+        <div class="lighting-border p-10 shadow-xl mb-12">
+          <input type="hidden" id="vEditId">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <input type="text" id="vClient" placeholder="Select Client" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+            <input type="text" id="vCat" list="vaultCategorySuggestions" placeholder="System/Portal Category" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+            <input type="text" id="vUser" placeholder="Login ID" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+            <input type="text" id="vPass" placeholder="Access Password" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+          </div>
+          <button onclick="saveVault()" id="vaultBtn" class="mt-6 w-full bg-yellow-500 text-blue-900 p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-yellow-400 transition-all">Store Securely</button>
+        </div>
+        <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
+          <div class="scroll-container">
+            <table class="w-full text-left min-w-[900px]">
+              <thead class="bg-slate-50/50 border-b">
+                <tr>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Entity</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Access Category</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Username</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Password</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400 tracking-wider">Updated By</th>
+                  <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400 tracking-wider">Secure Action</th>
+                </tr>
+              </thead>
+              <tbody id="vaultTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- DSC MANAGEMENT SECTION -->
+      <div id="dscManagement" class="section">
+        <h2 class="text-3xl font-black text-slate-800 mb-10 uppercase tracking-tight">DSC Status</h2>
+        <div class="mb-8 relative max-w-xl">
+          <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="dscSearch" oninput="searchDSC(this.value)" placeholder="Search Company, Client or Status..." class="w-full pl-14 pr-6 py-4 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
+        </div>
+        <div class="lighting-border p-10 shadow-xl mb-12">
+          <input type="hidden" id="dEditId">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <input type="text" id="dCompany" list="companySuggestions" placeholder="Company Name" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+            <input type="text" id="dClient" placeholder="Client Name" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+            <select id="dStatus" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+              <option value="Valid">Valid</option>
+              <option value="Expired">Expired</option>
+              <option value="No DSC">No DSC</option>
+            </select>
+            <input type="date" id="dExpiry" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+            <input type="text" id="dRemarks" placeholder="Remarks" class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 font-bold">
+          </div>
+          <button onclick="saveDSC()" id="dscBtn" class="mt-6 w-full bg-cyan-600 text-white p-5 rounded-2xl font-black uppercase tracking-widest hover:bg-cyan-700 transition-all">Save DSC Status</button>
+        </div>
+        <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
+          <div class="scroll-container">
+            <table class="w-full text-left min-w-[1200px]">
+              <thead class="bg-slate-50/50 border-b">
+                <tr>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400">Company</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400">Client</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400">Status</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400">Expiry</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400">Remarks</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400">Updated By</th>
+                  <th class="p-4 font-black text-[10px] uppercase text-slate-400">Updated At</th>
+                  <th class="p-4 text-right font-black text-[10px] uppercase text-slate-400">Action</th>
+                </tr>
+              </thead>
+              <tbody id="dscTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER VIEW SECTION -->
+      <div id="filterView" class="section">
+        <div class="flex items-center gap-6 mb-12">
+          <button onclick="showSection('dashboard')" class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-md text-slate-400 hover:text-blue-600 transition-all transform hover:-translate-x-1">
+            <i class="fas fa-arrow-left text-xl"></i>
+          </button>
+          <h2 id="filterTitle" class="text-3xl font-black text-slate-800 uppercase">Records Filtered</h2>
+        </div>
+        <div class="lighting-border bg-white shadow-xl overflow-hidden border" id="filterTableContainer">
+          <div class="scroll-container">
+            <table class="w-full text-left border-collapse min-w-[1200px]">
+              <thead class="bg-slate-50/50">
+                <tr>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Info</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Service Desk</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Category</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Assigned Staff</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Alloted By</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Deadline</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Status</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Updated By</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-right tracking-widest">Manage</th>
+                </tr>
+              </thead>
+              <tbody id="filterTableBody" class="divide-y divide-slate-50"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- THEME SETTINGS MODAL -->
+  <div id="themeModal" class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between p-6 border-b">
+        <h2 class="text-2xl font-black text-slate-800">Background Themes</h2>
+        <button onclick="closeThemeSettings()" class="text-3xl text-slate-400 hover:text-red-500">&times;</button>
+      </div>
+      <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 max-h-[80vh] overflow-y-auto">
+        <div onclick="changeTheme('theme-ocean')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-cyan-500 to-blue-700"></div>
+          <div class="p-3 font-bold text-center">Ocean Blue</div>
+        </div>
+        <div onclick="changeTheme('theme-dark')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-slate-900 to-slate-700"></div>
+          <div class="p-3 font-bold text-center">Dark Mode</div>
+        </div>
+        <div onclick="changeTheme('theme-green')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-emerald-500 to-teal-700"></div>
+          <div class="p-3 font-bold text-center">Green Nature</div>
+        </div>
+        <div onclick="changeTheme('theme-purple')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-fuchsia-500 to-purple-700"></div>
+          <div class="p-3 font-bold text-center">Purple Dream</div>
+        </div>
+        <div onclick="changeTheme('theme-light')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-slate-100 to-white"></div>
+          <div class="p-3 font-bold text-center">Light Mode</div>
+        </div>
+
+        <div class="col-span-full mt-8 mb-2">
+          <h3 class="text-xl font-black text-slate-700">Sidebar Themes</h3>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-raspberry')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-pink-300 to-pink-500"></div>
+          <div class="p-3 font-bold text-center">Raspberry Beret</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-chill')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-emerald-700 to-cyan-700"></div>
+          <div class="p-3 font-bold text-center">Chill Vibes</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-damini')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-pink-300 to-sky-400"></div>
+          <div class="p-3 font-bold text-center">Damini</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-forest')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-lime-700 to-amber-900"></div>
+          <div class="p-3 font-bold text-center">Forest Floor</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-mint')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-lime-300 to-blue-400"></div>
+          <div class="p-3 font-bold text-center">Mint Chip</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-seaglass')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-cyan-200 to-fuchsia-300"></div>
+          <div class="p-3 font-bold text-center">Sea Glass</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-lemon')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-yellow-400 to-green-700"></div>
+          <div class="p-3 font-bold text-center">Lemon Lime</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-dark')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28 bg-gradient-to-r from-slate-900 to-slate-700"></div>
+          <div class="p-3 font-bold text-center">Dark Sidebar</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-navypro')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28" style="background:linear-gradient(180deg,#1f376d 0%,#1a2f5f 35%,#172a55 70%,#14244b 100%);"></div>
+          <div class="p-3 font-bold text-center">Navy Pro</div>
+        </div>
+        <div onclick="changeSidebarTheme('sidebar-theme-original')" class="cursor-pointer rounded-2xl overflow-hidden border-4 hover:scale-105 transition-all">
+          <div class="h-28" style="background:linear-gradient(180deg,#0f172a 0%,#14213d 45%,#1e3a8a 100%);"></div>
+          <div class="p-3 font-bold text-center">Original Blue</div>
+        </div>
+      </div>
     </div>
+  </div>
 
-</div>
-    <!-- GLOBAL AUTOCOMPLETE LISTS -->
+  <!-- ACTIVITY MODAL -->
+  <div id="activityModal" class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-3xl rounded-3xl overflow-hidden">
+      <div class="p-5 border-b flex justify-between">
+        <h2 class="text-2xl font-black">My Activity</h2>
+        <button onclick="closeActivityModal()">✕</button>
+      </div>
+      <div id="activityList" class="p-5 max-h-[500px] overflow-y-auto"></div>
+    </div>
+  </div>
 
-<datalist id="clientSuggestions"></datalist>
+  <!-- EXPORT MODAL -->
+  <div id="exportModal" class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden">
+      <div class="p-5 border-b flex justify-between">
+        <h2 class="text-xl font-black">Export Records</h2>
+        <button onclick="closeExportModal()">✕</button>
+      </div>
+      <div class="p-6 space-y-3">
+        <button onclick="exportExcel()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">📊 Export Excel</button>
+        <button onclick="exportPDF()" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">📄 Export PDF</button>
+        <button onclick="exportCSV()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">📁 Export CSV</button>
+      </div>
+    </div>
+  </div>
 
-<datalist id="serviceSuggestions"></datalist>
+  <!-- GLOBAL AUTOCOMPLETE LISTS -->
+  <datalist id="clientSuggestions"></datalist>
+  <datalist id="serviceSuggestions"></datalist>
+  <datalist id="staffSuggestions"></datalist>
+  <datalist id="allotedSuggestions"></datalist>
+  <datalist id="companySuggestions"></datalist>
+  <datalist id="vaultCategorySuggestions"></datalist>
 
-<datalist id="staffSuggestions"></datalist>
-
-<datalist id="allotedSuggestions"></datalist>
-
-<datalist id="companySuggestions"></datalist>
-
-<datalist id="vaultCategorySuggestions"></datalist>
-    <div id="activityModal"
-class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
-
-<div class="bg-white w-full max-w-3xl rounded-3xl overflow-hidden">
-
-<div class="p-5 border-b flex justify-between">
-
-<h2 class="text-2xl font-black">
-My Activity
-</h2>
-
-<button onclick="closeActivityModal()">
-✕
-</button>
-
-</div>
-
-<div id="activityList"
-class="p-5 max-h-[500px] overflow-y-auto">
-
-</div>
-
-</div>
-
-</div>
-    <div id="exportModal"
-class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
-
-<div class="bg-white w-full max-w-md rounded-3xl overflow-hidden">
-
-<div class="p-5 border-b flex justify-between">
-
-<h2 class="text-xl font-black">
-Export Records
-</h2>
-
-<button onclick="closeExportModal()">
-✕
-</button>
-
-</div>
-
-<div class="p-6 space-y-3">
-
-<button onclick="exportExcel()"
-class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">
-
-📊 Export Excel
-
-</button>
-
-<button onclick="exportPDF()"
-class="w-full bg-red-600 text-white py-3 rounded-xl font-bold">
-
-📄 Export PDF
-
-</button>
-
-<button onclick="exportCSV()"
-class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">
-
-📁 Export CSV
-
-</button>
-
-</div>
-
-</div>
-
-</div>
- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
- <script src="script.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
