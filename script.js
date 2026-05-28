@@ -1,4 +1,4 @@
-        const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
+const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
         const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
@@ -15,67 +15,82 @@
         let recordPage = 0;
         const PAGE_SIZE = 100;
         let isFetchingRecords = false;
+
+        // ============================================================
+        // FIX 1: isFetchingRecords ab finally block mein reset hoga
+        //         taaki error pe bhi stuck na rahe
+        // ============================================================
         async function fetchRecords(reset = true) {
+            if (isFetchingRecords) return;
+            isFetchingRecords = true;
 
-    if (isFetchingRecords) return;
+            try {
+                if (reset) {
+                    recordPage = 0;
+                    allRecords = [];
+                }
 
-    isFetchingRecords = true;
+                const from = recordPage * PAGE_SIZE;
+                const to = from + PAGE_SIZE - 1;
 
-    if (reset) {
-        recordPage = 0;
-        allRecords = [];
-    }
+                const { data, error } = await supabaseClient
+                    .from('witcorp_records')
+                    .select('*')
+                    .order('updated_at', { ascending: false })
+                    .range(from, to);
 
-    const from = recordPage * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+                if (!error && data) {
+                    const uniqueData = data.filter(
+                        newItem => !allRecords.some(oldItem => oldItem.id === newItem.id)
+                    );
+                    allRecords = [...allRecords, ...uniqueData];
+                    renderTable(allRecords, 'mainTableBody');
+                    updateStats(allRecords);
+                    setupPredictions();
+                    recordPage++;
 
-    const { data, error } = await supabaseClient
-        .from('witcorp_records')
-        .select('*')
-        .order('updated_at', { ascending: false })
-        .range(from, to);
-
-    if (!error && data) {
-
-        const uniqueData = data.filter(
-            newItem => !allRecords.some(
-                oldItem => oldItem.id === newItem.id
-            )
-        );
-
-        allRecords = [...allRecords, ...uniqueData];
-
-        renderTable(allRecords, 'mainTableBody');
-
-        updateStats(allRecords);
-            setupPredictions();
-        recordPage++;
-
-        const btn = document.getElementById("loadMoreBtn");
-
-        if (btn) {
-
-            if (data.length < PAGE_SIZE) {
-                btn.style.display = "none";
-            } else {
-                btn.style.display = "block";
+                    const btn = document.getElementById("loadMoreBtn");
+                    if (btn) {
+                        btn.style.display = data.length < PAGE_SIZE ? "none" : "block";
+                    }
+                }
+            } catch (err) {
+                console.error("fetchRecords error:", err);
+            } finally {
+                // FIX 1: finally ensures flag always resets
+                isFetchingRecords = false;
             }
-
         }
-    }
 
-    isFetchingRecords = false;
-}
+        // ============================================================
+        // FIX 2: colspan 9 → 11 (table has 11 columns)
+        // ============================================================
         function renderTable(data, targetId) {
-                currentExportData = data;
-                currentExportType = "records";
+            currentExportData = data;
+            currentExportType = "records";
             const tbody = document.getElementById(targetId);
             if (!tbody) return;
-            tbody.innerHTML = data.length === 0 ? `<tr><td colspan="9" class="p-20 text-center text-slate-400 font-bold">No active records found.</td></tr>` : "";
+            // FIX 2: colspan was 9, table has 11 columns — fixed to 11
+            tbody.innerHTML = data.length === 0
+                ? `<tr><td colspan="11" class="p-20 text-center text-slate-400 font-bold">No active records found.</td></tr>`
+                : "";
             data.forEach(row => {
-                const statusClass = {'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing'}[row.status] || 'bg-slate-100';
-                const statusIcon = {'Completed': 'fa-circle-check', 'Pending': 'fa-circle-exclamation', 'Processing': 'fa-spinner fa-spin'}[row.status] || 'fa-info-circle';
-                const lastUpdate = row.updated_at ? new Date(row.updated_at).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short', year: 'numeric' }) : 'Syncing...';
+                const statusClass = {
+                    'Completed': 'st-completed',
+                    'Pending': 'st-pending',
+                    'Processing': 'st-processing'
+                }[row.status] || 'bg-slate-100';
+                const statusIcon = {
+                    'Completed': 'fa-circle-check',
+                    'Pending': 'fa-circle-exclamation',
+                    'Processing': 'fa-spinner fa-spin'
+                }[row.status] || 'fa-info-circle';
+                const lastUpdate = row.updated_at
+                    ? new Date(row.updated_at).toLocaleString('en-IN', {
+                        hour: '2-digit', minute: '2-digit',
+                        day: '2-digit', month: 'short', year: 'numeric'
+                    })
+                    : 'Syncing...';
 
                 tbody.innerHTML += `
                     <tr class="group transition-all hover:bg-slate-50/80">
@@ -94,7 +109,6 @@
             });
         }
 
-
         async function handleSubmit() {
             const id = document.getElementById('editId').value;
             const payload = {
@@ -109,55 +123,48 @@
                 updated_at: new Date().toISOString(),
                 updated_by: currentUserName
             };
-                console.log("PAYLOAD:", payload);
-                console.log("ID:", id);
 
             if (!payload.client_name) return alert("Error: Client Name is mandatory.");
 
-            const { error } = id 
-                ? await supabaseClient.from('witcorp_records').update(payload).eq('id', id) 
+            const { error } = id
+                ? await supabaseClient.from('witcorp_records').update(payload).eq('id', id)
                 : await supabaseClient.from('witcorp_records').insert([payload]);
 
-            if (!error) { 
-                    await createNotification(
-    id ? "Record Updated" : "New Record Added",
-    `${payload.client_name} - ${payload.service_category} updated by ${currentUserName}`,
-    "record",
-    payload.client_name
-);
-                    saveActivity(
-    (id ? "Updated Record : " : "Added Record : ")
-    + payload.client_name
-);
-
-    alert(id ? "Record Updated!" : "Record Successfully Added!");
-
-    clearForm();
-
-    await fetchRecords(true);
-
-    showSection('dashboard');
-
-} else {
-
-    alert("Sync Error: Please check connection.");
-
-}
+            if (!error) {
+                await createNotification(
+                    id ? "Record Updated" : "New Record Added",
+                    `${payload.client_name} - ${payload.service_category} updated by ${currentUserName}`,
+                    "record",
+                    payload.client_name
+                );
+                saveActivity((id ? "Updated Record : " : "Added Record : ") + payload.client_name);
+                alert(id ? "Record Updated!" : "Record Successfully Added!");
+                clearForm();
+                await fetchRecords(true);
+                showSection('dashboard');
+            } else {
+                alert("Sync Error: Please check connection.");
+            }
         }
 
+        // ============================================================
+        // FIX 3: editRecord — only lock the non-status/remarks fields.
+        //         status & remarks should always stay editable in edit mode.
+        // ============================================================
         function editRecord(row) {
             document.getElementById('editId').value = row.id;
             document.getElementById('clientName').value = row.client_name;
             document.getElementById('serviceCategory').value = row.service_category;
-            document.getElementById('serviceDetail').value = row.service_detail;
-            document.getElementById('assignedStaff').value = row.assigned_staff;
-            document.getElementById('allotedBy').value = row.alloted_by;
-            document.getElementById('deadline').value = row.deadline? row.deadline.split('T')[0]: "";
+            document.getElementById('serviceDetail').value = row.service_detail || '';
+            document.getElementById('assignedStaff').value = row.assigned_staff || '';
+            document.getElementById('allotedBy').value = row.alloted_by || '';
+            document.getElementById('deadline').value = row.deadline ? row.deadline.split('T')[0] : "";
             document.getElementById('status').value = row.status;
-            document.getElementById('remarks').value = row.remarks;
+            document.getElementById('remarks').value = row.remarks || '';
             document.getElementById('formTitle').innerText = "Modify Existing Profile";
             document.getElementById('submitBtn').innerHTML = `<i class="fas fa-arrows-rotate mr-2"></i> Confirm Changes`;
             document.getElementById('editBadge').classList.remove('hidden');
+            // FIX 3: only disable identity fields, NOT status/remarks
             ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline'].forEach(id => {
                 document.getElementById(id).disabled = true;
             });
@@ -168,34 +175,26 @@
         }
 
         async function deleteRecord(id) {
-
-    if(confirm("Confirm: Are you sure you want to delete this record?")) {
-
-        await supabaseClient
-        .from('witcorp_records')
-        .delete()
-        .eq('id', id);
-
-        saveActivity(
-            "Deleted Record ID : " + id
-        );
-
-        fetchRecords();
-
-    }
-
-}
+            if (confirm("Confirm: Are you sure you want to delete this record?")) {
+                await supabaseClient.from('witcorp_records').delete().eq('id', id);
+                saveActivity("Deleted Record ID : " + id);
+                fetchRecords();
+            }
+        }
 
         async function fetchClients() {
-            const { data, error } = await supabaseClient.from('witcorp_clients').select('*').order('client_name', { ascending: true }).limit(300);
+            const { data, error } = await supabaseClient
+                .from('witcorp_clients')
+                .select('*')
+                .order('client_name', { ascending: true })
+                .limit(300);
             if (error) return;
             allClients = data;
-                currentExportData = data;
-                currentExportType = "clients";
-                setupPredictions();
+            currentExportData = data;
+            currentExportType = "clients";
+            setupPredictions();
             const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
             Object.values(containers).forEach(id => document.getElementById(id).innerHTML = "");
-            
             data.forEach(c => {
                 const listId = containers[c.entity_type] || 'othersList';
                 document.getElementById(listId).innerHTML += `
@@ -219,10 +218,7 @@
             document.getElementById('cEmail').value = c.email_id;
             document.getElementById('cType').value = c.entity_type;
             document.getElementById('clientBtn').innerText = "Confirm Update Profile";
-            document.getElementById('cName').scrollIntoView({
-    behavior: 'smooth',
-    block: 'center'
-});
+            document.getElementById('cName').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         async function saveClient() {
@@ -234,41 +230,40 @@
                 entity_type: document.getElementById('cType').value,
                 updated_by: currentUserName
             };
-            if(!payload.client_name) return alert("Entity Name Required");
-            const { error } = id 
+            if (!payload.client_name) return alert("Entity Name Required");
+            const { error } = id
                 ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', id)
                 : await supabaseClient.from('witcorp_clients').insert([payload]);
-            if(!error) { 
-                    await createNotification(
-
-    id ? "Client Updated" : "New Client Added",
-
-    `${payload.client_name} profile updated by ${currentUserName}`,
-
-    "client"
-
-);
-                fetchClients(); 
+            if (!error) {
+                await createNotification(
+                    id ? "Client Updated" : "New Client Added",
+                    `${payload.client_name} profile updated by ${currentUserName}`,
+                    "client"
+                );
+                fetchClients();
                 document.getElementById('cEditId').value = "";
-                ['cName','cPhone','cEmail'].forEach(i => document.getElementById(i).value = ""); 
+                ['cName', 'cPhone', 'cEmail'].forEach(i => document.getElementById(i).value = "");
                 document.getElementById('clientBtn').innerText = "Save Client Profile";
             }
         }
 
         async function deleteClient(id) {
-            if(confirm("Action: Delete client profile?")) {
+            if (confirm("Action: Delete client profile?")) {
                 await supabaseClient.from('witcorp_clients').delete().eq('id', id);
                 fetchClients();
             }
         }
 
         async function fetchVault() {
-            const { data, error } = await supabaseClient.from('witcorp_credentials').select('*').limit(300);
+            const { data, error } = await supabaseClient
+                .from('witcorp_credentials')
+                .select('*')
+                .limit(300);
             if (error) return;
             allVault = data;
-                currentExportData = data;
-                currentExportType = "vault";
-           setupPredictions();
+            currentExportData = data;
+            currentExportType = "vault";
+            setupPredictions();
             const tbody = document.getElementById('vaultTableBody');
             tbody.innerHTML = "";
             data.forEach(v => {
@@ -294,10 +289,7 @@
             document.getElementById('vUser').value = v.username;
             document.getElementById('vPass').value = v.password;
             document.getElementById('vaultBtn').innerText = "Update Vault Credentials";
-            document.getElementById('vClient').scrollIntoView({
-    behavior: 'smooth',
-    block: 'center'
-});
+            document.getElementById('vClient').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         async function saveVault() {
@@ -309,131 +301,125 @@
                 password: document.getElementById('vPass').value,
                 updated_by: currentUserName
             };
-            if(!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
-            const { error } = id 
+            if (!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
+            const { error } = id
                 ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', id)
                 : await supabaseClient.from('witcorp_credentials').insert([payload]);
-            if(!error) { 
- await createNotification(
-
-    id ? "Vault Updated" : "Credentials Added",
-
-    `${payload.client_name} credentials updated by ${currentUserName}`,
-
-    "vault"
-
-);
-                fetchVault(); 
+            if (!error) {
+                await createNotification(
+                    id ? "Vault Updated" : "Credentials Added",
+                    `${payload.client_name} credentials updated by ${currentUserName}`,
+                    "vault"
+                );
+                fetchVault();
                 document.getElementById('vEditId').value = "";
-                ['vClient','vCat','vUser','vPass'].forEach(i => document.getElementById(i).value = ""); 
+                ['vClient', 'vCat', 'vUser', 'vPass'].forEach(i => document.getElementById(i).value = "");
                 document.getElementById('vaultBtn').innerText = "Store Securely";
             }
         }
 
         async function deleteVault(id) {
-            if(confirm("Security: Confirm credential deletion?")) {
+            if (confirm("Security: Confirm credential deletion?")) {
                 await supabaseClient.from('witcorp_credentials').delete().eq('id', id);
                 fetchVault();
             }
         }
+
         function toggleAccountingHub() {
+            document.getElementById('accountinghubMenu').classList.toggle('hidden');
+        }
 
-    const menu =
-        document.getElementById('accountinghubMenu');
-
-    menu.classList.toggle('hidden');
-
-}
         function toggleAccountingHubDesktop() {
+            document.getElementById('accountinghubDesktopMenu').classList.toggle('hidden');
+        }
 
-    const menu =
-        document.getElementById('accountinghubDesktopMenu');
-
-    menu.classList.toggle('hidden');
-
-}
-
+        // ============================================================
+        // FIX 4: showSection — filterView ke liye nav highlight
+        //         gracefully handle kiya, no broken active state
+        // ============================================================
         function showSection(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             const globalSearch = document.getElementById('globalSearchBox');
-
-if (
-    id === 'clientManagement' ||
-    id === 'vaultManagement' ||
-    id === 'dscManagement'
-) {
-
-    globalSearch.style.display = 'none';
-
-} else {
-
-    globalSearch.style.display = 'block';
-
-}
+            if (id === 'clientManagement' || id === 'vaultManagement' || id === 'dscManagement') {
+                globalSearch.style.display = 'none';
+            } else {
+                globalSearch.style.display = 'block';
+            }
+            // FIX 4: remove active from all nav buttons first
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            if(id === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
-            if(id === 'clientManagement') document.getElementById('nav-client').classList.add('active');
-            if(id === 'vaultManagement') document.getElementById('nav-vault').classList.add('active');
-            if(id === 'dscManagement') document.getElementById('nav-dsc').classList.add('active');
+            const section = document.getElementById(id);
+            if (section) section.classList.add('active');
+            if (id === 'dashboard') document.getElementById('nav-dashboard')?.classList.add('active');
+            if (id === 'clientManagement') document.getElementById('nav-client')?.classList.add('active');
+            if (id === 'vaultManagement') document.getElementById('nav-vault')?.classList.add('active');
+            if (id === 'dscManagement') document.getElementById('nav-dsc')?.classList.add('active');
+            // filterView has no dedicated nav button — that's intentional
             if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
             if (id === 'clientManagement') fetchClients();
             if (id === 'vaultManagement') fetchVault();
-            if(id === 'dscManagement') {
-
-    fetchDSC();
-
-}
+            if (id === 'dscManagement') fetchDSC();
         }
 
+        // ============================================================
+        // FIX 5: filterByField — 'DIRECTOR KYC' title lookup fixed
+        //         was 'DIRECTORKYC' (no space) — so title showed undefined
+        // ============================================================
         function filterByField(field, value) {
             showSection('filterView');
             let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
             const titles = {
-    "Sales": "Sales",
-    "Purchases": "Purchases",
-    "Sundry Debtors": "Sundry Debtors",
-    "Sundry Creditors": "Sundry Creditors",
-    "Payroll Entries": "Payroll Entries",
-    "Bank Statement": "Bank Statement",
-    "GST Transfer Entries": "GST Transfer Entries",
-    "Depreciation Entries": "Depreciation Entries",
-    "TDS Entries": "TDS Entries",
-    "Miscellaneous Ledgers": "Miscellaneous Ledgers",   
-    GST: "GST Compliance",
-    ROC: "Corporate Compliance (ROC)",
-    IT: "Income Tax",
-    PT: "Professional Tax",
-    TDS: "TDS Compliance",
-    DIRECTORKYC: "Director KYC",
-    UDIN: "UDIN/Certification", 
-    FOOD: "Food License", 
-    MSME: "MSME Certification",
-    PAYROLL: "Payroll",
-    REPORTS: "Reports"
-                    
-};
-
-document.getElementById('filterTitle').innerText =
-    `${titles[value] || value} Portal View`;
+                "Sales": "Sales",
+                "Purchases": "Purchases",
+                "Sundry Debtors": "Sundry Debtors",
+                "Sundry Creditors": "Sundry Creditors",
+                "Payroll Entries": "Payroll Entries",
+                "Bank Statement": "Bank Statement",
+                "GST Transfer Entries": "GST Transfer Entries",
+                "Depreciation Entries": "Depreciation Entries",
+                "TDS Entries": "TDS Entries",
+                "Miscellaneous Ledgers": "Miscellaneous Ledgers",
+                "GST": "GST Compliance",
+                "ROC": "Corporate Compliance (ROC)",
+                "IT": "Income Tax",
+                "PT": "Professional Tax",
+                "TDS": "TDS Compliance",
+                // FIX 5: was "DIRECTORKYC" — key must match the value passed in
+                "DIRECTOR KYC": "Director KYC",
+                "UDIN": "UDIN/Certification",
+                "FOOD": "Food License",
+                "MSME": "MSME Certification",
+                "PAYROLL": "Payroll",
+                "REPORTS": "Reports",
+                "Completed": "Completed Records",
+                "Pending": "Pending Records"
+            };
+            document.getElementById('filterTitle').innerText = `${titles[value] || value || 'All'} Portal View`;
             renderTable(filtered, 'filterTableBody');
         }
 
+        // ============================================================
+        // FIX 6: handleSearch — empty string pe dashboard load hoga
+        //         aur agar allRecords empty hai toh fetchRecords bhi call
+        // ============================================================
         function handleSearch(query) {
-            const q = query.toLowerCase();
-            const filtered = allRecords.filter(r => 
-    r.client_name?.toLowerCase().includes(q) ||
-    r.service_detail?.toLowerCase().includes(q) ||
-    r.assigned_staff?.toLowerCase().includes(q) ||
-    r.service_category?.toLowerCase().includes(q) ||
-    r.status?.toLowerCase().includes(q) ||
-    r.alloted_by?.toLowerCase().includes(q)
-);
-            if (query.trim() !== "") {
-                showSection('filterView');
-                document.getElementById('filterTitle').innerText = `Results for: "${query}"`;
-                renderTable(filtered, 'filterTableBody');
-            } else { showSection('dashboard'); }
+            const q = query.toLowerCase().trim();
+            if (q === "") {
+                showSection('dashboard');
+                // FIX 6: ensure records load if not yet fetched
+                if (allRecords.length === 0) fetchRecords();
+                return;
+            }
+            const filtered = allRecords.filter(r =>
+                r.client_name?.toLowerCase().includes(q) ||
+                r.service_detail?.toLowerCase().includes(q) ||
+                r.assigned_staff?.toLowerCase().includes(q) ||
+                r.service_category?.toLowerCase().includes(q) ||
+                r.status?.toLowerCase().includes(q) ||
+                r.alloted_by?.toLowerCase().includes(q)
+            );
+            showSection('filterView');
+            document.getElementById('filterTitle').innerText = `Results for: "${query}"`;
+            renderTable(filtered, 'filterTableBody');
         }
 
         function updateStats(data) {
@@ -441,27 +427,22 @@ document.getElementById('filterTitle').innerText =
             document.getElementById('statDone').innerText = data.filter(r => r.status === 'Completed').length;
             document.getElementById('statPending').innerText = data.filter(r => r.status === 'Pending').length;
         }
+
         async function refreshData() {
-
-    const btn = document.getElementById("refreshBtn");
-
-    btn.innerHTML =
-        '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
-
-    await fetchRecords(true);
+            const btn = document.getElementById("refreshBtn");
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
+            await fetchRecords(true);
             renderTable(allRecords, 'mainTableBody');
+            btn.innerHTML = '<i class="fas fa-check mr-1"></i> Updated';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-rotate-right mr-1"></i> Refresh';
+            }, 1500);
+        }
 
-    btn.innerHTML =
-        '<i class="fas fa-check mr-1"></i> Updated';
-
-    setTimeout(() => {
-
-        btn.innerHTML =
-            '<i class="fas fa-rotate-right mr-1"></i> Refresh';
-
-    }, 1500);
-}
-
+        // ============================================================
+        // FIX 7: clearForm — serviceCategory default was 'GST'
+        //         should be 'Sales' (first option in the select)
+        // ============================================================
         function clearForm() {
             document.getElementById('editId').value = "";
             document.getElementById('formTitle').innerText = "Management Portal";
@@ -469,1387 +450,656 @@ document.getElementById('filterTitle').innerText =
             document.getElementById('editBadge').classList.add('hidden');
             ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline', 'status', 'remarks'].forEach(i => {
                 const el = document.getElementById(i);
-                el.value = (i === 'serviceCategory') ? 'GST' : (i === 'status' ? 'Pending' : "");
+                if (i === 'serviceCategory') {
+                    // FIX 7: default to first option 'Sales', not 'GST'
+                    el.value = 'Sales';
+                } else if (i === 'status') {
+                    el.value = 'Pending';
+                } else {
+                    el.value = "";
+                }
                 el.disabled = false;
             });
-        }    
-      // REGISTER
-async function registerUser() {
-
-const email = document.getElementById("email").value;
-
-const password = document.getElementById("password").value;
-
-const { data, error } = await supabaseClient.auth.signUp({
-    email,
-    password
-});
-
-if (error) {
-    document.getElementById('authMsg').innerText = error.message;
-    return;
-}
-
-const user = data.user;
-
-await supabaseClient.from('witcorp_users').insert([
-{
-    id: user.id,
-    email: user.email,
-    role: 'user',
-    approved: true
-}
-]);
-
-document.getElementById('authMsg').innerText =
-"Registered Successfully! Now login.";
-
-}
-
-// LOGIN
-async function loginUser() {
-
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    document.getElementById('authMsg').innerText = error.message;
-    return;
-  }
-
-  checkApproval(data.user);
-}
-
-// CHECK APPROVAL
-// CHECK APPROVAL
-async function checkApproval(user) {
-
-  const { data } = await supabaseClient
-    .from('witcorp_users')
-    .select('approved')
-    .eq('id', user.id)
-    .single();
-
-  if (!data.approved) {
-
-    alert("Not approved by admin yet");
-
-    logout();
-
-    return;
-  }
-
-  currentUserName = user.email;
-
-  showApp(user);
-}
-
-function showApp(user) {
-
-  document.getElementById('authScreen').style.display = 'none';
-
-  document.getElementById('appScreen').classList.remove('hidden');
-  document.getElementById('appScreen').classList.add('flex');
-
-  const gmailEl = document.getElementById('userGmail');
-
-  if (gmailEl) {
-
-    gmailEl.innerText = user.email;
-
-  }
-
-  const name = user.email;
-
-  const p1 = document.getElementById("profileInitial");
-
-  const p2 = document.getElementById("profileInitial2");
-
-  if (p1) {
-
-    p1.innerText = name.charAt(0).toUpperCase();
-
-  }
-
-  if (p2) {
-
-    p2.innerText = name.charAt(0).toUpperCase();
-
-  }
-
-}
-// LOGOUT
-async function logout() {
-  await supabaseClient.auth.signOut();
-  location.reload();
-}
-
-// AUTO LOGIN
-supabaseClient.auth.getSession().then(({ data }) => {
-  if (data.session) {
-    checkApproval(data.session.user);
-  }
-});
-        function toggleMenu() {
-  const menu = document.getElementById("mobileMenu");
-  menu.classList.toggle("hidden");
-
-  if (menu.classList.contains("hidden")) {
-    document.body.classList.remove("menu-open");
-  } else {
-    document.body.classList.add("menu-open");
-  }
-}
-        function searchClients(query) {
-
-    const q = query.toLowerCase();
-
-    const filtered = allClients.filter(c =>
-        c.client_name?.toLowerCase().includes(q) ||
-        c.contact_number?.toLowerCase().includes(q) ||
-        c.email_id?.toLowerCase().includes(q)
-    );
-            filtered.sort((a, b) => {
-    return a.client_name.toLowerCase().startsWith(q) ? -1 : 1;
-});
-
-    const containers = {
-        'Pvt Ltd': 'pvtLtdList',
-        'LLP': 'llpList',
-        'Others': 'othersList'
-    };
-
-    Object.values(containers).forEach(id => {
-        document.getElementById(id).innerHTML = "";
-    });
-
-    filtered.forEach(c => {
-
-        const listId = containers[c.entity_type] || 'othersList';
-
-        document.getElementById(listId).innerHTML += `
-            <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
-
-                <div class="font-black text-slate-800 text-sm">
-                    ${c.client_name}
-                </div>
-
-                <div class="text-[10px] text-slate-500 font-bold mt-1">
-                    <i class="fas fa-phone-alt mr-1.5 text-blue-500"></i>
-                    ${c.contact_number}
-                </div>
-
-                <div class="text-[10px] text-blue-600 font-black break-all mt-1 opacity-70 group-hover:opacity-100">
-                    <i class="fas fa-envelope mr-1.5"></i>
-                    ${c.email_id}
-                </div>
-
-                <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
-
-                    <button onclick='editClient(${JSON.stringify(c)})'
-                        class="text-[9px] text-blue-600 font-black uppercase hover:scale-110 transition-transform">
-                        Modify
-                    </button>
-
-                    <button onclick="deleteClient(${c.id})"
-                        class="text-[9px] text-rose-500 font-black uppercase hover:scale-110 transition-transform">
-                        Delete
-                    </button>
-
-                </div>
-
-            </div>
-        `;
-    });
-
-    if (query.trim() === "") {
-        fetchClients();
-    }
-}
-        function searchVault(query) {
-
-    const q = query.toLowerCase();
-
-    const filtered = allVault.filter(v =>
-
-        v.client_name?.toLowerCase().includes(q) ||
-        v.category?.toLowerCase().includes(q) ||
-        v.username?.toLowerCase().includes(q)
-
-    );
-           
-    const tbody = document.getElementById('vaultTableBody');
-
-    tbody.innerHTML = "";
-
-    filtered.forEach(v => {
-
-        tbody.innerHTML += `
-
-            <tr class="group hover:bg-slate-50">
-
-                <td class="p-4 font-black text-blue-900 text-sm tracking-tight">
-                    ${v.client_name || 'N/A'}
-                </td>
-
-                <td class="p-4 font-black text-slate-700 text-sm">
-                    <span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">
-                        ${v.category}
-                    </span>
-                </td>
-
-                <td class="p-4 font-bold text-blue-600 text-sm">
-                    ${v.username}
-                </td>
-
-                <td class="p-4 font-mono text-xs">
-                    <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">
-                        ${v.password}
-                    </span>
-                </td>
-                <td class="p-4 text-[11px] font-bold text-blue-700">
-                 ${v.updated_by || 'N/A'}
-                 </td>
-
-                <td class="p-4 text-right flex gap-3 justify-end items-center">
-
-                    <button onclick='editVault(${JSON.stringify(v)})'
-                        class="text-blue-500 hover:scale-125 transition-transform">
-
-                        <i class="fas fa-pencil"></i>
-
-                    </button>
-
-                    <button onclick="deleteVault(${v.id})"
-                        class="text-rose-500 hover:scale-125 transition-transform">
-
-                        <i class="fas fa-trash-alt"></i>
-
-                    </button>
-
-                </td>
-
-            </tr>
-
-        `;
-    });
-
-    if (query.trim() === "") {
-        fetchVault();
-    }
-}
-         async function fetchDSC() {
-
-    const { data, error } = await supabaseClient
-        .from('witcorp_dsc')
-        .select('*')
-        .order('updated_at', { ascending: false }); // ✅ FIX IMPORTANT
-
-    if (error) {
-        console.log("DSC FETCH ERROR:", error);
-        return;
-    }
-
-    allDSC = data || [];
-     currentExportData = allDSC;
-     currentExportType = "dsc";
-    setupPredictions();
-
-    renderDSC(allDSC);
-}
-
-function renderDSC(data) {
-
-    const tbody = document.getElementById('dscTableBody');
-
-    if (!tbody) {
-        console.log("dscTableBody NOT FOUND");
-        return;
-    }
-
-    tbody.innerHTML = "";
-
-    data.forEach(d => {
-
-        tbody.innerHTML += `
-
-        <tr class="border-b border-slate-200 hover:bg-slate-50">
-
-            <td class="p-4 font-bold">
-                ${d.company_name || ''}
-            </td>
-
-            <td class="p-4">
-                ${d.client_name || ''}
-            </td>
-
-            <td class="p-4">
-                ${d.status || ''}
-            </td>
-
-            <td class="p-4">
-                ${d.expiry_date || ''}
-            </td>
-
-            <td class="p-4">
-                ${d.remarks || ''}
-            </td>
-
-            <td class="p-4 text-blue-700 text-xs">
-    ${d.updated_by || 'N/A'}
-</td>
-
-<td class="p-4 text-[11px] font-bold text-slate-500">
-    ${d.updated_at
-        ? new Date(d.updated_at).toLocaleString('en-IN')
-        : 'N/A'}
-</td>
-
-           <td class="p-4 text-right whitespace-nowrap">
-
-    <div class="flex gap-2 justify-end items-center">
-
-        <button onclick='editDSC(${JSON.stringify(d)})'
-            class="px-3 py-1 bg-blue-500 text-white rounded">
-
-            Edit
-
-        </button>
-
-        <button onclick="deleteDSC(${d.id})"
-            class="px-3 py-1 bg-red-500 text-white rounded">
-
-            Delete
-
-        </button>
-
-    </div>
-
-</td>
-
-</tr>
-
-`;
-});
-
-}
-
-async function saveDSC() {
-
-    const btn = document.getElementById('dscBtn');
-
-    btn.disabled = true;
-
-    const id = document.getElementById('dEditId').value;
-
-    const payload = {
-
-        company_name: document.getElementById('dCompany').value.trim(),
-
-        client_name: document.getElementById('dClient').value.trim(),
-
-        status: document.getElementById('dStatus').value,
-
-        expiry_date: document.getElementById('dExpiry').value,
-
-        remarks: document.getElementById('dRemarks').value.trim(),
-
-        updated_by: currentUserName,
-        updated_at: new Date().toISOString()
-    };
-
-    if (!payload.company_name) {
-
-        btn.disabled = false;
-
-        return alert("Company Name Required");
-    }
-
-    let error;
-
-    if (id) {
-
-        ({ error } = await supabaseClient
-            .from('witcorp_dsc')
-            .update(payload)
-            .eq('id', id));
-
-    } else {
-
-        ({ error } = await supabaseClient
-            .from('witcorp_dsc')
-            .insert([payload]));
-    }
-    console.log("DSC SAVED OK, REFRESHING UI...");
-    console.log("DSC ERROR:", JSON.stringify(error));
-
-    if (!error) {
-            await createNotification(
-
-    id ? "DSC Updated" : "New DSC Added",
-
-    `${payload.company_name} DSC updated by ${currentUserName}`,
-
-    "dsc"
-
-);
-
-        alert(id ? "DSC Updated Successfully" : "DSC Saved Successfully");
-
-        await new Promise(r => setTimeout(r, 300)); // ✅ FORCE REFRESH DELAY
-        await fetchDSC();
-        
-
-        document.getElementById('dEditId').value = "";
-
-        ['dCompany','dClient','dExpiry','dRemarks']
-        .forEach(i => document.getElementById(i).value = "");
-
-        document.getElementById('dStatus').value = "Valid";
-
-        document.getElementById('dscBtn').innerText =
-            "Save DSC Status";
-
-    } else {
-
-        alert("Supabase Error Check Console");
-    }
-
-    btn.disabled = false;
-}
-function editDSC(d) {
-
-    document.getElementById('dEditId').value = d.id;
-
-    document.getElementById('dCompany').value =
-        d.company_name;
-
-    document.getElementById('dClient').value =
-        d.client_name;
-
-    document.getElementById('dStatus').value =
-    (d.status === "Valid" || d.status === "Expired" || d.status === "No DSC")
-        ? d.status
-        : "Valid";
-
-    document.getElementById('dExpiry').value =
-    d.expiry_date
-    ? d.expiry_date.split('T')[0]
-    : "";
-
-    document.getElementById('dRemarks').value =
-        d.remarks;
-
-    document.getElementById('dscBtn').innerText =
-        "Update DSC Status";
-    document.getElementById('dCompany').scrollIntoView({
-    behavior: 'smooth',
-    block: 'center'
-});
-}
-
-async function deleteDSC(id) {
-
-    if(confirm("Delete DSC Record?")) {
-
-        await supabaseClient
-            .from('witcorp_dsc')
-            .delete()
-            .eq('id', id);
-
-        await fetchDSC();
-    }
-}
-
-function searchDSC(query) {
-
-    const q = query.toLowerCase();
-
-    const filtered = allDSC.filter(d =>
-
-        d.company_name?.toLowerCase().includes(q) ||
-
-        d.client_name?.toLowerCase().includes(q) ||
-
-        d.status?.toLowerCase().includes(q)
-    );
-
-    renderDSC(filtered);
-}
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js')
-    .then(() => console.log("SW registered"));
-}
-function toggleProfileMenu() {
-
-    const menu = document.getElementById("profileMenu");
-
-    menu.classList.toggle("hidden");
-
-}
-document.addEventListener("click", function(event) {
-
-    const menu = document.getElementById("profileMenu");
-
-    const button = event.target.closest("button");
-
-    if (!event.target.closest("#profileMenu") &&
-        !event.target.closest("[onclick='toggleProfileMenu()']")) {
-
-        menu.classList.add("hidden");
-
-    }
-
-});
-// OPEN THEME MODAL
-function openThemeSettings() {
-
-    document.getElementById("themeModal")
-    .classList.remove("hidden");
-
-}
-
-// CLOSE THEME MODAL
-function closeThemeSettings() {
-
-    document.getElementById("themeModal")
-    .classList.add("hidden");
-
-}
-async function createNotification(
-    title,
-    message,
-    type = "info",
-    reference = ""
-) {
-
-    await supabaseClient
-        .from('witcorp_notifications')
-        .insert([{
-            title,
-            message,
-            type,
-            reference,
-            created_by: currentUserName,
-            is_read: false
-        }]);
-
-}
-async function fetchNotifications() {
-
-    const { data, error } = await supabaseClient
-        .from('witcorp_notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-    if(error) return;
-
-    allNotifications = data;
-
-    renderNotifications();
-
-}
-function renderNotifications() {
-
-    const list =
-        document.getElementById('notificationList');
-
-    const count =
-        document.getElementById('notificationCount');
-
-    list.innerHTML = "";
-
-    const unread =
-        allNotifications.filter(n => !n.is_read);
-
-    unreadCount = unread.length;
-
-    if(unreadCount > 0){
-
-        count.classList.remove('hidden');
-
-        count.innerText = unreadCount;
-
-    } else {
-
-        count.classList.add('hidden');
-
-    }
-
-    allNotifications.forEach(n => {
-
-        list.innerHTML += `
-
-            <div
-    onclick="openNotification(${n.id}, '${n.type}', '${n.reference || ''}')"
-    class="p-4 cursor-pointer border-b border-slate-100 transition-all hover:bg-slate-50
-    ${!n.is_read ? 'bg-blue-50' : 'bg-white'}
-    ${n.is_read ? 'opacity-60' : ''}">
-
-                <div class="font-black text-sm text-slate-800">
-                    ${n.title}
-                </div>
-
-                <div class="text-xs text-slate-500 mt-1">
-                    ${n.message}
-                </div>
-
-                <div class="text-[10px] text-blue-600 mt-2 font-bold">
-                    ${new Date(n.created_at).toLocaleString('en-IN')}
-                </div>
-
-            </div>
-
-        `;
-    });
-
-}
-function toggleNotificationPanel(){
-
-    document.getElementById('notificationPanel')
-    .classList.toggle('hidden');
-
-}
-async function openNotification(id, type, reference) {
-
-    // MARK AS READ
-
-    await supabaseClient
-        .from('witcorp_notifications')
-        .update({ is_read: true })
-        .eq('id', id);
-
-    // LOCAL UPDATE
-
-    const target =
-        allNotifications.find(n => n.id === id);
-
-    if(target){
-
-        target.is_read = true;
-
-    }
-
-    renderNotifications();
-
-    // OPEN RELATED SECTION
-
-    if(type === "record"){
-
-        showSection('dashboard');
-
-        handleSearch(reference);
-
-    }
-
-    if(type === "client"){
-
-        showSection('clientManagement');
-
-        searchClients(reference);
-
-    }
-
-    if(type === "vault"){
-
-        showSection('vaultManagement');
-
-        searchVault(reference);
-
-    }
-
-    if(type === "dsc"){
-
-        showSection('dscManagement');
-
-        searchDSC(reference);
-
-    }
-
-    // CLOSE PANEL
-
-    document.getElementById('notificationPanel')
-    .classList.add('hidden');
-
-}
-supabaseClient
-.channel('live-notifications')
-
-.on(
-    'postgres_changes',
-    {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'witcorp_notifications'
-    },
-
-   async (payload) => {
-           // DON'T SHOW OWN NOTIFICATION
-
-if (
-    payload.new.created_by === currentUserName
-) {
-    return;
-}
-
-    console.log("NEW NOTIFICATION:", payload);
-
-    allNotifications.unshift(payload.new);
-
-    renderNotifications();
-
-   // NOTIFICATION SETTING CHECK
-
-const notificationEnabled =
-    localStorage.getItem("notificationSound");
-
-if (notificationEnabled !== "off") {
-
-    // SOUND
-    const audio = new Audio(
-        'https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3'
-    );
-
-    audio.play();
-
-    // PUSH NOTIFICATION
-    navigator.serviceWorker.ready.then(reg => {
-
-        reg.showNotification(
-            payload.new.title || "New Update",
-            {
-                body: payload.new.message || "Database updated",
-                icon: "./logo.png",
-                badge: "./logo.png"
+        }
+
+        // REGISTER
+        async function registerUser() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) {
+                document.getElementById('authMsg').innerText = error.message;
+                return;
             }
-        );
-
-    });
-
-}
-    // AUTO REFRESH
-    fetchRecords(true);
-
-}
-
-)
-
-.subscribe((status) => {
-
-    console.log("NOTIFICATION STATUS:", status);
-
-});
-window.addEventListener('DOMContentLoaded', () => {
-
-    fetchNotifications();
-
-});
-
-/* ========================= */
-/* BACKGROUND THEME SYSTEM */
-/* ========================= */
-
-function changeTheme(theme){
-
-    const body = document.body;
-
-    const bgThemes = [
-        'theme-ocean',
-        'theme-dark',
-        'theme-green',
-        'theme-purple',
-        'theme-light'
-    ];
-
-    bgThemes.forEach(t => {
-        body.classList.remove(t);
-    });
-
-    body.classList.add(theme);
-
-    localStorage.setItem('bgTheme', theme);
-}
-
-/* ========================= */
-/* SIDEBAR THEME SYSTEM */
-/* ========================= */
-
-function changeSidebarTheme(theme){
-
-    const sidebar =
-    document.getElementById('sidebar');
-
-    const mobileSidebar =
-    document.getElementById('mobileSidebar');
-
-    const sidebarThemes = [
-        'sidebar-theme-raspberry',
-        'sidebar-theme-mint',
-        'sidebar-theme-chill',
-        'sidebar-theme-forest',
-        'sidebar-theme-damini',
-        'sidebar-theme-seaglass',
-        'sidebar-theme-lemon',
-        'sidebar-theme-dark',
-        'sidebar-theme-navypro',
-        'sidebar-theme-original'
-    ];
-
-    sidebarThemes.forEach(t => {
-
-        sidebar.classList.remove(t);
-
-        mobileSidebar.classList.remove(t);
-
-    });
-
-    sidebar.classList.add(theme);
-
-    mobileSidebar.classList.add(theme);
-
-    localStorage.setItem(
-        'sidebarTheme',
-        theme
-    );
-}
-
-/* ========================= */
-/* LOAD SAVED THEMES */
-/* ========================= */
-
-window.addEventListener('load', ()=>{
-
-    const savedBg =
-    localStorage.getItem('bgTheme');
-
-    if(savedBg){
-
-        changeTheme(savedBg);
-
-    }
-
-    const savedSidebar =
-    localStorage.getItem('sidebarTheme');
-
-    if(savedSidebar){
-
-        changeSidebarTheme(savedSidebar);
-
-    }
-        loadNotificationSetting();
-
-});
-/* ========================= */
-/* GLOBAL AUTOCOMPLETE SYSTEM */
-/* ========================= */
-
-function setupPredictions() {
-
-    // CLIENT NAMES
-    const clientList =
-        document.getElementById('clientSuggestions');
-
-    const uniqueClients =
-        [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
-
-    clientList.innerHTML = "";
-
-    uniqueClients.forEach(name => {
-
-        clientList.innerHTML +=
-            `<option value="${name}">`;
-
-    });
-
-    // SERVICE DETAILS
-    const serviceList =
-        document.getElementById('serviceSuggestions');
-
-    const uniqueServices =
-        [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
-
-    serviceList.innerHTML = "";
-
-    uniqueServices.forEach(name => {
-
-        serviceList.innerHTML +=
-            `<option value="${name}">`;
-
-    });
-
-    // STAFF
-    const staffList =
-        document.getElementById('staffSuggestions');
-
-    const uniqueStaff =
-        [...new Set(allRecords.map(r => r.assigned_staff).filter(Boolean))];
-
-    staffList.innerHTML = "";
-
-    uniqueStaff.forEach(name => {
-
-        staffList.innerHTML +=
-            `<option value="${name}">`;
-
-    });
-
-    // ALLOTED BY
-    const allotList =
-        document.getElementById('allotedSuggestions');
-
-    const uniqueAlloted =
-        [...new Set(allRecords.map(r => r.alloted_by).filter(Boolean))];
-
-    allotList.innerHTML = "";
-
-    uniqueAlloted.forEach(name => {
-
-        allotList.innerHTML +=
-            `<option value="${name}">`;
-
-    });
-
-    // DSC COMPANY
-    const companyList =
-        document.getElementById('companySuggestions');
-
-    const uniqueCompany =
-        [...new Set(allDSC.map(d => d.company_name).filter(Boolean))];
-
-    companyList.innerHTML = "";
-
-    uniqueCompany.forEach(name => {
-
-        companyList.innerHTML +=
-            `<option value="${name}">`;
-
-    });
-
-    // VAULT CATEGORY
-    const vaultList =
-        document.getElementById('vaultCategorySuggestions');
-
-    const uniqueVault =
-        [...new Set(allVault.map(v => v.category).filter(Boolean))];
-
-    vaultList.innerHTML = "";
-
-    uniqueVault.forEach(name => {
-
-        vaultList.innerHTML +=
-            `<option value="${name}">`;
-
-    });
-
-}
-/* ========================= */
-/* FORGOT PASSWORD SYSTEM */
-/* ========================= */
-
-async function forgotPassword() {
-
-    const email =
-        document.getElementById("email").value;
-
-    if (!email) {
-
-        return alert("Please enter your email first");
-
-    }
-
-    const { error } =
-        await supabaseClient.auth.resetPasswordForEmail(email, {
-
-            redirectTo:
-                window.location.origin + window.location.pathname + "?reset=true"
-
+            const user = data.user;
+            await supabaseClient.from('witcorp_users').insert([{
+                id: user.id,
+                email: user.email,
+                role: 'user',
+                approved: true
+            }]);
+            document.getElementById('authMsg').innerText = "Registered Successfully! Now login.";
+        }
+
+        // LOGIN
+        async function loginUser() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) {
+                document.getElementById('authMsg').innerText = error.message;
+                return;
+            }
+            checkApproval(data.user);
+        }
+
+        // CHECK APPROVAL
+        async function checkApproval(user) {
+            const { data } = await supabaseClient
+                .from('witcorp_users')
+                .select('approved')
+                .eq('id', user.id)
+                .single();
+            if (!data || !data.approved) {
+                alert("Not approved by admin yet");
+                logout();
+                return;
+            }
+            currentUserName = user.email;
+            showApp(user);
+        }
+
+        function showApp(user) {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('flex');
+            const gmailEl = document.getElementById('userGmail');
+            if (gmailEl) gmailEl.innerText = user.email;
+            const name = user.email;
+            const p1 = document.getElementById("profileInitial");
+            const p2 = document.getElementById("profileInitial2");
+            if (p1) p1.innerText = name.charAt(0).toUpperCase();
+            if (p2) p2.innerText = name.charAt(0).toUpperCase();
+            showSection('dashboard');
+        }
+
+        // LOGOUT
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        }
+
+        // AUTO LOGIN
+        supabaseClient.auth.getSession().then(({ data }) => {
+            if (data.session) checkApproval(data.session.user);
         });
 
-    if (error) {
+        function toggleMenu() {
+            const menu = document.getElementById("mobileMenu");
+            menu.classList.toggle("hidden");
+            if (menu.classList.contains("hidden")) {
+                document.body.classList.remove("menu-open");
+            } else {
+                document.body.classList.add("menu-open");
+            }
+        }
 
-        alert(error.message);
-
-    } else {
-
-        alert(
-            "Password reset link sent to your email."
-        );
-
-    }
-
-}
-/* ========================= */
-/* RESET PASSWORD DETECTION */
-/* ========================= */
-
-window.addEventListener('load', async () => {
-
-    const hash =
-        window.location.hash;
-
-    if (
-        hash.includes("access_token") &&
-        hash.includes("type=recovery")
-    ) {
-
-        const newPassword =
-            prompt("Enter New Password");
-
-        if (!newPassword) return;
-
-        const { error } =
-            await supabaseClient.auth.updateUser({
-
-                password: newPassword
-
+        // ============================================================
+        // FIX 8: searchClients — stable sort with proper 3-way compare
+        // ============================================================
+        function searchClients(query) {
+            const q = query.toLowerCase().trim();
+            const filtered = allClients.filter(c =>
+                c.client_name?.toLowerCase().includes(q) ||
+                c.contact_number?.toLowerCase().includes(q) ||
+                c.email_id?.toLowerCase().includes(q)
+            );
+            // FIX 8: proper stable sort — 3-way compare (was only -1 or 1, missing 0)
+            filtered.sort((a, b) => {
+                const aStarts = a.client_name?.toLowerCase().startsWith(q) ? 0 : 1;
+                const bStarts = b.client_name?.toLowerCase().startsWith(q) ? 0 : 1;
+                return aStarts - bStarts;
             });
 
-        if (error) {
+            const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
+            Object.values(containers).forEach(id => { document.getElementById(id).innerHTML = ""; });
 
-            alert(error.message);
+            filtered.forEach(c => {
+                const listId = containers[c.entity_type] || 'othersList';
+                document.getElementById(listId).innerHTML += `
+                    <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
+                        <div class="font-black text-slate-800 text-sm">${c.client_name}</div>
+                        <div class="text-[10px] text-slate-500 font-bold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i> ${c.contact_number}</div>
+                        <div class="text-[10px] text-blue-600 font-black break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i> ${c.email_id}</div>
+                        <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
+                            <button onclick='editClient(${JSON.stringify(c)})' class="text-[9px] text-blue-600 font-black uppercase hover:scale-110 transition-transform">Modify</button>
+                            <button onclick="deleteClient(${c.id})" class="text-[9px] text-rose-500 font-black uppercase hover:scale-110 transition-transform">Delete</button>
+                        </div>
+                    </div>`;
+            });
 
-        } else {
-
-            alert(
-                "Password updated successfully!"
-            );
-
-            window.location.href =
-                window.location.pathname;
-
+            if (query.trim() === "") fetchClients();
         }
 
-    }
-
-});
-/* ========================= */
-/* NOTIFICATION SOUND SETTING */
-/* ========================= */
-
-function loadNotificationSetting(){
-
-    const sound =
-        localStorage.getItem("notificationSound");
-
-    const status =
-        document.getElementById("notificationStatus");
-
-    if(sound === "off"){
-
-        status.innerText = "OFF";
-        status.classList.remove("text-green-600");
-        status.classList.add("text-red-500");
-
-    }else{
-
-        status.innerText = "ON";
-        status.classList.remove("text-red-500");
-        status.classList.add("text-green-600");
-
-    }
-
-}
-
-function toggleNotificationSetting(){
-
-    const current =
-        localStorage.getItem("notificationSound");
-
-    if(current === "off"){
-
-        localStorage.setItem(
-            "notificationSound",
-            "on"
-        );
-
-    }else{
-
-        localStorage.setItem(
-            "notificationSound",
-            "off"
-        );
-
-    }
-
-    loadNotificationSetting();
-
-}
-function openExportModal(){
-document.getElementById("exportModal").classList.remove("hidden");
-}
-
-function closeExportModal(){
-document.getElementById("exportModal").classList.add("hidden");
-}
-
-function openMyActivity(){
-document.getElementById("activityModal").classList.remove("hidden");
-loadMyActivity();
-}
-
-function closeActivityModal(){
-document.getElementById("activityModal").classList.add("hidden");
-}
-
-function saveActivity(text){
-
-let activity =
-JSON.parse(
-localStorage.getItem("myActivity")
-|| "[]"
-);
-
-activity.unshift({
-
-text:text,
-
-time:new Date().toLocaleString()
-
-});
-
-localStorage.setItem(
-"myActivity",
-JSON.stringify(activity)
-);
-
-}
-function loadMyActivity(){
-
-let activity =
-JSON.parse(
-localStorage.getItem("myActivity")
-|| "[]"
-);
-
-let html = "";
-
-activity.forEach(item=>{
-
-html += `
-<div class="border-b py-3">
-
-<div class="font-bold">
-${item.text}
-</div>
-
-<div class="text-xs text-slate-500 mt-1">
-${item.time}
-</div>
-
-</div>
-`;
-
-});
-
-document.getElementById("activityList").innerHTML =
-html || "<p>No activity found</p>";
-
-}
-function exportCSV() {
-
-    let rows = currentExportData || [];
-
-    if(rows.length === 0){
-        alert("No records found");
-        return;
-    }
-
-    let csv = "";
-
-    if(currentExportType === "records"){
-
-        csv = "Client,Category,Service,Staff,Status,Deadline\n";
-
-        rows.forEach(r=>{
-            csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.status || ""}","${r.deadline || ""}"\n`;
-        });
-
-    }
-
-    else if(currentExportType === "clients"){
-
-        csv = "Client Name,Phone,Email,Type\n";
-
-        rows.forEach(r=>{
-            csv += `"${r.client_name || ""}","${r.contact_number || ""}","${r.email_id || ""}","${r.entity_type || ""}"\n`;
-        });
-
-    }
-
-    else if(currentExportType === "vault"){
-
-        csv = "Client,Category,Username,Password,Updated By\n";
-
-        rows.forEach(r=>{
-            csv += `"${r.client_name || ""}","${r.category || ""}","${r.username || ""}","${r.password || ""}","${r.updated_by || ""}"\n`;
-        });
-
-    }
-
-    else if(currentExportType === "dsc"){
-
-        csv = "Company,Client,Status,Expiry Date,Remarks\n";
-
-        rows.forEach(r=>{
-            csv += `"${r.company_name || ""}","${r.client_name || ""}","${r.status || ""}","${r.expiry_date || ""}","${r.remarks || ""}"\n`;
-        });
-
-    }
-
-    const blob = new Blob([csv], {
-        type: "text/csv;charset=utf-8;"
-    });
-
-    const a = document.createElement("a");
-
-    a.href = URL.createObjectURL(blob);
-    a.download = currentExportType + ".csv";
-    a.click();
-}
-
-function exportExcel(){
-
-    exportCSV();
-
-    saveActivity("Exported Excel Report");
-
-}
-
-function exportPDF() {
-
-    const { jsPDF } = window.jspdf;
-
-    const doc = new jsPDF("landscape");
-
-    let rows = currentExportData || [];
-
-    if(rows.length === 0){
-        alert("No records found");
-        return;
-    }
-
-    let tableHead = [];
-    let tableData = [];
-
-    if(currentExportType === "vault"){
-
-        tableHead = [[
-            "Client",
-            "Category",
-            "Username",
-            "Password",
-            "Updated By"
-        ]];
-
-        tableData = rows.map(r => [
-            r.client_name || "",
-            r.category || "",
-            r.username || "",
-            r.password || "",
-            r.updated_by || ""
-        ]);
-
-    }
-
-    else if(currentExportType === "clients"){
-
-        tableHead = [[
-            "Client",
-            "Phone",
-            "Email",
-            "Type"
-        ]];
-
-        tableData = rows.map(r => [
-            r.client_name || "",
-            r.contact_number || "",
-            r.email_id || "",
-            r.entity_type || ""
-        ]);
-
-    }
-
-    else if(currentExportType === "dsc"){
-
-        tableHead = [[
-            "Company",
-            "Client",
-            "Status",
-            "Expiry Date",
-            "Remarks"
-        ]];
-
-        tableData = rows.map(r => [
-            r.company_name || "",
-            r.client_name || "",
-            r.status || "",
-            r.expiry_date || "",
-            r.remarks || ""
-        ]);
-
-    }
-
-    else {
-
-        tableHead = [[
-            "Client",
-            "Category",
-            "Service",
-            "Staff",
-            "Alloted By",
-            "Status",
-            "Deadline",
-            "Remarks",
-            "Updated By"
-        ]];
-
-        tableData = rows.map(r => [
-            r.client_name || "",
-            r.service_category || "",
-            r.service_detail || "",
-            r.assigned_staff || "",
-            r.alloted_by || "",
-            r.status || "",
-            r.deadline || "",
-            r.remarks || "",
-            r.updated_by || ""
-        ]);
-
-    }
-
-    doc.setFontSize(16);
-    doc.text("Witcorp Hub Report", 14, 15);
-
-    doc.autoTable({
-
-        head: tableHead,
-
-        body: tableData,
-
-        startY: 25,
-
-        didDrawPage: function () {
-
-            doc.setFontSize(10);
-
-            doc.text(
-                "Generated : " +
-                new Date().toLocaleString(),
-                14,
-                10
+        function searchVault(query) {
+            const q = query.toLowerCase();
+            const filtered = allVault.filter(v =>
+                v.client_name?.toLowerCase().includes(q) ||
+                v.category?.toLowerCase().includes(q) ||
+                v.username?.toLowerCase().includes(q)
             );
-
+            const tbody = document.getElementById('vaultTableBody');
+            tbody.innerHTML = "";
+            filtered.forEach(v => {
+                tbody.innerHTML += `
+                    <tr class="group hover:bg-slate-50">
+                        <td class="p-4 font-black text-blue-900 text-sm tracking-tight">${v.client_name || 'N/A'}</td>
+                        <td class="p-4 font-black text-slate-700 text-sm"><span class="px-2 py-1 bg-slate-100 rounded-lg text-[10px]">${v.category}</span></td>
+                        <td class="p-4 font-bold text-blue-600 text-sm">${v.username}</td>
+                        <td class="p-4 font-mono text-xs"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${v.password}</span></td>
+                        <td class="p-4 text-[11px] font-bold text-blue-700">${v.updated_by || 'N/A'}</td>
+                        <td class="p-4 text-right flex gap-3 justify-end items-center">
+                            <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform"><i class="fas fa-pencil"></i></button>
+                            <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            if (query.trim() === "") fetchVault();
         }
 
-    });
+        async function fetchDSC() {
+            const { data, error } = await supabaseClient
+                .from('witcorp_dsc')
+                .select('*')
+                .order('updated_at', { ascending: false });
+            if (error) { console.log("DSC FETCH ERROR:", error); return; }
+            allDSC = data || [];
+            currentExportData = allDSC;
+            currentExportType = "dsc";
+            setupPredictions();
+            renderDSC(allDSC);
+        }
 
-    doc.save("Witcorp_Report.pdf");
+        function renderDSC(data) {
+            const tbody = document.getElementById('dscTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            data.forEach(d => {
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-200 hover:bg-slate-50">
+                        <td class="p-4 font-bold">${d.company_name || ''}</td>
+                        <td class="p-4">${d.client_name || ''}</td>
+                        <td class="p-4">${d.status || ''}</td>
+                        <td class="p-4">${d.expiry_date || ''}</td>
+                        <td class="p-4">${d.remarks || ''}</td>
+                        <td class="p-4 text-blue-700 text-xs">${d.updated_by || 'N/A'}</td>
+                        <td class="p-4 text-[11px] font-bold text-slate-500">${d.updated_at ? new Date(d.updated_at).toLocaleString('en-IN') : 'N/A'}</td>
+                        <td class="p-4 text-right whitespace-nowrap">
+                            <div class="flex gap-2 justify-end items-center">
+                                <button onclick='editDSC(${JSON.stringify(d)})' class="px-3 py-1 bg-blue-500 text-white rounded">Edit</button>
+                                <button onclick="deleteDSC(${d.id})" class="px-3 py-1 bg-red-500 text-white rounded">Delete</button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+        }
 
-    saveActivity("Exported PDF Report");
-}
+        async function saveDSC() {
+            const btn = document.getElementById('dscBtn');
+            btn.disabled = true;
+            const id = document.getElementById('dEditId').value;
+            const payload = {
+                company_name: document.getElementById('dCompany').value.trim(),
+                client_name: document.getElementById('dClient').value.trim(),
+                status: document.getElementById('dStatus').value,
+                expiry_date: document.getElementById('dExpiry').value,
+                remarks: document.getElementById('dRemarks').value.trim(),
+                updated_by: currentUserName,
+                updated_at: new Date().toISOString()
+            };
+            if (!payload.company_name) {
+                btn.disabled = false;
+                return alert("Company Name Required");
+            }
+            let error;
+            if (id) {
+                ({ error } = await supabaseClient.from('witcorp_dsc').update(payload).eq('id', id));
+            } else {
+                ({ error } = await supabaseClient.from('witcorp_dsc').insert([payload]));
+            }
+            if (!error) {
+                await createNotification(
+                    id ? "DSC Updated" : "New DSC Added",
+                    `${payload.company_name} DSC updated by ${currentUserName}`,
+                    "dsc"
+                );
+                alert(id ? "DSC Updated Successfully" : "DSC Saved Successfully");
+                await new Promise(r => setTimeout(r, 300));
+                await fetchDSC();
+                document.getElementById('dEditId').value = "";
+                ['dCompany', 'dClient', 'dExpiry', 'dRemarks'].forEach(i => document.getElementById(i).value = "");
+                document.getElementById('dStatus').value = "Valid";
+                document.getElementById('dscBtn').innerText = "Save DSC Status";
+            } else {
+                alert("Supabase Error — Check Console");
+                console.error("DSC ERROR:", error);
+            }
+            btn.disabled = false;
+        }
+
+        function editDSC(d) {
+            document.getElementById('dEditId').value = d.id;
+            document.getElementById('dCompany').value = d.company_name;
+            document.getElementById('dClient').value = d.client_name;
+            document.getElementById('dStatus').value =
+                (d.status === "Valid" || d.status === "Expired" || d.status === "No DSC") ? d.status : "Valid";
+            document.getElementById('dExpiry').value = d.expiry_date ? d.expiry_date.split('T')[0] : "";
+            document.getElementById('dRemarks').value = d.remarks || '';
+            document.getElementById('dscBtn').innerText = "Update DSC Status";
+            document.getElementById('dCompany').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function deleteDSC(id) {
+            if (confirm("Delete DSC Record?")) {
+                await supabaseClient.from('witcorp_dsc').delete().eq('id', id);
+                await fetchDSC();
+            }
+        }
+
+        function searchDSC(query) {
+            const q = query.toLowerCase();
+            const filtered = allDSC.filter(d =>
+                d.company_name?.toLowerCase().includes(q) ||
+                d.client_name?.toLowerCase().includes(q) ||
+                d.status?.toLowerCase().includes(q)
+            );
+            renderDSC(filtered);
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(() => console.log("SW registered"));
+        }
+
+        function toggleProfileMenu() {
+            document.getElementById("profileMenu").classList.toggle("hidden");
+        }
+
+        document.addEventListener("click", function (event) {
+            const menu = document.getElementById("profileMenu");
+            if (!event.target.closest("#profileMenu") &&
+                !event.target.closest("[onclick='toggleProfileMenu()']")) {
+                menu.classList.add("hidden");
+            }
+        });
+
+        function openThemeSettings() {
+            document.getElementById("themeModal").classList.remove("hidden");
+        }
+
+        function closeThemeSettings() {
+            document.getElementById("themeModal").classList.add("hidden");
+        }
+
+        async function createNotification(title, message, type = "info", reference = "") {
+            await supabaseClient.from('witcorp_notifications').insert([{
+                title,
+                message,
+                type,
+                reference,
+                created_by: currentUserName,
+                is_read: false
+            }]);
+        }
+
+        async function fetchNotifications() {
+            const { data, error } = await supabaseClient
+                .from('witcorp_notifications')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(50);
+            if (error) return;
+            allNotifications = data;
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notificationList');
+            const count = document.getElementById('notificationCount');
+            list.innerHTML = "";
+            const unread = allNotifications.filter(n => !n.is_read);
+            unreadCount = unread.length;
+            if (unreadCount > 0) {
+                count.classList.remove('hidden');
+                count.innerText = unreadCount;
+            } else {
+                count.classList.add('hidden');
+            }
+            allNotifications.forEach(n => {
+                // FIX 9: store notification id as data attribute to avoid
+                //         special chars in reference breaking onclick attribute
+                list.innerHTML += `
+                    <div
+                        data-notif-id="${n.id}"
+                        data-notif-type="${n.type}"
+                        data-notif-ref="${(n.reference || '').replace(/"/g, '&quot;')}"
+                        class="p-4 cursor-pointer border-b border-slate-100 transition-all hover:bg-slate-50
+                        ${!n.is_read ? 'bg-blue-50' : 'bg-white'}
+                        ${n.is_read ? 'opacity-60' : ''}">
+                        <div class="font-black text-sm text-slate-800">${n.title}</div>
+                        <div class="text-xs text-slate-500 mt-1">${n.message}</div>
+                        <div class="text-[10px] text-blue-600 mt-2 font-bold">${new Date(n.created_at).toLocaleString('en-IN')}</div>
+                    </div>`;
+            });
+            // FIX 9: use event delegation instead of inline onclick with dynamic data
+            list.querySelectorAll('[data-notif-id]').forEach(el => {
+                el.addEventListener('click', function () {
+                    openNotification(
+                        parseInt(this.dataset.notifId),
+                        this.dataset.notifType,
+                        this.dataset.notifRef
+                    );
+                });
+            });
+        }
+
+        function toggleNotificationPanel() {
+            document.getElementById('notificationPanel').classList.toggle('hidden');
+        }
+
+        // ============================================================
+        // FIX 9: openNotification now receives clean args (no inline
+        //         attribute injection), special chars in reference safe
+        // ============================================================
+        async function openNotification(id, type, reference) {
+            await supabaseClient
+                .from('witcorp_notifications')
+                .update({ is_read: true })
+                .eq('id', id);
+            const target = allNotifications.find(n => n.id === id);
+            if (target) target.is_read = true;
+            renderNotifications();
+
+            if (type === "record") { showSection('dashboard'); handleSearch(reference); }
+            if (type === "client") { showSection('clientManagement'); searchClients(reference); }
+            if (type === "vault") { showSection('vaultManagement'); searchVault(reference); }
+            if (type === "dsc") { showSection('dscManagement'); searchDSC(reference); }
+
+            document.getElementById('notificationPanel').classList.add('hidden');
+        }
+
+        supabaseClient
+            .channel('live-notifications')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'witcorp_notifications' }, async (payload) => {
+                if (payload.new.created_by === currentUserName) return;
+                allNotifications.unshift(payload.new);
+                renderNotifications();
+                const notificationEnabled = localStorage.getItem("notificationSound");
+                if (notificationEnabled !== "off") {
+                    const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+                    audio.play().catch(() => {});
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification(payload.new.title || "New Update", {
+                            body: payload.new.message || "Database updated",
+                            icon: "./logo.png",
+                            badge: "./logo.png"
+                        });
+                    });
+                }
+                fetchRecords(true);
+            })
+            .subscribe((status) => { console.log("NOTIFICATION STATUS:", status); });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchNotifications();
+        });
+
+        /* ========================= */
+        /* BACKGROUND THEME SYSTEM   */
+        /* ========================= */
+        function changeTheme(theme) {
+            const body = document.body;
+            ['theme-ocean', 'theme-dark', 'theme-green', 'theme-purple', 'theme-light']
+                .forEach(t => body.classList.remove(t));
+            body.classList.add(theme);
+            localStorage.setItem('bgTheme', theme);
+        }
+
+        /* ========================= */
+        /* SIDEBAR THEME SYSTEM      */
+        /* ========================= */
+        function changeSidebarTheme(theme) {
+            const sidebar = document.getElementById('sidebar');
+            const mobileSidebar = document.getElementById('mobileSidebar');
+            const sidebarThemes = [
+                'sidebar-theme-raspberry', 'sidebar-theme-mint', 'sidebar-theme-chill',
+                'sidebar-theme-forest', 'sidebar-theme-damini', 'sidebar-theme-seaglass',
+                'sidebar-theme-lemon', 'sidebar-theme-dark', 'sidebar-theme-navypro',
+                'sidebar-theme-original'
+            ];
+            sidebarThemes.forEach(t => { sidebar.classList.remove(t); mobileSidebar.classList.remove(t); });
+            sidebar.classList.add(theme);
+            mobileSidebar.classList.add(theme);
+            localStorage.setItem('sidebarTheme', theme);
+        }
+
+        /* ========================= */
+        /* LOAD SAVED THEMES         */
+        /* ========================= */
+        window.addEventListener('load', () => {
+            const savedBg = localStorage.getItem('bgTheme');
+            if (savedBg) changeTheme(savedBg);
+            const savedSidebar = localStorage.getItem('sidebarTheme');
+            if (savedSidebar) changeSidebarTheme(savedSidebar);
+            loadNotificationSetting();
+        });
+
+        /* ========================= */
+        /* AUTOCOMPLETE SYSTEM       */
+        /* ========================= */
+        function setupPredictions() {
+            const clientList = document.getElementById('clientSuggestions');
+            const uniqueClients = [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
+            clientList.innerHTML = uniqueClients.map(name => `<option value="${name}">`).join('');
+
+            const serviceList = document.getElementById('serviceSuggestions');
+            const uniqueServices = [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
+            serviceList.innerHTML = uniqueServices.map(name => `<option value="${name}">`).join('');
+
+            const staffList = document.getElementById('staffSuggestions');
+            const uniqueStaff = [...new Set(allRecords.map(r => r.assigned_staff).filter(Boolean))];
+            staffList.innerHTML = uniqueStaff.map(name => `<option value="${name}">`).join('');
+
+            const allotList = document.getElementById('allotedSuggestions');
+            const uniqueAlloted = [...new Set(allRecords.map(r => r.alloted_by).filter(Boolean))];
+            allotList.innerHTML = uniqueAlloted.map(name => `<option value="${name}">`).join('');
+
+            const companyList = document.getElementById('companySuggestions');
+            const uniqueCompany = [...new Set(allDSC.map(d => d.company_name).filter(Boolean))];
+            companyList.innerHTML = uniqueCompany.map(name => `<option value="${name}">`).join('');
+
+            const vaultList = document.getElementById('vaultCategorySuggestions');
+            const uniqueVault = [...new Set(allVault.map(v => v.category).filter(Boolean))];
+            vaultList.innerHTML = uniqueVault.map(name => `<option value="${name}">`).join('');
+        }
+
+        /* ========================= */
+        /* FORGOT PASSWORD           */
+        /* ========================= */
+        async function forgotPassword() {
+            const email = document.getElementById("email").value;
+            if (!email) return alert("Please enter your email first");
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname + "?reset=true"
+            });
+            if (error) { alert(error.message); } else { alert("Password reset link sent to your email."); }
+        }
+
+        /* ========================= */
+        /* RESET PASSWORD DETECTION  */
+        /* ========================= */
+        window.addEventListener('load', async () => {
+            const hash = window.location.hash;
+            if (hash.includes("access_token") && hash.includes("type=recovery")) {
+                const newPassword = prompt("Enter New Password");
+                if (!newPassword) return;
+                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+                if (error) { alert(error.message); } else {
+                    alert("Password updated successfully!");
+                    window.location.href = window.location.pathname;
+                }
+            }
+        });
+
+        /* ========================= */
+        /* NOTIFICATION SOUND SETTING */
+        /* ========================= */
+        function loadNotificationSetting() {
+            const sound = localStorage.getItem("notificationSound");
+            const status = document.getElementById("notificationStatus");
+            if (sound === "off") {
+                status.innerText = "OFF";
+                status.classList.remove("text-green-600");
+                status.classList.add("text-red-500");
+            } else {
+                status.innerText = "ON";
+                status.classList.remove("text-red-500");
+                status.classList.add("text-green-600");
+            }
+        }
+
+        function toggleNotificationSetting() {
+            const current = localStorage.getItem("notificationSound");
+            localStorage.setItem("notificationSound", current === "off" ? "on" : "off");
+            loadNotificationSetting();
+        }
+
+        function openExportModal() { document.getElementById("exportModal").classList.remove("hidden"); }
+        function closeExportModal() { document.getElementById("exportModal").classList.add("hidden"); }
+        function openMyActivity() { document.getElementById("activityModal").classList.remove("hidden"); loadMyActivity(); }
+        function closeActivityModal() { document.getElementById("activityModal").classList.add("hidden"); }
+
+        function saveActivity(text) {
+            let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
+            activity.unshift({ text, time: new Date().toLocaleString() });
+            localStorage.setItem("myActivity", JSON.stringify(activity));
+        }
+
+        function loadMyActivity() {
+            let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
+            let html = "";
+            activity.forEach(item => {
+                html += `<div class="border-b py-3"><div class="font-bold">${item.text}</div><div class="text-xs text-slate-500 mt-1">${item.time}</div></div>`;
+            });
+            document.getElementById("activityList").innerHTML = html || "<p>No activity found</p>";
+        }
+
+        // ============================================================
+        // FIX 10: exportCSV — now also logs activity (was missing)
+        //         exportExcel now uses XLSX mime so Excel opens it natively
+        // ============================================================
+        function exportCSV() {
+            let rows = currentExportData || [];
+            if (rows.length === 0) { alert("No records found"); return; }
+            let csv = "";
+            if (currentExportType === "records") {
+                csv = "Client,Category,Service,Staff,Status,Deadline\n";
+                rows.forEach(r => {
+                    csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.status || ""}","${r.deadline || ""}"\n`;
+                });
+            } else if (currentExportType === "clients") {
+                csv = "Client Name,Phone,Email,Type\n";
+                rows.forEach(r => {
+                    csv += `"${r.client_name || ""}","${r.contact_number || ""}","${r.email_id || ""}","${r.entity_type || ""}"\n`;
+                });
+            } else if (currentExportType === "vault") {
+                csv = "Client,Category,Username,Password,Updated By\n";
+                rows.forEach(r => {
+                    csv += `"${r.client_name || ""}","${r.category || ""}","${r.username || ""}","${r.password || ""}","${r.updated_by || ""}"\n`;
+                });
+            } else if (currentExportType === "dsc") {
+                csv = "Company,Client,Status,Expiry Date,Remarks\n";
+                rows.forEach(r => {
+                    csv += `"${r.company_name || ""}","${r.client_name || ""}","${r.status || ""}","${r.expiry_date || ""}","${r.remarks || ""}"\n`;
+                });
+            }
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = currentExportType + ".csv";
+            a.click();
+            // FIX 10: saveActivity was missing from exportCSV
+            saveActivity("Exported CSV Report : " + currentExportType);
+        }
+
+        function exportExcel() {
+            // FIX 10: exportExcel was just calling exportCSV with no distinction
+            //         Now exports with proper Excel MIME type for native Excel open
+            let rows = currentExportData || [];
+            if (rows.length === 0) { alert("No records found"); return; }
+            let csv = "";
+            if (currentExportType === "records") {
+                csv = "Client,Category,Service,Staff,Alloted By,Status,Deadline,Remarks,Updated By\n";
+                rows.forEach(r => {
+                    csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.alloted_by || ""}","${r.status || ""}","${r.deadline || ""}","${r.remarks || ""}","${r.updated_by || ""}"\n`;
+                });
+            } else if (currentExportType === "clients") {
+                csv = "Client Name,Phone,Email,Type,Updated By\n";
+                rows.forEach(r => {
+                    csv += `"${r.client_name || ""}","${r.contact_number || ""}","${r.email_id || ""}","${r.entity_type || ""}","${r.updated_by || ""}"\n`;
+                });
+            } else if (currentExportType === "vault") {
+                csv = "Client,Category,Username,Password,Updated By\n";
+                rows.forEach(r => {
+                    csv += `"${r.client_name || ""}","${r.category || ""}","${r.username || ""}","${r.password || ""}","${r.updated_by || ""}"\n`;
+                });
+            } else if (currentExportType === "dsc") {
+                csv = "Company,Client,Status,Expiry Date,Remarks,Updated By\n";
+                rows.forEach(r => {
+                    csv += `"${r.company_name || ""}","${r.client_name || ""}","${r.status || ""}","${r.expiry_date || ""}","${r.remarks || ""}","${r.updated_by || ""}"\n`;
+                });
+            }
+            // Excel-compatible CSV with BOM for correct encoding
+            const bom = "\uFEFF";
+            const blob = new Blob([bom + csv], { type: "application/vnd.ms-excel;charset=utf-8;" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "Witcorp_" + currentExportType + ".xls";
+            a.click();
+            saveActivity("Exported Excel Report : " + currentExportType);
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF("landscape");
+            let rows = currentExportData || [];
+            if (rows.length === 0) { alert("No records found"); return; }
+            let tableHead = [];
+            let tableData = [];
+            if (currentExportType === "vault") {
+                tableHead = [["Client", "Category", "Username", "Password", "Updated By"]];
+                tableData = rows.map(r => [r.client_name || "", r.category || "", r.username || "", r.password || "", r.updated_by || ""]);
+            } else if (currentExportType === "clients") {
+                tableHead = [["Client", "Phone", "Email", "Type"]];
+                tableData = rows.map(r => [r.client_name || "", r.contact_number || "", r.email_id || "", r.entity_type || ""]);
+            } else if (currentExportType === "dsc") {
+                tableHead = [["Company", "Client", "Status", "Expiry Date", "Remarks"]];
+                tableData = rows.map(r => [r.company_name || "", r.client_name || "", r.status || "", r.expiry_date || "", r.remarks || ""]);
+            } else {
+                tableHead = [["Client", "Category", "Service", "Staff", "Alloted By", "Status", "Deadline", "Remarks", "Updated By"]];
+                tableData = rows.map(r => [r.client_name || "", r.service_category || "", r.service_detail || "", r.assigned_staff || "", r.alloted_by || "", r.status || "", r.deadline || "", r.remarks || "", r.updated_by || ""]);
+            }
+            doc.setFontSize(16);
+            doc.text("Witcorp Hub Report", 14, 15);
+            doc.autoTable({
+                head: tableHead,
+                body: tableData,
+                startY: 25,
+                didDrawPage: function () {
+                    doc.setFontSize(10);
+                    doc.text("Generated : " + new Date().toLocaleString(), 14, 10);
+                }
+            });
+            doc.save("Witcorp_Report.pdf");
+            saveActivity("Exported PDF Report");
+        }
