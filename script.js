@@ -2181,3 +2181,891 @@ document.addEventListener('keydown', function(e) {
         document.getElementById('exportModal')?.classList.add('hidden');
     }
 });
+// ============================================================
+// USER PROFILE SYSTEM — DB Based
+// ============================================================
+let currentUserProfile = null;
+
+async function loadUserProfile(email) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('witcorp_user_profiles')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error || !data) {
+            // Pehli baar login — profile create karo
+            await createUserProfile(email);
+            return;
+        }
+
+        currentUserProfile = data;
+        applyUserPreferences(data);
+        updateProfileUI(data);
+    } catch (err) {
+        console.error('loadUserProfile error:', err);
+    }
+}
+
+async function createUserProfile(email) {
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444','#06b6d4'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+        const payload = {
+            id: user.id,
+            email: email,
+            full_name: '',
+            designation: '',
+            role: 'staff',
+            bg_theme: localStorage.getItem('bgTheme') || 'theme-light',
+            sidebar_theme: localStorage.getItem('sidebarTheme') || 'sidebar-theme-original',
+            notification_sound: localStorage.getItem('notificationSound') || 'on',
+            avatar_color: randomColor
+        };
+
+        const { data, error } = await supabaseClient
+            .from('witcorp_user_profiles')
+            .insert([payload])
+            .select()
+            .single();
+
+        if (!error && data) {
+            currentUserProfile = data;
+            applyUserPreferences(data);
+            updateProfileUI(data);
+        }
+    } catch (err) {
+        console.error('createUserProfile error:', err);
+    }
+}
+
+async function updateUserProfile(updates) {
+    if (!currentUserProfile) return;
+    try {
+        updates.updated_at = new Date().toISOString();
+        const { error } = await supabaseClient
+            .from('witcorp_user_profiles')
+            .update(updates)
+            .eq('email', currentUserProfile.email);
+
+        if (!error) {
+            currentUserProfile = { ...currentUserProfile, ...updates };
+            showToast('Profile updated successfully', 'success', 2000);
+            updateProfileUI(currentUserProfile);
+        }
+    } catch (err) {
+        console.error('updateUserProfile error:', err);
+    }
+}
+
+function applyUserPreferences(profile) {
+    if (profile.bg_theme) changeTheme(profile.bg_theme);
+    if (profile.sidebar_theme) changeSidebarTheme(profile.sidebar_theme);
+    if (profile.default_category_filter) {
+        const el = document.getElementById('filterCategory');
+        if (el) el.value = profile.default_category_filter;
+    }
+    if (profile.default_status_filter) {
+        const el = document.getElementById('filterStatus');
+        if (el) el.value = profile.default_status_filter;
+    }
+}
+
+function updateProfileUI(profile) {
+    const name = profile.full_name || profile.email;
+    const initial = name.charAt(0).toUpperCase();
+
+    const p1 = document.getElementById('profileInitial');
+    const p2 = document.getElementById('profileInitial2');
+    if (p1) {
+        p1.innerText = initial;
+        p1.style.background = profile.avatar_color || '#3b82f6';
+    }
+    if (p2) {
+        p2.innerText = initial;
+        p2.style.background = profile.avatar_color || '#3b82f6';
+    }
+
+    const nameEl = document.getElementById('profileDisplayName');
+    if (nameEl) nameEl.innerText = profile.full_name || profile.email.split('@')[0];
+
+    const desigEl = document.getElementById('profileDesignation');
+    if (desigEl) desigEl.innerText = profile.designation || 'Team Member';
+
+    const roleEl = document.getElementById('profileRoleBadge');
+    if (roleEl) {
+        const roleColors = { admin: 'bg-red-100 text-red-700', manager: 'bg-purple-100 text-purple-700', staff: 'bg-blue-100 text-blue-700', viewer: 'bg-slate-100 text-slate-600' };
+        roleEl.className = `px-2 py-0.5 rounded-full text-xs font-black ${roleColors[profile.role] || roleColors.staff}`;
+        roleEl.innerText = (profile.role || 'staff').toUpperCase();
+    }
+}
+
+function openProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (!modal) return;
+
+    if (currentUserProfile) {
+        document.getElementById('pFullName').value = currentUserProfile.full_name || '';
+        document.getElementById('pDesignation').value = currentUserProfile.designation || '';
+        document.getElementById('pPhone').value = currentUserProfile.phone || '';
+        document.getElementById('pDepartment').value = currentUserProfile.department || '';
+        document.getElementById('pDefaultCategory').value = currentUserProfile.default_category_filter || '';
+        document.getElementById('pDefaultStatus').value = currentUserProfile.default_status_filter || '';
+
+        const statsAdded = document.getElementById('pStatsAdded');
+        const statsUpdated = document.getElementById('pStatsUpdated');
+        const statsDeleted = document.getElementById('pStatsDeleted');
+        if (statsAdded) statsAdded.innerText = currentUserProfile.total_added || 0;
+        if (statsUpdated) statsUpdated.innerText = currentUserProfile.total_updated || 0;
+        if (statsDeleted) statsDeleted.innerText = currentUserProfile.total_deleted || 0;
+    }
+
+    loadActivityInProfile();
+    modal.classList.remove('hidden');
+}
+
+function closeProfileModal() {
+    document.getElementById('profileModal')?.classList.add('hidden');
+}
+
+async function saveProfileChanges() {
+    const updates = {
+        full_name: document.getElementById('pFullName').value.trim(),
+        designation: document.getElementById('pDesignation').value.trim(),
+        phone: document.getElementById('pPhone').value.trim(),
+        department: document.getElementById('pDepartment').value.trim(),
+        default_category_filter: document.getElementById('pDefaultCategory').value,
+        default_status_filter: document.getElementById('pDefaultStatus').value
+    };
+
+    await updateUserProfile(updates);
+    currentUserName = updates.full_name || currentUserProfile.email;
+    closeProfileModal();
+}
+
+async function loadActivityInProfile() {
+    try {
+        const { data } = await supabaseClient
+            .from('witcorp_activity_log')
+            .select('*')
+            .eq('user_email', currentUserEmail)
+            .order('created_at', { ascending: false })
+            .limit(30);
+
+        const list = document.getElementById('profileActivityList');
+        if (!list) return;
+
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="text-center text-slate-400 py-6 text-sm font-semibold">No activity yet</div>`;
+            return;
+        }
+
+        const iconMap = {
+            Added: 'fa-circle-plus text-emerald-500',
+            Updated: 'fa-pen-to-square text-blue-500',
+            Deleted: 'fa-trash-can text-rose-500',
+            Exported: 'fa-file-export text-purple-500',
+            Bulk: 'fa-layer-group text-cyan-500',
+            Login: 'fa-right-to-bracket text-amber-500',
+            Other: 'fa-clock-rotate-left text-slate-400'
+        };
+
+        list.innerHTML = data.map(item => `
+            <div class="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
+                <div class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0">
+                    <i class="fas ${iconMap[item.action_type] || iconMap.Other} text-xs"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-700">${item.action_text}</div>
+                    <div class="text-xs text-blue-500 font-semibold mt-0.5">
+                        ${new Date(item.created_at).toLocaleString('en-IN')}
+                    </div>
+                </div>
+            </div>`).join('');
+    } catch (err) {
+        console.error('loadActivityInProfile error:', err);
+    }
+}
+
+// ============================================================
+// ACTIVITY LOG — DB Based (localStorage replace)
+// ============================================================
+async function saveActivity(text) {
+    // DB mein save karo
+    try {
+        const actionType = ['Added','Updated','Deleted','Exported','Bulk','Login']
+            .find(t => text.startsWith(t)) || 'Other';
+
+        await supabaseClient.from('witcorp_activity_log').insert([{
+            user_email: currentUserEmail,
+            action_type: actionType,
+            action_text: text,
+            module: text.includes('Client') ? 'clients' :
+                    text.includes('Vault') ? 'vault' :
+                    text.includes('DSC') ? 'dsc' : 'records'
+        }]);
+
+        // Stats update karo profile mein
+        if (currentUserProfile) {
+            const field = actionType === 'Added' ? 'total_added' :
+                         actionType === 'Updated' ? 'total_updated' :
+                         actionType === 'Deleted' ? 'total_deleted' : null;
+            if (field) {
+                await supabaseClient
+                    .from('witcorp_user_profiles')
+                    .update({ [field]: (currentUserProfile[field] || 0) + 1 })
+                    .eq('email', currentUserEmail);
+                if (currentUserProfile) currentUserProfile[field] = (currentUserProfile[field] || 0) + 1;
+            }
+        }
+    } catch (err) {
+        // Fallback to localStorage if DB fails
+        console.error('saveActivity DB error, falling back:', err);
+        try {
+            let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
+            activity.unshift({ text, time: new Date().toLocaleString('en-IN') });
+            if (activity.length > 50) activity = activity.slice(0, 50);
+            localStorage.setItem("myActivity", JSON.stringify(activity));
+        } catch(e) {}
+    }
+}
+
+// ============================================================
+// THEME — DB Based
+// ============================================================
+function changeTheme(theme) {
+    const body = document.body;
+    ['theme-ocean','theme-dark','theme-green','theme-purple','theme-light'].forEach(t => body.classList.remove(t));
+    body.classList.add(theme);
+    localStorage.setItem('bgTheme', theme); // fallback
+    if (currentUserProfile) updateUserProfile({ bg_theme: theme });
+}
+
+function changeSidebarTheme(theme) {
+    const sidebar = document.getElementById('sidebar');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    const sidebarThemes = [
+        'sidebar-theme-raspberry','sidebar-theme-mint','sidebar-theme-chill',
+        'sidebar-theme-forest','sidebar-theme-damini','sidebar-theme-seaglass',
+        'sidebar-theme-lemon','sidebar-theme-dark','sidebar-theme-navypro','sidebar-theme-original'
+    ];
+    sidebarThemes.forEach(t => { sidebar?.classList.remove(t); mobileSidebar?.classList.remove(t); });
+    sidebar?.classList.add(theme);
+    mobileSidebar?.classList.add(theme);
+    localStorage.setItem('sidebarTheme', theme); // fallback
+    if (currentUserProfile) updateUserProfile({ sidebar_theme: theme });
+}
+
+// ============================================================
+// AUDIT TRAIL
+// ============================================================
+async function saveAuditTrail(tableName, recordId, action, oldData, newData) {
+    try {
+        const changedFields = [];
+        if (action === 'UPDATE' && oldData && newData) {
+            Object.keys(newData).forEach(key => {
+                if (oldData[key] !== newData[key]) changedFields.push(key);
+            });
+        }
+
+        await supabaseClient.from('witcorp_audit_trail').insert([{
+            table_name: tableName,
+            record_id: String(recordId),
+            action: action,
+            changed_by: currentUserEmail,
+            old_data: oldData || null,
+            new_data: newData || null,
+            changed_fields: changedFields
+        }]);
+    } catch (err) {
+        console.error('saveAuditTrail error:', err);
+    }
+}
+
+async function openAuditModal(recordId) {
+    try {
+        const { data } = await supabaseClient
+            .from('witcorp_audit_trail')
+            .select('*')
+            .eq('record_id', String(recordId))
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        const modal = document.getElementById('auditModal');
+        const list = document.getElementById('auditList');
+        const title = document.getElementById('auditModalTitle');
+
+        if (!modal || !list) return;
+        if (title) title.innerText = `Change History — Record #${recordId}`;
+
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="text-center text-slate-400 py-10 font-semibold text-sm">No history found</div>`;
+        } else {
+            list.innerHTML = data.map(entry => {
+                const actionColors = { INSERT: 'text-emerald-600 bg-emerald-50', UPDATE: 'text-blue-600 bg-blue-50', DELETE: 'text-red-600 bg-red-50' };
+                const color = actionColors[entry.action] || 'text-slate-600 bg-slate-50';
+                const fields = entry.changed_fields?.length > 0
+                    ? `<div class="text-xs text-slate-500 mt-1">Changed: <span class="font-bold text-slate-700">${entry.changed_fields.join(', ')}</span></div>`
+                    : '';
+                return `
+                    <div class="p-4 border-b border-slate-100 last:border-0">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2 py-0.5 rounded-lg text-xs font-black ${color}">${entry.action}</span>
+                            <span class="text-sm font-bold text-slate-700">${entry.changed_by}</span>
+                            <span class="text-xs text-slate-400 ml-auto">${new Date(entry.created_at).toLocaleString('en-IN')}</span>
+                        </div>
+                        ${fields}
+                    </div>`;
+            }).join('');
+        }
+
+        modal.classList.remove('hidden');
+    } catch (err) {
+        console.error('openAuditModal error:', err);
+    }
+}
+
+function closeAuditModal() {
+    document.getElementById('auditModal')?.classList.add('hidden');
+}
+
+// ============================================================
+// RECORD COMMENTS
+// ============================================================
+let activeCommentRecordId = null;
+
+async function openCommentsModal(recordId, clientName) {
+    activeCommentRecordId = recordId;
+    const modal = document.getElementById('commentsModal');
+    const title = document.getElementById('commentsModalTitle');
+    if (!modal) return;
+    if (title) title.innerText = `Comments — ${clientName}`;
+    modal.classList.remove('hidden');
+    await loadComments(recordId);
+}
+
+function closeCommentsModal() {
+    document.getElementById('commentsModal')?.classList.add('hidden');
+    activeCommentRecordId = null;
+}
+
+async function loadComments(recordId) {
+    try {
+        const { data } = await supabaseClient
+            .from('witcorp_comments')
+            .select('*')
+            .eq('record_id', recordId)
+            .order('created_at', { ascending: true });
+
+        const list = document.getElementById('commentsList');
+        if (!list) return;
+
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="text-center text-slate-400 py-8 text-sm font-semibold"><i class="fas fa-comments text-3xl block mb-2 opacity-30"></i>No comments yet</div>`;
+            return;
+        }
+
+        list.innerHTML = data.map(c => {
+            const isMe = c.commented_by === currentUserEmail;
+            return `
+                <div class="flex gap-3 ${isMe ? 'flex-row-reverse' : ''}">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
+                        style="background: ${currentUserProfile?.avatar_color || '#3b82f6'}">
+                        ${c.commented_by.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="max-w-[75%]">
+                        <div class="text-xs font-bold text-slate-500 mb-1 ${isMe ? 'text-right' : ''}">
+                            ${isMe ? 'You' : c.commented_by.split('@')[0]}
+                        </div>
+                        <div class="px-4 py-2.5 rounded-2xl text-sm font-medium ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-100 text-slate-800 rounded-tl-sm'}">
+                            ${c.comment_text}
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-1 ${isMe ? 'text-right' : ''}">
+                            ${new Date(c.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
+                            ${c.is_edited ? ' · edited' : ''}
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        list.scrollTop = list.scrollHeight;
+    } catch (err) {
+        console.error('loadComments error:', err);
+    }
+}
+
+async function postComment() {
+    if (!activeCommentRecordId) return;
+    const input = document.getElementById('commentInput');
+    const text = input?.value.trim();
+    if (!text) return;
+
+    const btn = document.getElementById('postCommentBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
+
+    try {
+        const { error } = await supabaseClient.from('witcorp_comments').insert([{
+            record_id: activeCommentRecordId,
+            comment_text: text,
+            commented_by: currentUserEmail
+        }]);
+
+        if (!error) {
+            input.value = '';
+            await loadComments(activeCommentRecordId);
+        } else {
+            showToast('Comment post failed', 'error');
+        }
+    } catch (err) {
+        console.error('postComment error:', err);
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
+    }
+}
+
+// Enter key se comment post karo
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.id === 'commentInput') {
+        e.preventDefault();
+        postComment();
+    }
+});
+
+// ============================================================
+// SUB-TASKS / CHECKLIST
+// ============================================================
+let activeSubtaskRecordId = null;
+
+async function openSubtasksModal(recordId, clientName) {
+    activeSubtaskRecordId = recordId;
+    const modal = document.getElementById('subtasksModal');
+    const title = document.getElementById('subtasksModalTitle');
+    if (!modal) return;
+    if (title) title.innerText = `Checklist — ${clientName}`;
+    modal.classList.remove('hidden');
+    await loadSubtasks(recordId);
+}
+
+function closeSubtasksModal() {
+    document.getElementById('subtasksModal')?.classList.add('hidden');
+    activeSubtaskRecordId = null;
+}
+
+async function loadSubtasks(recordId) {
+    try {
+        const { data } = await supabaseClient
+            .from('witcorp_subtasks')
+            .select('*')
+            .eq('record_id', recordId)
+            .order('sort_order', { ascending: true });
+
+        const list = document.getElementById('subtasksList');
+        if (!list) return;
+
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="text-center text-slate-400 py-6 text-sm font-semibold"><i class="fas fa-list-check text-3xl block mb-2 opacity-30"></i>No tasks added yet</div>`;
+            return;
+        }
+
+        const done = data.filter(t => t.is_done).length;
+        const pct = Math.round((done / data.length) * 100);
+
+        list.innerHTML = `
+            <div class="mb-4">
+                <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                    <span>${done}/${data.length} completed</span>
+                    <span>${pct}%</span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full transition-all" style="width:${pct}%"></div>
+                </div>
+            </div>
+            ${data.map(task => `
+                <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 group transition-all" id="task_${task.id}">
+                    <input type="checkbox" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
+                        ${task.is_done ? 'checked' : ''}
+                        onchange="toggleSubtask(${task.id}, this.checked)">
+                    <span class="flex-1 text-sm font-medium ${task.is_done ? 'line-through text-slate-400' : 'text-slate-700'}">
+                        ${task.task_text}
+                    </span>
+                    ${task.is_done ? `<span class="text-[10px] text-emerald-600 font-bold">${task.done_by?.split('@')[0] || ''}</span>` : ''}
+                    <button onclick="deleteSubtask(${task.id})"
+                        class="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-600 transition-all text-xs">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>`).join('')}`;
+    } catch (err) {
+        console.error('loadSubtasks error:', err);
+    }
+}
+
+async function addSubtask() {
+    if (!activeSubtaskRecordId) return;
+    const input = document.getElementById('subtaskInput');
+    const text = input?.value.trim();
+    if (!text) return;
+
+    try {
+        const { error } = await supabaseClient.from('witcorp_subtasks').insert([{
+            record_id: activeSubtaskRecordId,
+            task_text: text,
+            created_by: currentUserEmail
+        }]);
+
+        if (!error) {
+            input.value = '';
+            await loadSubtasks(activeSubtaskRecordId);
+        }
+    } catch (err) {
+        console.error('addSubtask error:', err);
+    }
+}
+
+async function toggleSubtask(id, isDone) {
+    try {
+        await supabaseClient.from('witcorp_subtasks')
+            .update({
+                is_done: isDone,
+                done_by: isDone ? currentUserEmail : '',
+                done_at: isDone ? new Date().toISOString() : null
+            })
+            .eq('id', id);
+        await loadSubtasks(activeSubtaskRecordId);
+    } catch (err) {
+        console.error('toggleSubtask error:', err);
+    }
+}
+
+async function deleteSubtask(id) {
+    try {
+        await supabaseClient.from('witcorp_subtasks').delete().eq('id', id);
+        await loadSubtasks(activeSubtaskRecordId);
+    } catch (err) {
+        console.error('deleteSubtask error:', err);
+    }
+}
+
+// ============================================================
+// PIN / STAR RECORDS
+// ============================================================
+async function togglePin(recordId) {
+    try {
+        const isPinned = await checkIfPinned(recordId);
+        if (isPinned) {
+            await supabaseClient.from('witcorp_pins')
+                .delete()
+                .eq('record_id', recordId)
+                .eq('pinned_by', currentUserEmail);
+            showToast('Record unpinned', 'info', 2000);
+        } else {
+            await supabaseClient.from('witcorp_pins')
+                .insert([{ record_id: recordId, pinned_by: currentUserEmail }]);
+            showToast('Record pinned!', 'success', 2000);
+        }
+        updatePinButton(recordId, !isPinned);
+    } catch (err) {
+        console.error('togglePin error:', err);
+    }
+}
+
+async function checkIfPinned(recordId) {
+    try {
+        const { data } = await supabaseClient
+            .from('witcorp_pins')
+            .select('id')
+            .eq('record_id', recordId)
+            .eq('pinned_by', currentUserEmail)
+            .single();
+        return !!data;
+    } catch { return false; }
+}
+
+function updatePinButton(recordId, isPinned) {
+    const btn = document.getElementById(`pin_${recordId}`);
+    if (btn) {
+        btn.innerHTML = `<i class="fas fa-thumbtack ${isPinned ? 'text-amber-500' : 'text-slate-400'}"></i>`;
+        btn.title = isPinned ? 'Unpin' : 'Pin this record';
+    }
+}
+
+async function showPinnedRecords() {
+    try {
+        const { data: pins } = await supabaseClient
+            .from('witcorp_pins')
+            .select('record_id')
+            .eq('pinned_by', currentUserEmail);
+
+        if (!pins || pins.length === 0) {
+            showToast('No pinned records yet', 'info');
+            return;
+        }
+
+        const pinnedIds = pins.map(p => p.record_id);
+        const pinned = allRecords.filter(r => pinnedIds.includes(r.id));
+        showSection('filterView');
+        document.getElementById('filterTitle').innerText = `⭐ Pinned Records (${pinned.length})`;
+        renderTable(pinned, 'filterTableBody');
+    } catch (err) {
+        console.error('showPinnedRecords error:', err);
+    }
+}
+
+// ============================================================
+// ONLINE PRESENCE
+// ============================================================
+async function updatePresence(section = 'dashboard') {
+    if (!currentUserEmail) return;
+    try {
+        await supabaseClient.from('witcorp_presence').upsert({
+            user_email: currentUserEmail,
+            user_initial: currentUserEmail.charAt(0).toUpperCase(),
+            avatar_color: currentUserProfile?.avatar_color || '#3b82f6',
+            last_seen: new Date().toISOString(),
+            current_section: section,
+            is_online: true
+        }, { onConflict: 'user_email' });
+    } catch (err) {
+        console.error('updatePresence error:', err);
+    }
+}
+
+async function loadOnlineUsers() {
+    try {
+        const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        const { data } = await supabaseClient
+            .from('witcorp_presence')
+            .select('*')
+            .gte('last_seen', fiveMinAgo);
+
+        const container = document.getElementById('onlineUsersBar');
+        if (!container || !data) return;
+
+        container.innerHTML = data.map(u => `
+            <div class="relative group cursor-default">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black ring-2 ring-white"
+                    style="background: ${u.avatar_color}">
+                    ${u.user_initial}
+                </div>
+                <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full"></span>
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                    ${u.user_email.split('@')[0]}
+                    <div class="text-[9px] opacity-60">${u.current_section}</div>
+                </div>
+            </div>`).join('');
+    } catch (err) {
+        console.error('loadOnlineUsers error:', err);
+    }
+}
+
+// Presence update karte raho
+setInterval(() => updatePresence(), 60000);
+
+// ============================================================
+// SESSION TIMEOUT (15 min inactivity)
+// ============================================================
+let sessionTimer;
+let warningTimer;
+const SESSION_TIMEOUT = 15 * 60 * 1000;
+const WARNING_TIME = 2 * 60 * 1000;
+
+function resetSessionTimer() {
+    clearTimeout(sessionTimer);
+    clearTimeout(warningTimer);
+
+    warningTimer = setTimeout(() => {
+        showToast('Session expiring in 2 minutes due to inactivity', 'warning', 8000);
+    }, SESSION_TIMEOUT - WARNING_TIME);
+
+    sessionTimer = setTimeout(() => {
+        showToast('Session expired. Logging out...', 'warning');
+        setTimeout(logout, 2000);
+    }, SESSION_TIMEOUT);
+}
+
+['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
+    document.addEventListener(event, resetSessionTimer, { passive: true });
+});
+
+// ============================================================
+// ANNOUNCEMENTS
+// ============================================================
+async function loadAnnouncements() {
+    try {
+        const now = new Date().toISOString();
+        const { data } = await supabaseClient
+            .from('witcorp_announcements')
+            .select('*')
+            .eq('is_active', true)
+            .or(`expires_at.is.null,expires_at.gte.${now}`)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        const banner = document.getElementById('announcementBanner');
+        const text = document.getElementById('announcementText');
+        if (!banner || !text || !data || data.length === 0) return;
+
+        const a = data[0];
+        const bgColors = { info: 'bg-blue-600', warning: 'bg-amber-500', success: 'bg-emerald-600', urgent: 'bg-red-600' };
+        banner.className = `${bgColors[a.type] || bgColors.info} text-white px-4 py-2 flex items-center justify-between text-sm font-semibold`;
+        text.innerText = `📢 ${a.title}: ${a.message}`;
+        banner.classList.remove('hidden');
+    } catch (err) {
+        console.error('loadAnnouncements error:', err);
+    }
+}
+
+async function postAnnouncement() {
+    if (currentUserProfile?.role !== 'admin') {
+        showToast('Only admins can post announcements', 'error');
+        return;
+    }
+    const title = prompt('Announcement Title:');
+    if (!title) return;
+    const message = prompt('Announcement Message:');
+    if (!message) return;
+
+    try {
+        await supabaseClient.from('witcorp_announcements').insert([{
+            title, message,
+            type: 'info',
+            created_by: currentUserEmail,
+            is_active: true
+        }]);
+        showToast('Announcement posted!', 'success');
+        loadAnnouncements();
+    } catch (err) {
+        console.error('postAnnouncement error:', err);
+    }
+}
+
+// ============================================================
+// QUICK ADD MODAL (Ctrl+N)
+// ============================================================
+function openQuickAdd() {
+    document.getElementById('quickAddModal')?.classList.remove('hidden');
+    document.getElementById('qaClientName')?.focus();
+}
+
+function closeQuickAdd() {
+    document.getElementById('quickAddModal')?.classList.add('hidden');
+}
+
+async function submitQuickAdd() {
+    const clientName = document.getElementById('qaClientName')?.value.trim();
+    const category = document.getElementById('qaCategory')?.value;
+    const status = document.getElementById('qaStatus')?.value;
+
+    if (!clientName || !category) {
+        showToast('Client name & category required', 'error');
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient.from('witcorp_records').insert([{
+            client_name: clientName,
+            service_category: category,
+            service_detail: document.getElementById('qaServiceDetail')?.value.trim() || '',
+            assigned_staff: document.getElementById('qaStaff')?.value.trim() || '',
+            status: status || 'Pending',
+            deadline: document.getElementById('qaDeadline')?.value || null,
+            updated_at: new Date().toISOString(),
+            updated_by: currentUserName
+        }]);
+
+        if (!error) {
+            saveActivity(`Added Record: ${clientName} | ${category}`);
+            showToast(`Quick added: ${clientName}`, 'success');
+            closeQuickAdd();
+            ['qaClientName','qaServiceDetail','qaStaff','qaDeadline'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            await fetchRecords(true);
+        } else {
+            showToast('Quick add failed', 'error');
+        }
+    } catch (err) {
+        console.error('submitQuickAdd error:', err);
+    }
+}
+
+// Keyboard shortcut update karo
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        openQuickAdd();
+    }
+});
+
+// ============================================================
+// COLUMN VISIBILITY
+// ============================================================
+const defaultColumns = {
+    checkbox: true, client: true, updated: true, service: true,
+    category: true, staff: true, allotedby: true, deadline: true,
+    status: true, remarks: true, updatedby: true, actions: true
+};
+let columnVisibility = { ...defaultColumns };
+
+function loadColumnPrefs() {
+    try {
+        const saved = localStorage.getItem('colVis');
+        if (saved) columnVisibility = { ...defaultColumns, ...JSON.parse(saved) };
+    } catch {}
+    applyColumnVisibility();
+}
+
+function applyColumnVisibility() {
+    const colMap = {
+        checkbox: 0, client: 1, updated: 2, service: 3, category: 4,
+        staff: 5, allotedby: 6, deadline: 7, status: 8, remarks: 9, updatedby: 10, actions: 11
+    };
+    Object.entries(colMap).forEach(([key, idx]) => {
+        const display = columnVisibility[key] !== false ? '' : 'none';
+        document.querySelectorAll(`#mainTableBody tr td:nth-child(${idx + 1})`).forEach(td => td.style.display = display);
+        document.querySelectorAll(`#mainTable thead th:nth-child(${idx + 1})`).forEach(th => th.style.display = display);
+    });
+}
+
+function toggleColumn(colKey) {
+    columnVisibility[colKey] = !columnVisibility[colKey];
+    localStorage.setItem('colVis', JSON.stringify(columnVisibility));
+    applyColumnVisibility();
+}
+
+function resetColumns() {
+    columnVisibility = { ...defaultColumns };
+    localStorage.setItem('colVis', JSON.stringify(columnVisibility));
+    document.querySelectorAll('.col-toggle-cb').forEach(cb => cb.checked = true);
+    applyColumnVisibility();
+}
+
+// ============================================================
+// SHOWAPP — update karo (profile load add karo)
+// ============================================================
+function showApp(user) {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('appScreen').classList.add('flex');
+    currentUserEmail = user.email;
+    currentUserName = user.email;
+    const gmailEl = document.getElementById('userGmail');
+    if (gmailEl) gmailEl.innerText = user.email;
+    showSection('dashboard');
+
+    // Naye functions call karo
+    loadUserProfile(user.email);
+    loadAnnouncements();
+    loadOnlineUsers();
+    resetSessionTimer();
+    updatePresence('dashboard');
+    loadColumnPrefs();
+
+    setInterval(loadOnlineUsers, 30000);
+
+    saveActivity('Login: ' + user.email);
+    showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
+}
