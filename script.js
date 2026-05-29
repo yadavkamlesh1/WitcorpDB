@@ -1,8 +1,3 @@
-// ============================================================
-// WITCORP HUB — ENTERPRISE SCRIPT
-// All original features preserved + enterprise upgrades added
-// ============================================================
-
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -21,158 +16,9 @@ let recordPage = 0;
 const PAGE_SIZE = 100;
 let isFetchingRecords = false;
 
-// Sort state
-let sortField = null;
-let sortAsc = true;
-
-// Form dirty state
-let isFormDirty = false;
-
-// Bulk selection
-let selectedRowIds = new Set();
-
-// ============================================================
-// TOAST NOTIFICATION SYSTEM — replaces all alert()
-// ============================================================
-function showToast(message, type = 'success', duration = 3500) {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-
-    const icons = {
-        success: 'fa-circle-check',
-        error: 'fa-circle-xmark',
-        warning: 'fa-triangle-exclamation',
-        info: 'fa-circle-info'
-    };
-    const colors = {
-        success: 'bg-emerald-600',
-        error: 'bg-red-600',
-        warning: 'bg-amber-500',
-        info: 'bg-blue-600'
-    };
-
-    const toast = document.createElement('div');
-    toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-4 rounded-2xl text-white font-bold text-sm shadow-2xl transform translate-x-full transition-all duration-300 ${colors[type] || colors.info}`;
-    toast.style.maxWidth = '360px';
-    toast.innerHTML = `
-        <i class="fas ${icons[type] || icons.info} text-lg flex-shrink-0"></i>
-        <span class="flex-1">${message}</span>
-        <button class="ml-2 opacity-70 hover:opacity-100 text-lg leading-none">&times;</button>
-    `;
-
-    toast.querySelector('button').onclick = () => removeToast(toast);
-    container.appendChild(toast);
-
-    // Animate in
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            toast.classList.remove('translate-x-full');
-        });
-    });
-
-    // Auto remove
-    setTimeout(() => removeToast(toast), duration);
-}
-
-function removeToast(toast) {
-    toast.classList.add('translate-x-full', 'opacity-0');
-    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
-}
-
-// ============================================================
-// LAST SYNC TIMESTAMP
-// ============================================================
-function updateLastSync() {
-    const badge = document.getElementById('lastSyncBadge');
-    const text = document.getElementById('lastSyncText');
-    if (!badge || !text) return;
-    badge.classList.remove('hidden');
-    const now = new Date();
-    text.innerText = 'Synced ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-}
-
-// ============================================================
-// BREADCRUMB
-// ============================================================
-function updateBreadcrumb(section) {
-    const map = {
-        dashboard: 'Dashboard',
-        clientManagement: 'Dashboard → Client Directory',
-        vaultManagement: 'Dashboard → Credential Vault',
-        dscManagement: 'Dashboard → DSC Status',
-        filterView: 'Dashboard → Filter View'
-    };
-    const el = document.getElementById('breadcrumbText');
-    if (el) el.innerText = map[section] || 'Dashboard';
-}
-
-// ============================================================
-// FORM DIRTY STATE
-// ============================================================
-function markFormDirty() {
-    isFormDirty = true;
-}
-
-function clearDirtyState() {
-    isFormDirty = false;
-}
-
-// ============================================================
-// DEADLINE ALERT BANNER
-// ============================================================
-function checkDeadlineAlerts(data) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dayAfter = new Date(today);
-    dayAfter.setDate(dayAfter.getDate() + 2);
-
-    const urgent = data.filter(r => {
-        if (!r.deadline || r.status === 'Completed') return false;
-        const d = new Date(r.deadline);
-        d.setHours(0, 0, 0, 0);
-        return d >= today && d < dayAfter;
-    });
-
-    const overdue = data.filter(r => {
-        if (!r.deadline || r.status === 'Completed') return false;
-        const d = new Date(r.deadline);
-        d.setHours(0, 0, 0, 0);
-        return d < today;
-    });
-
-    const banner = document.getElementById('deadlineAlertBanner');
-    const text = document.getElementById('deadlineAlertText');
-    if (!banner || !text) return;
-
-    const parts = [];
-    if (overdue.length > 0) parts.push(`${overdue.length} overdue record${overdue.length > 1 ? 's' : ''}`);
-    if (urgent.length > 0) parts.push(`${urgent.length} due today/tomorrow`);
-
-    if (parts.length > 0) {
-        text.innerText = parts.join(' · ') + ' — action required.';
-        banner.classList.remove('hidden');
-    } else {
-        banner.classList.add('hidden');
-    }
-}
-
-// ============================================================
-// FETCH RECORDS
-// ============================================================
 async function fetchRecords(reset = true) {
     if (isFetchingRecords) return;
     isFetchingRecords = true;
-
-    // Show skeleton, hide table
-    const skeleton = document.getElementById('tableSkeleton');
-    const wrapper = document.getElementById('mainTableWrapper');
-    if (reset && skeleton && wrapper) {
-        skeleton.style.display = 'block';
-        wrapper.style.display = 'none';
-    }
-
     try {
         if (reset) { recordPage = 0; allRecords = []; }
         const from = recordPage * PAGE_SIZE;
@@ -188,173 +34,22 @@ async function fetchRecords(reset = true) {
             renderTable(allRecords, 'mainTableBody');
             updateStats(allRecords);
             setupPredictions();
-            checkDeadlineAlerts(allRecords);
-            updateLastSync();
             recordPage++;
             const btn = document.getElementById("loadMoreBtn");
             if (btn) btn.style.display = data.length < PAGE_SIZE ? "none" : "block";
-
-            // Update record count badge
-            const badge = document.getElementById('recordCountBadge');
-            if (badge) badge.innerText = `${allRecords.length} records`;
         }
     } catch (err) {
         console.error("fetchRecords error:", err);
-        showToast('Failed to fetch records. Check connection.', 'error');
     } finally {
         isFetchingRecords = false;
-        // Hide skeleton, show table
-        if (skeleton && wrapper) {
-            skeleton.style.display = 'none';
-            wrapper.style.display = 'block';
-        }
     }
 }
 
 // ============================================================
-// SORT TABLE
-// ============================================================
-function sortTable(field) {
-    if (sortField === field) {
-        sortAsc = !sortAsc;
-    } else {
-        sortField = field;
-        sortAsc = true;
-    }
-
-    // Reset all sort icons
-    document.querySelectorAll('[id^="sort_"]').forEach(el => {
-        el.className = 'fas fa-sort ml-1 opacity-40';
-    });
-
-    const icon = document.getElementById('sort_' + field);
-    if (icon) {
-        icon.className = `fas fa-sort-${sortAsc ? 'up' : 'down'} ml-1 text-blue-500`;
-    }
-
-    const sorted = [...allRecords].sort((a, b) => {
-        let av = a[field] || '';
-        let bv = b[field] || '';
-        if (field === 'updated_at' || field === 'deadline') {
-            av = av ? new Date(av).getTime() : 0;
-            bv = bv ? new Date(bv).getTime() : 0;
-        } else {
-            av = av.toString().toLowerCase();
-            bv = bv.toString().toLowerCase();
-        }
-        if (av < bv) return sortAsc ? -1 : 1;
-        if (av > bv) return sortAsc ? 1 : -1;
-        return 0;
-    });
-
-    renderTable(sorted, 'mainTableBody');
-}
-
-// ============================================================
-// MULTI FILTER
-// ============================================================
-function applyMultiFilter() {
-    const statusVal = document.getElementById('filterStatus')?.value || '';
-    const categoryVal = document.getElementById('filterCategory')?.value || '';
-
-    let filtered = [...allRecords];
-    if (statusVal) filtered = filtered.filter(r => r.status === statusVal);
-    if (categoryVal) filtered = filtered.filter(r => r.service_category === categoryVal);
-
-    renderTable(filtered, 'mainTableBody');
-    updateStats(filtered);
-
-    const badge = document.getElementById('recordCountBadge');
-    if (badge) badge.innerText = `${filtered.length} records`;
-}
-
-function resetFilters() {
-    const s = document.getElementById('filterStatus');
-    const c = document.getElementById('filterCategory');
-    if (s) s.value = '';
-    if (c) c.value = '';
-    renderTable(allRecords, 'mainTableBody');
-    updateStats(allRecords);
-    const badge = document.getElementById('recordCountBadge');
-    if (badge) badge.innerText = `${allRecords.length} records`;
-}
-
-// ============================================================
-// BULK SELECTION
-// ============================================================
-function toggleSelectAll(checkbox) {
-    const checkboxes = document.querySelectorAll('.row-checkbox');
-    checkboxes.forEach(cb => {
-        cb.checked = checkbox.checked;
-        const id = parseInt(cb.dataset.id);
-        if (checkbox.checked) {
-            selectedRowIds.add(id);
-        } else {
-            selectedRowIds.delete(id);
-        }
-    });
-    updateBulkBar();
-}
-
-function toggleRowSelect(id, checked) {
-    if (checked) {
-        selectedRowIds.add(id);
-    } else {
-        selectedRowIds.delete(id);
-    }
-    updateBulkBar();
-    // Update select-all state
-    const allCbs = document.querySelectorAll('.row-checkbox');
-    const selectAllCb = document.getElementById('selectAllCheckbox');
-    if (selectAllCb) {
-        selectAllCb.checked = allCbs.length > 0 && [...allCbs].every(cb => cb.checked);
-        selectAllCb.indeterminate = selectedRowIds.size > 0 && selectedRowIds.size < allCbs.length;
-    }
-}
-
-function updateBulkBar() {
-    const bar = document.getElementById('bulkActionBar');
-    const count = document.getElementById('bulkSelectedCount');
-    if (!bar || !count) return;
-    if (selectedRowIds.size > 0) {
-        bar.classList.remove('hidden');
-        count.innerText = `${selectedRowIds.size} selected`;
-    } else {
-        bar.classList.add('hidden');
-    }
-}
-
-function clearBulkSelection() {
-    selectedRowIds.clear();
-    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
-    const selectAll = document.getElementById('selectAllCheckbox');
-    if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
-    updateBulkBar();
-}
-
-async function applyBulkStatus() {
-    if (selectedRowIds.size === 0) return;
-    const newStatus = document.getElementById('bulkStatusSelect')?.value;
-    if (!newStatus) return;
-
-    const ids = [...selectedRowIds];
-    const { error } = await supabaseClient
-        .from('witcorp_records')
-        .update({ status: newStatus, updated_at: new Date().toISOString(), updated_by: currentUserName })
-        .in('id', ids);
-
-    if (!error) {
-        showToast(`${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`, 'success');
-        saveActivity(`Bulk Update: ${ids.length} records → ${newStatus}`);
-        clearBulkSelection();
-        await fetchRecords(true);
-    } else {
-        showToast('Bulk update failed. Check connection.', 'error');
-    }
-}
-
-// ============================================================
-// RENDER TABLE — with checkbox, row color coding, skeleton
+// FIXED renderTable
+// 1. Service: har 2 words ek line — clean multi-line wrap
+// 2. Remarks: working inline more/less toggle (style.display)
+// 3. Updated By: professional blue chip, full email on hover
 // ============================================================
 let _rmkCounter = 0;
 
@@ -363,29 +58,9 @@ function renderTable(data, targetId) {
     currentExportType = "records";
     const tbody = document.getElementById(targetId);
     if (!tbody) return;
-
-    if (data.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="12" class="p-16 text-center">
-                    <div class="flex flex-col items-center gap-4">
-                        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-folder-open text-3xl text-slate-300"></i>
-                        </div>
-                        <p class="font-black text-slate-400 text-sm uppercase tracking-wider">No records found</p>
-                        <p class="text-xs text-slate-300">Try adjusting your filters or add a new record above</p>
-                    </div>
-                </td>
-            </tr>`;
-        return;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    tbody.innerHTML = '';
+    tbody.innerHTML = data.length === 0
+        ? `<tr><td colspan="11" class="p-20 text-center text-slate-400 font-bold text-sm">No active records found.</td></tr>`
+        : "";
 
     data.forEach(row => {
         const statusClass = {
@@ -400,23 +75,7 @@ function renderTable(data, targetId) {
             'Processing': 'fa-spinner fa-spin'
         }[row.status] || 'fa-info-circle';
 
-        // Row color coding
-        let rowBg = '';
-        if (row.deadline && row.status !== 'Completed') {
-            const dl = new Date(row.deadline);
-            dl.setHours(0, 0, 0, 0);
-            if (dl < today) {
-                rowBg = 'bg-red-50 hover:bg-red-100/60';
-            } else if (dl.getTime() === today.getTime() || dl.getTime() === tomorrow.getTime()) {
-                rowBg = 'bg-amber-50 hover:bg-amber-100/60';
-            } else {
-                rowBg = 'hover:bg-slate-50/80';
-            }
-        } else {
-            rowBg = 'hover:bg-slate-50/80';
-        }
-
-        // Last Update
+        // Last Update — compact single line
         let datePart = '', timePart = '';
         if (row.updated_at) {
             const d = new Date(row.updated_at);
@@ -425,7 +84,7 @@ function renderTable(data, targetId) {
         }
         const lastUpdate = row.updated_at ? `${datePart}, ${timePart}` : 'Syncing...';
 
-        // Service display
+        // Service — wrap into chunks of 3 words per line, only if > 3 words total
         const svcFull = row.service_detail || 'General Consulting';
         const svcWords = svcFull.split(' ');
         let svcLines = [];
@@ -436,18 +95,29 @@ function renderTable(data, targetId) {
                 svcLines.push(svcWords.slice(i, i + 3).join(' '));
             }
         }
-        const svcDisplay = svcLines.map(line =>
+        const svcDisplay = svcLines.map((line, idx) =>
             `<span style="display:block;font-size:13px;font-weight:600;color:#334155;line-height:1.6;">${line}</span>`
         ).join('');
 
-        // Remarks toggle
+        // Remarks — bulletproof inline toggle with unique counter ID
         _rmkCounter++;
         const uid = `rmk_${_rmkCounter}`;
         const fullRemarksRaw = row.remarks || '—';
-        const safeShort = fullRemarksRaw.length > 55 ? fullRemarksRaw.substring(0, 54) + '\u2026' : fullRemarksRaw;
+        const safeShort = fullRemarksRaw.length > 55
+            ? fullRemarksRaw.substring(0, 54) + '\u2026'
+            : fullRemarksRaw;
         const needsExpand = fullRemarksRaw.length > 55;
-        const safeFull = fullRemarksRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        const safeShortHtml = safeShort.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        // Escape for safe HTML attribute and innerHTML use
+        const safeFull = fullRemarksRaw
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        const safeShortHtml = safeShort
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
 
         const remarksCell = needsExpand ? `
             <div style="min-width:180px;max-width:260px;">
@@ -458,7 +128,7 @@ function renderTable(data, targetId) {
             </div>`
             : `<span style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>`;
 
-        // Updated By chip
+        // Updated By — clean blue chip, full email on hover
         const updatedBy = row.updated_by || 'N/A';
         const updatedByShort = updatedBy.includes('@') ? updatedBy.split('@')[0] : updatedBy;
         const updatedByCell = `
@@ -467,32 +137,8 @@ function renderTable(data, targetId) {
                 <span style="font-size:12px;font-weight:600;color:#1d4ed8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${updatedByShort}</span>
             </div>`;
 
-        // Deadline display
-        let deadlineDisplay = 'N/A';
-        let deadlineBadge = '';
-        if (row.deadline) {
-            const dl = new Date(row.deadline);
-            dl.setHours(0, 0, 0, 0);
-            deadlineDisplay = dl.toLocaleDateString('en-GB');
-            if (row.status !== 'Completed') {
-                if (dl < today) {
-                    deadlineBadge = `<span style="display:block;font-size:9px;font-weight:700;color:#dc2626;background:#fee2e2;padding:1px 5px;border-radius:4px;margin-top:2px;">OVERDUE</span>`;
-                } else if (dl.getTime() === today.getTime()) {
-                    deadlineBadge = `<span style="display:block;font-size:9px;font-weight:700;color:#d97706;background:#fef3c7;padding:1px 5px;border-radius:4px;margin-top:2px;">TODAY</span>`;
-                } else if (dl.getTime() === tomorrow.getTime()) {
-                    deadlineBadge = `<span style="display:block;font-size:9px;font-weight:700;color:#d97706;background:#fef3c7;padding:1px 5px;border-radius:4px;margin-top:2px;">TOMORROW</span>`;
-                }
-            }
-        }
-
-        const isChecked = selectedRowIds.has(row.id) ? 'checked' : '';
-
         tbody.innerHTML += `
-            <tr class="group transition-all ${rowBg}" id="row_${row.id}">
-                <td class="p-4">
-                    <input type="checkbox" class="row-checkbox w-4 h-4 rounded" data-id="${row.id}" ${isChecked}
-                        onchange="toggleRowSelect(${row.id}, this.checked)">
-                </td>
+            <tr class="group transition-all hover:bg-slate-50/80">
                 <td class="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">${row.client_name}</td>
                 <td class="p-4 whitespace-nowrap">
                     <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
@@ -514,7 +160,7 @@ function renderTable(data, targetId) {
                     </div>
                 </td>
                 <td class="p-4 text-center font-semibold text-slate-600 text-sm whitespace-nowrap">
-                    <div>${deadlineDisplay}</div>${deadlineBadge}
+                    ${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}
                 </td>
                 <td class="p-4 text-center whitespace-nowrap">
                     <span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i>${row.status}</span>
@@ -536,7 +182,8 @@ function renderTable(data, targetId) {
 }
 
 // ============================================================
-// REMARKS TOGGLE — event delegation
+// REMARKS TOGGLE — event delegation, no inline onclick needed
+// Koi bhi quotes/apostrophe ho remarks mein — kaam karega
 // ============================================================
 document.addEventListener('click', function(e) {
     const btn = e.target.closest('.rmk-toggle-btn');
@@ -552,9 +199,23 @@ document.addEventListener('click', function(e) {
     btn.innerText = expanded ? 'more' : 'less';
 });
 
-// ============================================================
-// HANDLE SUBMIT
-// ============================================================
+function toggleRemark(uid) {
+    const short = document.getElementById(uid + '_s');
+    const full  = document.getElementById(uid + '_f');
+    const btn   = document.getElementById(uid + '_btn');
+    if (!short || !full || !btn) return;
+    const expanded = full.style.display !== 'none';
+    if (expanded) {
+        full.style.display = 'none';
+        short.style.display = 'inline';
+        btn.innerText = 'more';
+    } else {
+        short.style.display = 'none';
+        full.style.display = 'inline';
+        btn.innerText = 'less';
+    }
+}
+
 async function handleSubmit() {
     const id = document.getElementById('editId').value;
     const payload = {
@@ -569,22 +230,11 @@ async function handleSubmit() {
         updated_at: new Date().toISOString(),
         updated_by: currentUserName
     };
-    if (!payload.client_name) {
-        showToast('Client Name is mandatory.', 'error');
-        return;
-    }
-
-    const btn = document.getElementById('submitBtn');
-    const origHtml = btn.innerHTML;
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin text-xl"></i> Syncing...`;
-    btn.disabled = true;
+    if (!payload.client_name) return alert("Error: Client Name is mandatory.");
 
     const { error } = id
         ? await supabaseClient.from('witcorp_records').update(payload).eq('id', id)
         : await supabaseClient.from('witcorp_records').insert([payload]);
-
-    btn.innerHTML = origHtml;
-    btn.disabled = false;
 
     if (!error) {
         const actionText = id
@@ -599,13 +249,12 @@ async function handleSubmit() {
             payload.client_name
         );
 
-        showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
+        alert(id ? "Record Updated!" : "Record Successfully Added!");
         clearForm();
-        clearDirtyState();
         await fetchRecords(true);
         showSection('dashboard');
     } else {
-        showToast('Sync Error: Please check connection.', 'error');
+        alert("Sync Error: Please check connection.");
     }
 }
 
@@ -634,23 +283,15 @@ function editRecord(row) {
 async function deleteRecord(id) {
     if (confirm("Confirm: Are you sure you want to delete this record?")) {
         const rec = allRecords.find(r => r.id === id);
-        const { error } = await supabaseClient.from('witcorp_records').delete().eq('id', id);
-        if (!error) {
-            const logText = rec
-                ? `Deleted Record: ${rec.client_name} | ${rec.service_category} | ${rec.service_detail || 'N/A'}`
-                : `Deleted Record ID: ${id}`;
-            saveActivity(logText);
-            showToast(rec ? `Deleted: ${rec.client_name}` : 'Record deleted', 'warning');
-            fetchRecords();
-        } else {
-            showToast('Delete failed. Check connection.', 'error');
-        }
+        await supabaseClient.from('witcorp_records').delete().eq('id', id);
+        const logText = rec
+            ? `Deleted Record: ${rec.client_name} | ${rec.service_category} | ${rec.service_detail || 'N/A'}`
+            : `Deleted Record ID: ${id}`;
+        saveActivity(logText);
+        fetchRecords();
     }
 }
 
-// ============================================================
-// FETCH CLIENTS — with record count badges
-// ============================================================
 async function fetchClients() {
     const { data, error } = await supabaseClient
         .from('witcorp_clients')
@@ -662,39 +303,13 @@ async function fetchClients() {
     currentExportData = data;
     currentExportType = "clients";
     setupPredictions();
-
     const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
-    const counts = { 'Pvt Ltd': 0, 'LLP': 0, 'Others': 0 };
-
-    Object.values(containers).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = "";
-    });
-
-    if (data.length === 0) {
-        Object.values(containers).forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = `<div class="text-center py-8 text-slate-300 font-bold text-sm"><i class="fas fa-users text-3xl block mb-2"></i>No clients yet</div>`;
-        });
-    }
-
+    Object.values(containers).forEach(id => document.getElementById(id).innerHTML = "");
     data.forEach(c => {
-        const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
-        counts[typeKey]++;
-        const listId = containers[typeKey];
-
-        // Get record count for this client
-        const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
-        const recordBadge = clientRecordCount > 0
-            ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
-            : '';
-
+        const listId = containers[c.entity_type] || 'othersList';
         document.getElementById(listId).innerHTML += `
             <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
-                <div class="flex items-center gap-2">
-                    <div class="font-bold text-slate-800 text-sm flex-1">${c.client_name}</div>
-                    ${recordBadge}
-                </div>
+                <div class="font-bold text-slate-800 text-sm">${c.client_name}</div>
                 <div class="text-xs text-slate-500 font-semibold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i>${c.contact_number}</div>
                 <div class="text-xs text-blue-600 font-semibold break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i>${c.email_id}</div>
                 <div class="text-xs text-green-600 font-semibold mt-1">Updated By: ${c.updated_by || 'N/A'}</div>
@@ -704,14 +319,6 @@ async function fetchClients() {
                 </div>
             </div>`;
     });
-
-    // Update count badges in headers
-    const pvtCount = document.getElementById('pvtLtdCount');
-    const llpCount = document.getElementById('llpCount');
-    const othersCount = document.getElementById('othersCount');
-    if (pvtCount) pvtCount.innerText = counts['Pvt Ltd'];
-    if (llpCount) llpCount.innerText = counts['LLP'];
-    if (othersCount) othersCount.innerText = counts['Others'];
 }
 
 function editClient(c) {
@@ -733,10 +340,7 @@ async function saveClient() {
         entity_type: document.getElementById('cType').value,
         updated_by: currentUserName
     };
-    if (!payload.client_name) {
-        showToast('Entity Name Required', 'error');
-        return;
-    }
+    if (!payload.client_name) return alert("Entity Name Required");
     const { error } = id
         ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', id)
         : await supabaseClient.from('witcorp_clients').insert([payload]);
@@ -747,33 +351,22 @@ async function saveClient() {
             "client"
         );
         saveActivity(`${id ? 'Updated' : 'Added'} Client: ${payload.client_name} | ${payload.entity_type}`);
-        showToast(`${id ? 'Updated' : 'Added'}: ${payload.client_name}`, 'success');
         fetchClients();
         document.getElementById('cEditId').value = "";
         ['cName', 'cPhone', 'cEmail'].forEach(i => document.getElementById(i).value = "");
         document.getElementById('clientBtn').innerText = "Save Client Profile";
-    } else {
-        showToast('Save failed. Check connection.', 'error');
     }
 }
 
 async function deleteClient(id) {
     if (confirm("Action: Delete client profile?")) {
         const c = allClients.find(x => x.id === id);
-        const { error } = await supabaseClient.from('witcorp_clients').delete().eq('id', id);
-        if (!error) {
-            if (c) saveActivity(`Deleted Client: ${c.client_name} | ${c.entity_type}`);
-            showToast(c ? `Deleted: ${c.client_name}` : 'Client deleted', 'warning');
-            fetchClients();
-        } else {
-            showToast('Delete failed.', 'error');
-        }
+        await supabaseClient.from('witcorp_clients').delete().eq('id', id);
+        if (c) saveActivity(`Deleted Client: ${c.client_name} | ${c.entity_type}`);
+        fetchClients();
     }
 }
 
-// ============================================================
-// FETCH VAULT — with password show/hide & copy button
-// ============================================================
 async function fetchVault() {
     const { data, error } = await supabaseClient
         .from('witcorp_credentials')
@@ -784,87 +377,23 @@ async function fetchVault() {
     currentExportData = data;
     currentExportType = "vault";
     setupPredictions();
-    renderVaultTable(data);
-}
-
-function renderVaultTable(data) {
     const tbody = document.getElementById('vaultTableBody');
-    if (!tbody) return;
     tbody.innerHTML = "";
-
-    if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-16 text-center">
-            <div class="flex flex-col items-center gap-4">
-                <i class="fas fa-shield-halved text-4xl text-slate-200"></i>
-                <p class="font-black text-slate-400 text-sm uppercase">No credentials stored</p>
-            </div>
-        </td></tr>`;
-        return;
-    }
-
     data.forEach(v => {
         const fullPass = v.password || '';
-        const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
-        const vId = `vault_${v.id}`;
-
+        const shortPass = fullPass.length > 20 ? fullPass.substring(0, 18) + '\u2026' : fullPass;
         tbody.innerHTML += `
-            <tr class="group hover:bg-slate-50" id="${vId}_row">
+            <tr class="group hover:bg-slate-50">
                 <td class="p-4 font-bold text-blue-900 text-sm whitespace-nowrap">${v.client_name || 'N/A'}</td>
                 <td class="p-4 whitespace-nowrap"><span class="px-2 py-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-700">${v.category}</span></td>
-                <td class="p-4 font-semibold text-blue-600 text-sm whitespace-nowrap">
-                    <div class="flex items-center gap-2">
-                        <span>${v.username}</span>
-                        <button onclick="copyToClipboard('${v.username.replace(/'/g,"\\'")}', 'Username')"
-                            class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-600 transition-all text-xs" title="Copy Username">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                </td>
-                <td class="p-4 font-mono text-sm whitespace-nowrap">
-                    <div class="flex items-center gap-2">
-                        <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner" id="${vId}_pass">${maskedPass}</span>
-                        <button onclick="toggleVaultPassword('${vId}', '${fullPass.replace(/'/g,"\\'")}')"
-                            class="text-slate-400 hover:text-blue-600 transition-all text-xs" title="Show/Hide">
-                            <i class="fas fa-eye" id="${vId}_eye"></i>
-                        </button>
-                        <button onclick="copyToClipboard('${fullPass.replace(/'/g,"\\'")}', 'Password')"
-                            class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-600 transition-all text-xs" title="Copy Password">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                </td>
+                <td class="p-4 font-semibold text-blue-600 text-sm whitespace-nowrap">${v.username}</td>
+                <td class="p-4 font-mono text-sm whitespace-nowrap" title="${fullPass.replace(/"/g,'&quot;')}"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${shortPass}</span></td>
                 <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${v.updated_by || 'N/A'}</td>
-                <td class="p-4 text-right whitespace-nowrap">
-                    <div class="flex gap-3 justify-end items-center">
-                        <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-pencil"></i></button>
-                        <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </td>
+                <td class="p-4 text-right whitespace-nowrap"><div class="flex gap-3 justify-end items-center">
+                    <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-pencil"></i></button>
+                    <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-trash-alt"></i></button>
+                </div></td>
             </tr>`;
-    });
-}
-
-function toggleVaultPassword(vId, fullPass) {
-    const passEl = document.getElementById(vId + '_pass');
-    const eyeEl = document.getElementById(vId + '_eye');
-    if (!passEl || !eyeEl) return;
-    const isHidden = passEl.textContent.includes('•');
-    passEl.textContent = isHidden ? fullPass : '•'.repeat(Math.min(fullPass.length, 12));
-    eyeEl.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
-}
-
-function copyToClipboard(text, label) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast(`${label} copied to clipboard`, 'info', 2000);
-    }).catch(() => {
-        // Fallback for older browsers
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        showToast(`${label} copied`, 'info', 2000);
     });
 }
 
@@ -887,10 +416,7 @@ async function saveVault() {
         password: document.getElementById('vPass').value,
         updated_by: currentUserName
     };
-    if (!payload.category || !payload.client_name) {
-        showToast('Required fields missing.', 'error');
-        return;
-    }
+    if (!payload.category || !payload.client_name) return alert("Error: Required fields missing.");
     const { error } = id
         ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', id)
         : await supabaseClient.from('witcorp_credentials').insert([payload]);
@@ -901,47 +427,22 @@ async function saveVault() {
             "vault"
         );
         saveActivity(`${id ? 'Updated' : 'Added'} Vault: ${payload.client_name} | ${payload.category}`);
-        showToast(`${id ? 'Updated' : 'Saved'}: ${payload.client_name} credentials`, 'success');
         fetchVault();
         document.getElementById('vEditId').value = "";
         ['vClient', 'vCat', 'vUser', 'vPass'].forEach(i => document.getElementById(i).value = "");
         document.getElementById('vaultBtn').innerText = "Store Securely";
-    } else {
-        showToast('Save failed. Check connection.', 'error');
     }
 }
 
 async function deleteVault(id) {
     if (confirm("Security: Confirm credential deletion?")) {
         const v = allVault.find(x => x.id === id);
-        const { error } = await supabaseClient.from('witcorp_credentials').delete().eq('id', id);
-        if (!error) {
-            if (v) saveActivity(`Deleted Vault: ${v.client_name} | ${v.category}`);
-            showToast(v ? `Deleted: ${v.client_name}` : 'Credential deleted', 'warning');
-            fetchVault();
-        } else {
-            showToast('Delete failed.', 'error');
-        }
+        await supabaseClient.from('witcorp_credentials').delete().eq('id', id);
+        if (v) saveActivity(`Deleted Vault: ${v.client_name} | ${v.category}`);
+        fetchVault();
     }
 }
 
-// ============================================================
-// SEARCH VAULT — uses renderVaultTable
-// ============================================================
-function searchVault(query) {
-    const q = query.toLowerCase();
-    const filtered = allVault.filter(v =>
-        v.client_name?.toLowerCase().includes(q) ||
-        v.category?.toLowerCase().includes(q) ||
-        v.username?.toLowerCase().includes(q)
-    );
-    renderVaultTable(filtered);
-    if (query.trim() === "") fetchVault();
-}
-
-// ============================================================
-// ACCOUNTING HUB TOGGLES
-// ============================================================
 function toggleAccountingHub() {
     document.getElementById('accountinghubMenu').classList.toggle('hidden');
 }
@@ -949,17 +450,7 @@ function toggleAccountingHubDesktop() {
     document.getElementById('accountinghubDesktopMenu').classList.toggle('hidden');
 }
 
-// ============================================================
-// SHOW SECTION — with breadcrumb + unsaved changes guard
-// ============================================================
 function showSection(id) {
-    // Unsaved changes warning
-    if (isFormDirty && id !== 'dashboard') {
-        const leave = confirm("You have unsaved changes in the form. Leave anyway?");
-        if (!leave) return;
-        clearDirtyState();
-    }
-
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const globalSearch = document.getElementById('globalSearchBox');
     if (id === 'clientManagement' || id === 'vaultManagement' || id === 'dscManagement') {
@@ -978,14 +469,8 @@ function showSection(id) {
     if (id === 'clientManagement') fetchClients();
     if (id === 'vaultManagement') fetchVault();
     if (id === 'dscManagement') fetchDSC();
-
-    updateBreadcrumb(id);
-    setTimeout(applyGreenHeaders, 80);
 }
 
-// ============================================================
-// FILTER BY FIELD
-// ============================================================
 function filterByField(field, value) {
     showSection('filterView');
     let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
@@ -1004,9 +489,6 @@ function filterByField(field, value) {
     renderTable(filtered, 'filterTableBody');
 }
 
-// ============================================================
-// HANDLE SEARCH
-// ============================================================
 function handleSearch(query) {
     const q = query.toLowerCase().trim();
     if (q === "") {
@@ -1027,46 +509,21 @@ function handleSearch(query) {
     renderTable(filtered, 'filterTableBody');
 }
 
-// ============================================================
-// UPDATE STATS — with percentage sub text
-// ============================================================
 function updateStats(data) {
-    const total = data.length;
-    const done = data.filter(r => r.status === 'Completed').length;
-    const pending = data.filter(r => r.status === 'Pending').length;
-    const processing = data.filter(r => r.status === 'Processing').length;
-
-    document.getElementById('statTotal').innerText = total;
-    document.getElementById('statDone').innerText = done;
-    document.getElementById('statPending').innerText = pending;
-
-    const totalSub = document.getElementById('statTotalSub');
-    const doneSub = document.getElementById('statDoneSub');
-    const pendingSub = document.getElementById('statPendingSub');
-
-    if (totalSub) totalSub.innerText = total > 0 ? `${processing} processing` : '';
-    if (doneSub) doneSub.innerText = total > 0 ? `${Math.round((done / total) * 100)}% completion rate` : '';
-    if (pendingSub) pendingSub.innerText = total > 0 ? `${Math.round((pending / total) * 100)}% need attention` : '';
+    document.getElementById('statTotal').innerText = data.length;
+    document.getElementById('statDone').innerText = data.filter(r => r.status === 'Completed').length;
+    document.getElementById('statPending').innerText = data.filter(r => r.status === 'Pending').length;
 }
 
-// ============================================================
-// REFRESH DATA
-// ============================================================
 async function refreshData() {
     const btn = document.getElementById("refreshBtn");
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
-    btn.disabled = true;
     await fetchRecords(true);
     renderTable(allRecords, 'mainTableBody');
     btn.innerHTML = '<i class="fas fa-check mr-1"></i> Updated';
-    btn.disabled = false;
-    showToast('Records refreshed successfully', 'success', 2000);
     setTimeout(() => { btn.innerHTML = '<i class="fas fa-rotate-right mr-1"></i> Refresh'; }, 1500);
 }
 
-// ============================================================
-// CLEAR FORM
-// ============================================================
 function clearForm() {
     document.getElementById('editId').value = "";
     document.getElementById('formTitle').innerText = "Management Portal";
@@ -1079,12 +536,8 @@ function clearForm() {
         else { el.value = ""; }
         el.disabled = false;
     });
-    clearDirtyState();
 }
 
-// ============================================================
-// AUTH
-// ============================================================
 async function registerUser() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -1105,11 +558,7 @@ async function loginUser() {
 
 async function checkApproval(user) {
     const { data } = await supabaseClient.from('witcorp_users').select('approved').eq('id', user.id).single();
-    if (!data || !data.approved) {
-        showToast('Not approved by admin yet', 'error');
-        logout();
-        return;
-    }
+    if (!data || !data.approved) { alert("Not approved by admin yet"); logout(); return; }
     currentUserName = user.email;
     showApp(user);
 }
@@ -1126,7 +575,6 @@ function showApp(user) {
     if (p1) p1.innerText = name.charAt(0).toUpperCase();
     if (p2) p2.innerText = name.charAt(0).toUpperCase();
     showSection('dashboard');
-    showToast(`Welcome back, ${name.split('@')[0]}!`, 'success');
 }
 
 async function logout() {
@@ -1138,9 +586,6 @@ supabaseClient.auth.getSession().then(({ data }) => {
     if (data.session) checkApproval(data.session.user);
 });
 
-// ============================================================
-// MOBILE MENU
-// ============================================================
 function toggleMenu() {
     const menu = document.getElementById("mobileMenu");
     menu.classList.toggle("hidden");
@@ -1148,9 +593,6 @@ function toggleMenu() {
     else { document.body.classList.add("menu-open"); }
 }
 
-// ============================================================
-// SEARCH CLIENTS
-// ============================================================
 function searchClients(query) {
     const q = query.toLowerCase().trim();
     const filtered = allClients.filter(c =>
@@ -1163,23 +605,13 @@ function searchClients(query) {
         const bS = b.client_name?.toLowerCase().startsWith(q) ? 0 : 1;
         return aS - bS;
     });
-
     const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
     Object.values(containers).forEach(id => { document.getElementById(id).innerHTML = ""; });
-
     filtered.forEach(c => {
-        const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
-        const listId = containers[typeKey];
-        const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
-        const recordBadge = clientRecordCount > 0
-            ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
-            : '';
+        const listId = containers[c.entity_type] || 'othersList';
         document.getElementById(listId).innerHTML += `
             <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
-                <div class="flex items-center gap-2">
-                    <div class="font-bold text-slate-800 text-sm flex-1">${c.client_name}</div>
-                    ${recordBadge}
-                </div>
+                <div class="font-bold text-slate-800 text-sm">${c.client_name}</div>
                 <div class="text-xs text-slate-500 font-semibold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i>${c.contact_number}</div>
                 <div class="text-xs text-blue-600 font-semibold break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i>${c.email_id}</div>
                 <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
@@ -1191,9 +623,34 @@ function searchClients(query) {
     if (query.trim() === "") fetchClients();
 }
 
-// ============================================================
-// DSC FUNCTIONS
-// ============================================================
+function searchVault(query) {
+    const q = query.toLowerCase();
+    const filtered = allVault.filter(v =>
+        v.client_name?.toLowerCase().includes(q) ||
+        v.category?.toLowerCase().includes(q) ||
+        v.username?.toLowerCase().includes(q)
+    );
+    const tbody = document.getElementById('vaultTableBody');
+    tbody.innerHTML = "";
+    filtered.forEach(v => {
+        const fullPass = v.password || '';
+        const shortPass = fullPass.length > 20 ? fullPass.substring(0, 18) + '\u2026' : fullPass;
+        tbody.innerHTML += `
+            <tr class="group hover:bg-slate-50">
+                <td class="p-4 font-bold text-blue-900 text-sm whitespace-nowrap">${v.client_name || 'N/A'}</td>
+                <td class="p-4 whitespace-nowrap"><span class="px-2 py-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-700">${v.category}</span></td>
+                <td class="p-4 font-semibold text-blue-600 text-sm whitespace-nowrap">${v.username}</td>
+                <td class="p-4 font-mono text-sm whitespace-nowrap" title="${fullPass.replace(/"/g,'&quot;')}"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${shortPass}</span></td>
+                <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${v.updated_by || 'N/A'}</td>
+                <td class="p-4 text-right whitespace-nowrap"><div class="flex gap-3 justify-end items-center">
+                    <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-pencil"></i></button>
+                    <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-trash-alt"></i></button>
+                </div></td>
+            </tr>`;
+    });
+    if (query.trim() === "") fetchVault();
+}
+
 async function fetchDSC() {
     const { data, error } = await supabaseClient
         .from('witcorp_dsc')
@@ -1211,69 +668,26 @@ function renderDSC(data) {
     const tbody = document.getElementById('dscTableBody');
     if (!tbody) return;
     tbody.innerHTML = "";
-
-    if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-16 text-center">
-            <div class="flex flex-col items-center gap-4">
-                <i class="fas fa-key text-4xl text-slate-200"></i>
-                <p class="font-black text-slate-400 text-sm uppercase">No DSC records found</p>
-            </div>
-        </td></tr>`;
-        return;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     data.forEach(d => {
         const fullRem = d.remarks || '—';
         const shortRem = fullRem.length > 50 ? fullRem.substring(0, 48) + '\u2026' : fullRem;
         const updatedAt = d.updated_at ? (() => {
             const dt = new Date(d.updated_at);
-            return dt.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ', ' +
-                dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+            return dt.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ', ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
         })() : 'N/A';
-
-        // DSC status styling
-        const statusColors = {
-            'Valid': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-            'Expired': 'bg-red-100 text-red-700 border-red-200',
-            'No DSC': 'bg-slate-100 text-slate-600 border-slate-200'
-        };
-        const statusStyle = statusColors[d.status] || statusColors['No DSC'];
-
-        // Check if expiry is soon (within 30 days)
-        let expiryBadge = '';
-        if (d.expiry_date && d.status === 'Valid') {
-            const expiry = new Date(d.expiry_date);
-            expiry.setHours(0, 0, 0, 0);
-            const daysLeft = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
-            if (daysLeft <= 30 && daysLeft >= 0) {
-                expiryBadge = `<span class="ml-1 text-[9px] font-black text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">${daysLeft}d left</span>`;
-            } else if (daysLeft < 0) {
-                expiryBadge = `<span class="ml-1 text-[9px] font-black text-red-600 bg-red-100 px-1.5 py-0.5 rounded">EXPIRED</span>`;
-            }
-        }
-
         tbody.innerHTML += `
-            <tr class="border-b border-slate-200 hover:bg-slate-50 transition-all">
+            <tr class="border-b border-slate-200 hover:bg-slate-50">
                 <td class="p-4 font-bold text-sm text-slate-800 whitespace-nowrap">${d.company_name || ''}</td>
                 <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">${d.client_name || ''}</td>
-                <td class="p-4 whitespace-nowrap">
-                    <span class="px-3 py-1 rounded-xl text-xs font-black border ${statusStyle}">${d.status || ''}</span>
-                </td>
-                <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">
-                    ${d.expiry_date || 'N/A'}${expiryBadge}
-                </td>
-                <td class="p-4 text-sm text-slate-600 max-w-[200px]" title="${fullRem.replace(/"/g,'&quot;')}">
-                    <span class="block">${shortRem}</span>
-                </td>
+                <td class="p-4 font-semibold text-sm whitespace-nowrap">${d.status || ''}</td>
+                <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">${d.expiry_date || ''}</td>
+                <td class="p-4 text-sm text-slate-600 max-w-[200px]" title="${fullRem.replace(/"/g,'&quot;')}"><span class="block">${shortRem}</span></td>
                 <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${d.updated_by || 'N/A'}</td>
                 <td class="p-4 text-sm font-semibold text-slate-500 whitespace-nowrap">${updatedAt}</td>
                 <td class="p-4 text-right whitespace-nowrap">
                     <div class="flex gap-2 justify-end items-center">
-                        <button onclick='editDSC(${JSON.stringify(d)})' class="px-3 py-1 bg-blue-500 text-white rounded-xl text-xs font-semibold hover:bg-blue-600 transition-all">Edit</button>
-                        <button onclick="deleteDSC(${d.id})" class="px-3 py-1 bg-red-500 text-white rounded-xl text-xs font-semibold hover:bg-red-600 transition-all">Delete</button>
+                        <button onclick='editDSC(${JSON.stringify(d)})' class="px-3 py-1 bg-blue-500 text-white rounded text-sm font-semibold">Edit</button>
+                        <button onclick="deleteDSC(${d.id})" class="px-3 py-1 bg-red-500 text-white rounded text-sm font-semibold">Delete</button>
                     </div>
                 </td>
             </tr>`;
@@ -1283,7 +697,6 @@ function renderDSC(data) {
 async function saveDSC() {
     const btn = document.getElementById('dscBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
     const id = document.getElementById('dEditId').value;
     const payload = {
         company_name: document.getElementById('dCompany').value.trim(),
@@ -1294,12 +707,7 @@ async function saveDSC() {
         updated_by: currentUserName,
         updated_at: new Date().toISOString()
     };
-    if (!payload.company_name) {
-        btn.disabled = false;
-        btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
-        showToast('Company Name Required', 'error');
-        return;
-    }
+    if (!payload.company_name) { btn.disabled = false; return alert("Company Name Required"); }
     let error;
     if (id) { ({ error } = await supabaseClient.from('witcorp_dsc').update(payload).eq('id', id)); }
     else { ({ error } = await supabaseClient.from('witcorp_dsc').insert([payload])); }
@@ -1310,7 +718,7 @@ async function saveDSC() {
             "dsc"
         );
         saveActivity(`${id ? 'Updated' : 'Added'} DSC: ${payload.company_name} | ${payload.client_name} | Status: ${payload.status}`);
-        showToast(`DSC ${id ? 'updated' : 'saved'}: ${payload.company_name}`, 'success');
+        alert(id ? "DSC Updated Successfully" : "DSC Saved Successfully");
         await new Promise(r => setTimeout(r, 300));
         await fetchDSC();
         document.getElementById('dEditId').value = "";
@@ -1318,11 +726,10 @@ async function saveDSC() {
         document.getElementById('dStatus').value = "Valid";
         document.getElementById('dscBtn').innerText = "Save DSC Status";
     } else {
-        showToast('Save failed. Check connection.', 'error');
+        alert("Supabase Error — Check Console");
         console.error("DSC ERROR:", error);
     }
     btn.disabled = false;
-    if (!error) btn.innerHTML = 'Save DSC Status';
 }
 
 function editDSC(d) {
@@ -1339,14 +746,9 @@ function editDSC(d) {
 async function deleteDSC(id) {
     if (confirm("Delete DSC Record?")) {
         const d = allDSC.find(x => x.id === id);
-        const { error } = await supabaseClient.from('witcorp_dsc').delete().eq('id', id);
-        if (!error) {
-            if (d) saveActivity(`Deleted DSC: ${d.company_name} | ${d.client_name}`);
-            showToast(d ? `Deleted: ${d.company_name}` : 'DSC deleted', 'warning');
-            await fetchDSC();
-        } else {
-            showToast('Delete failed.', 'error');
-        }
+        await supabaseClient.from('witcorp_dsc').delete().eq('id', id);
+        if (d) saveActivity(`Deleted DSC: ${d.company_name} | ${d.client_name}`);
+        await fetchDSC();
     }
 }
 
@@ -1360,41 +762,24 @@ function searchDSC(query) {
     renderDSC(filtered);
 }
 
-// ============================================================
-// SERVICE WORKER
-// ============================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').then(() => console.log("SW registered"));
 }
 
-// ============================================================
-// PROFILE MENU
-// ============================================================
 function toggleProfileMenu() {
     document.getElementById("profileMenu").classList.toggle("hidden");
 }
 
 document.addEventListener("click", function (event) {
     const menu = document.getElementById("profileMenu");
-    if (menu && !event.target.closest("#profileMenu") && !event.target.closest("[onclick='toggleProfileMenu()']")) {
+    if (!event.target.closest("#profileMenu") && !event.target.closest("[onclick='toggleProfileMenu()']")) {
         menu.classList.add("hidden");
-    }
-    // Close notification panel on outside click
-    const notifPanel = document.getElementById("notificationPanel");
-    if (notifPanel && !event.target.closest("#notificationPanel") && !event.target.closest("[onclick='toggleNotificationPanel()']")) {
-        notifPanel.classList.add("hidden");
     }
 });
 
-// ============================================================
-// THEME SETTINGS
-// ============================================================
 function openThemeSettings() { document.getElementById("themeModal").classList.remove("hidden"); }
 function closeThemeSettings() { document.getElementById("themeModal").classList.add("hidden"); }
 
-// ============================================================
-// NOTIFICATIONS
-// ============================================================
 async function createNotification(title, message, type = "info", reference = "") {
     await supabaseClient.from('witcorp_notifications').insert([{
         title, message, type, reference,
@@ -1422,55 +807,29 @@ async function fetchNotifications() {
     renderNotifications();
 }
 
-async function markAllRead() {
-    const unreadIds = allNotifications.filter(n => !n.is_read).map(n => n.id);
-    if (unreadIds.length === 0) return;
-    await supabaseClient.from('witcorp_notifications').update({ is_read: true }).in('id', unreadIds);
-    allNotifications.forEach(n => n.is_read = true);
-    renderNotifications();
-    showToast('All notifications marked as read', 'info', 2000);
-}
-
 function renderNotifications() {
     const list = document.getElementById('notificationList');
     const count = document.getElementById('notificationCount');
-    if (!list) return;
     list.innerHTML = "";
     const unread = allNotifications.filter(n => !n.is_read);
     unreadCount = unread.length;
-    if (count) {
-        if (unreadCount > 0) { count.classList.remove('hidden'); count.innerText = unreadCount > 99 ? '99+' : unreadCount; }
-        else { count.classList.add('hidden'); }
-    }
-
-    if (allNotifications.length === 0) {
-        list.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold text-sm">
-            <i class="fas fa-bell-slash text-3xl block mb-3 opacity-30"></i>No notifications yet
-        </div>`;
-        return;
-    }
+    if (unreadCount > 0) { count.classList.remove('hidden'); count.innerText = unreadCount; }
+    else { count.classList.add('hidden'); }
 
     allNotifications.forEach(n => {
-        const typeIcon = { record: 'fa-file-alt', client: 'fa-address-card', vault: 'fa-shield-halved', dsc: 'fa-key' };
         list.innerHTML += `
             <div
                 data-notif-id="${n.id}"
                 data-notif-type="${n.type}"
                 data-notif-ref="${(n.reference || '').replace(/"/g, '&quot;')}"
-                class="p-4 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 items-start
-                ${!n.is_read ? 'bg-blue-50 border-l-4 border-blue-400' : 'bg-white'}">
-                <div class="w-8 h-8 rounded-full ${!n.is_read ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'} flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <i class="fas ${typeIcon[n.type] || 'fa-bell'} text-xs"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-bold text-sm text-slate-800">${n.title}</div>
-                    <div class="text-xs text-slate-500 mt-0.5">${n.message}</div>
-                    <div class="text-[10px] text-blue-500 mt-1 font-semibold">${new Date(n.created_at).toLocaleString('en-IN')}</div>
-                </div>
-                ${!n.is_read ? '<span class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></span>' : ''}
+                class="p-4 cursor-pointer border-b border-slate-100 transition-all hover:bg-slate-50
+                ${!n.is_read ? 'bg-blue-50' : 'bg-white'}
+                ${n.is_read ? 'opacity-60' : ''}">
+                <div class="font-bold text-sm text-slate-800">${n.title}</div>
+                <div class="text-sm text-slate-500 mt-1">${n.message}</div>
+                <div class="text-xs text-blue-600 mt-2 font-semibold">${new Date(n.created_at).toLocaleString('en-IN')}</div>
             </div>`;
     });
-
     list.querySelectorAll('[data-notif-id]').forEach(el => {
         el.addEventListener('click', function () {
             openNotification(parseInt(this.dataset.notifId), this.dataset.notifType, this.dataset.notifRef);
@@ -1494,13 +853,11 @@ async function openNotification(id, type, reference) {
     document.getElementById('notificationPanel').classList.add('hidden');
 }
 
-// ============================================================
-// REALTIME SUBSCRIPTION
-// ============================================================
 supabaseClient
     .channel('live-notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'witcorp_notifications' }, async (payload) => {
         if (payload.new.created_by === currentUserName) return;
+
         allNotifications.unshift(payload.new);
         renderNotifications();
 
@@ -1518,17 +875,12 @@ supabaseClient
                 });
             }).catch(() => {});
         }
-
-        showToast(payload.new.title + ': ' + payload.new.message, 'info');
         fetchRecords(true);
     })
     .subscribe((status) => { console.log("NOTIFICATION STATUS:", status); });
 
 window.addEventListener('DOMContentLoaded', () => { fetchNotifications(); });
 
-// ============================================================
-// THEMES
-// ============================================================
 function changeTheme(theme) {
     const body = document.body;
     ['theme-ocean', 'theme-dark', 'theme-green', 'theme-purple', 'theme-light'].forEach(t => body.classList.remove(t));
@@ -1559,49 +911,39 @@ window.addEventListener('load', () => {
     loadNotificationSetting();
 });
 
-// ============================================================
-// AUTOCOMPLETE / PREDICTIONS
-// ============================================================
 function setupPredictions() {
     const clientList = document.getElementById('clientSuggestions');
     const uniqueClients = [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
-    if (clientList) clientList.innerHTML = uniqueClients.map(name => `<option value="${name}">`).join('');
+    clientList.innerHTML = uniqueClients.map(name => `<option value="${name}">`).join('');
 
     const serviceList = document.getElementById('serviceSuggestions');
     const uniqueServices = [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
-    if (serviceList) serviceList.innerHTML = uniqueServices.map(name => `<option value="${name}">`).join('');
+    serviceList.innerHTML = uniqueServices.map(name => `<option value="${name}">`).join('');
 
     const staffList = document.getElementById('staffSuggestions');
     const uniqueStaff = [...new Set(allRecords.map(r => r.assigned_staff).filter(Boolean))];
-    if (staffList) staffList.innerHTML = uniqueStaff.map(name => `<option value="${name}">`).join('');
+    staffList.innerHTML = uniqueStaff.map(name => `<option value="${name}">`).join('');
 
     const allotList = document.getElementById('allotedSuggestions');
     const uniqueAlloted = [...new Set(allRecords.map(r => r.alloted_by).filter(Boolean))];
-    if (allotList) allotList.innerHTML = uniqueAlloted.map(name => `<option value="${name}">`).join('');
+    allotList.innerHTML = uniqueAlloted.map(name => `<option value="${name}">`).join('');
 
     const companyList = document.getElementById('companySuggestions');
     const uniqueCompany = [...new Set(allDSC.map(d => d.company_name).filter(Boolean))];
-    if (companyList) companyList.innerHTML = uniqueCompany.map(name => `<option value="${name}">`).join('');
+    companyList.innerHTML = uniqueCompany.map(name => `<option value="${name}">`).join('');
 
     const vaultList = document.getElementById('vaultCategorySuggestions');
     const uniqueVault = [...new Set(allVault.map(v => v.category).filter(Boolean))];
-    if (vaultList) vaultList.innerHTML = uniqueVault.map(name => `<option value="${name}">`).join('');
+    vaultList.innerHTML = uniqueVault.map(name => `<option value="${name}">`).join('');
 }
 
-// ============================================================
-// FORGOT PASSWORD
-// ============================================================
 async function forgotPassword() {
     const email = document.getElementById("email").value;
-    if (!email) {
-        document.getElementById('authMsg').innerText = "Please enter your email first";
-        return;
-    }
+    if (!email) return alert("Please enter your email first");
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + window.location.pathname + "?reset=true"
     });
-    if (error) { document.getElementById('authMsg').innerText = error.message; }
-    else { document.getElementById('authMsg').innerText = "Password reset link sent to your email."; }
+    if (error) { alert(error.message); } else { alert("Password reset link sent to your email."); }
 }
 
 window.addEventListener('load', async () => {
@@ -1610,17 +952,13 @@ window.addEventListener('load', async () => {
         const newPassword = prompt("Enter New Password");
         if (!newPassword) return;
         const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-        if (error) { showToast(error.message, 'error'); }
-        else {
-            showToast("Password updated successfully!", 'success');
+        if (error) { alert(error.message); } else {
+            alert("Password updated successfully!");
             window.location.href = window.location.pathname;
         }
     }
 });
 
-// ============================================================
-// NOTIFICATION SOUND SETTING
-// ============================================================
 function loadNotificationSetting() {
     const sound = localStorage.getItem("notificationSound");
     const status = document.getElementById("notificationStatus");
@@ -1642,17 +980,11 @@ function toggleNotificationSetting() {
     loadNotificationSetting();
 }
 
-// ============================================================
-// EXPORT MODAL
-// ============================================================
 function openExportModal() { document.getElementById("exportModal").classList.remove("hidden"); }
 function closeExportModal() { document.getElementById("exportModal").classList.add("hidden"); }
 function openMyActivity() { document.getElementById("activityModal").classList.remove("hidden"); loadMyActivity(); }
 function closeActivityModal() { document.getElementById("activityModal").classList.add("hidden"); }
 
-// ============================================================
-// ACTIVITY LOG
-// ============================================================
 function saveActivity(text) {
     let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
     activity.unshift({ text, time: new Date().toLocaleString('en-IN') });
@@ -1667,7 +999,6 @@ function loadMyActivity() {
         'Updated': 'fa-pen-to-square text-blue-500',
         'Deleted': 'fa-trash-can text-rose-500',
         'Exported': 'fa-file-export text-purple-500',
-        'Bulk': 'fa-layer-group text-cyan-500',
         'Default': 'fa-clock-rotate-left text-slate-400'
     };
 
@@ -1698,12 +1029,9 @@ function loadMyActivity() {
     document.getElementById("activityList").innerHTML = html;
 }
 
-// ============================================================
-// EXPORT FUNCTIONS
-// ============================================================
 function exportCSV() {
     let rows = currentExportData || [];
-    if (rows.length === 0) { showToast('No records found to export', 'warning'); return; }
+    if (rows.length === 0) { alert("No records found"); return; }
     let csv = "";
     if (currentExportType === "records") {
         csv = "Client,Category,Service,Staff,Status,Deadline\n";
@@ -1724,12 +1052,11 @@ function exportCSV() {
     a.download = currentExportType + ".csv";
     a.click();
     saveActivity("Exported CSV Report: " + currentExportType);
-    showToast('CSV exported successfully', 'success');
 }
 
 function exportExcel() {
     let rows = currentExportData || [];
-    if (rows.length === 0) { showToast('No records found to export', 'warning'); return; }
+    if (rows.length === 0) { alert("No records found"); return; }
     let csv = "";
     if (currentExportType === "records") {
         csv = "Client,Category,Service,Staff,Alloted By,Status,Deadline,Remarks,Updated By\n";
@@ -1751,14 +1078,36 @@ function exportExcel() {
     a.download = "Witcorp_" + currentExportType + ".xls";
     a.click();
     saveActivity("Exported Excel Report: " + currentExportType);
-    showToast('Excel exported successfully', 'success');
 }
+
+// ============================================================
+// GREEN TABLE HEADERS — sab <th> cells automatically green
+// HTML mein manually style nahi karna padega
+// ============================================================
+function applyGreenHeaders() {
+    document.querySelectorAll('th').forEach(th => {
+        th.style.color = '#16a34a';
+        th.style.fontWeight = '700';
+        th.style.fontSize = '11px';
+        th.style.letterSpacing = '0.06em';
+    });
+}
+
+const _origShowSection = showSection;
+window.showSection = function(id) {
+    _origShowSection(id);
+    setTimeout(applyGreenHeaders, 80);
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(applyGreenHeaders, 400);
+});
 
 function exportPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
     let rows = currentExportData || [];
-    if (rows.length === 0) { showToast('No records found to export', 'warning'); return; }
+    if (rows.length === 0) { alert("No records found"); return; }
     let tableHead = [], tableData = [];
     if (currentExportType === "vault") {
         tableHead = [["Client", "Category", "Username", "Password", "Updated By"]];
@@ -1781,50 +1130,4 @@ function exportPDF() {
     });
     doc.save("Witcorp_Report.pdf");
     saveActivity("Exported PDF Report: " + currentExportType);
-    showToast('PDF exported successfully', 'success');
 }
-
-// ============================================================
-// GREEN TABLE HEADERS
-// ============================================================
-function applyGreenHeaders() {
-    document.querySelectorAll('th').forEach(th => {
-        th.style.color = '#16a34a';
-        th.style.fontWeight = '700';
-        th.style.fontSize = '11px';
-        th.style.letterSpacing = '0.06em';
-    });
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(applyGreenHeaders, 400);
-});
-
-// ============================================================
-// KEYBOARD SHORTCUTS — Ctrl+K for search, Escape to close
-// ============================================================
-document.addEventListener('keydown', function(e) {
-    // Ctrl+K / Cmd+K → focus global search
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        const searchBox = document.getElementById('globalSearch');
-        if (searchBox) {
-            searchBox.focus();
-            searchBox.select();
-            // Make sure dashboard is shown
-            const dashSection = document.getElementById('dashboard');
-            if (dashSection && !dashSection.classList.contains('active')) {
-                document.getElementById('globalSearchBox').style.display = 'block';
-                searchBox.focus();
-            }
-        }
-    }
-    // Escape → close notification panel, profile menu
-    if (e.key === 'Escape') {
-        document.getElementById('notificationPanel')?.classList.add('hidden');
-        document.getElementById('profileMenu')?.classList.add('hidden');
-        document.getElementById('themeModal')?.classList.add('hidden');
-        document.getElementById('activityModal')?.classList.add('hidden');
-        document.getElementById('exportModal')?.classList.add('hidden');
-    }
-});
