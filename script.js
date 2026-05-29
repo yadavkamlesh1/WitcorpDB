@@ -82,14 +82,19 @@ function renderTable(data, targetId) {
         }
         const lastUpdate = row.updated_at ? `${datePart}, ${timePart}` : 'Syncing...';
 
-        // Service — split every 2 words onto new lines
-        const svcWords = (row.service_detail || 'General Consulting').split(' ');
+        // Service — wrap into chunks of 3 words per line, only if > 3 words total
+        const svcFull = row.service_detail || 'General Consulting';
+        const svcWords = svcFull.split(' ');
         let svcLines = [];
-        for (let i = 0; i < svcWords.length; i += 2) {
-            svcLines.push(svcWords.slice(i, i + 2).join(' '));
+        if (svcWords.length <= 3) {
+            svcLines = [svcFull];
+        } else {
+            for (let i = 0; i < svcWords.length; i += 3) {
+                svcLines.push(svcWords.slice(i, i + 3).join(' '));
+            }
         }
         const svcDisplay = svcLines.map((line, idx) =>
-            `<span style="display:block;font-size:${idx === 0 ? '13px' : '12px'};font-weight:${idx === 0 ? '600' : '500'};color:${idx === 0 ? '#334155' : '#94a3b8'};line-height:1.5;">${line}</span>`
+            `<span style="display:block;font-size:13px;font-weight:600;color:#334155;line-height:1.6;">${line}</span>`
         ).join('');
 
         // Remarks — inline expand/collapse using style.display (reliable)
@@ -1044,6 +1049,29 @@ function exportExcel() {
     a.click();
     saveActivity("Exported Excel Report: " + currentExportType);
 }
+
+// ============================================================
+// GREEN TABLE HEADERS — sab <th> cells automatically green
+// HTML mein manually style nahi karna padega
+// ============================================================
+function applyGreenHeaders() {
+    document.querySelectorAll('th').forEach(th => {
+        th.style.color = '#16a34a';
+        th.style.fontWeight = '700';
+        th.style.fontSize = '11px';
+        th.style.letterSpacing = '0.06em';
+    });
+}
+
+const _origShowSection = showSection;
+window.showSection = function(id) {
+    _origShowSection(id);
+    setTimeout(applyGreenHeaders, 80);
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(applyGreenHeaders, 400);
+});
 
 function exportPDF() {
     const { jsPDF } = window.jspdf;
