@@ -67,26 +67,32 @@ function renderTable(data, targetId) {
             'Pending': 'fa-circle-exclamation',
             'Processing': 'fa-spinner fa-spin'
         }[row.status] || 'fa-info-circle';
-        const lastUpdate = row.updated_at
-            ? new Date(row.updated_at).toLocaleString('en-IN', {
-                hour: '2-digit', minute: '2-digit',
-                day: '2-digit', month: 'short', year: 'numeric'
-            })
-            : 'Syncing...';
+        // Update Info — compact single line: "28 May, 03:11 PM"
+        let datePart = '', timePart = '';
+        if (row.updated_at) {
+            const d = new Date(row.updated_at);
+            datePart = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            timePart = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+        const lastUpdate = row.updated_at ? `${datePart}, ${timePart}` : 'Syncing...';
+
+        // Remarks — max 60 chars shown, full text in title tooltip
+        const fullRemarks = row.remarks || '—';
+        const shortRemarks = fullRemarks.length > 60 ? fullRemarks.substring(0, 58) + '…' : fullRemarks;
 
         tbody.innerHTML += `
             <tr class="group transition-all hover:bg-slate-50/80">
-                <td class="p-4 font-bold text-slate-800 text-sm">${row.client_name}</td>
-                <td class="p-4 text-xs font-semibold text-slate-400"><i class="far fa-clock text-blue-400 mr-1"></i>${lastUpdate}</td>
-                <td class="p-4 text-center text-sm text-slate-600 font-semibold">${row.service_detail || 'General Consulting'}</td>
-                <td class="p-4 text-center"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold uppercase">${row.service_category}</div></td>
-                <td class="p-4 text-center"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500 text-xs"></i>${row.assigned_staff || 'TBD'}</div></td>
-                <td class="p-4 text-center"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 border border-cyan-200 rounded-xl text-xs font-semibold text-cyan-700 shadow-sm"><i class="fas fa-user-check text-xs"></i>${row.alloted_by || 'N/A'}</div></td>
-                <td class="p-4 text-center font-semibold text-slate-600 text-sm">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
-                <td class="p-4 text-center"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i>${row.status}</span></td>
-                <td class="p-4 text-slate-600 text-sm font-normal whitespace-normal break-words leading-5 max-w-[300px]">${row.remarks || '—'}</td>
-                <td class="p-4 text-sm font-semibold text-blue-700 max-w-[180px] overflow-hidden text-ellipsis whitespace-nowrap">${row.updated_by || 'N/A'}</td>
-                <td class="p-4 text-right"><div class="flex justify-end gap-2"><button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-trash-alt"></i></button></div></td>
+                <td class="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">${row.client_name}</td>
+                <td class="p-4 whitespace-nowrap"><div class="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><i class="far fa-clock text-blue-400"></i>${lastUpdate}</div></td>
+                <td class="p-4 text-center text-sm text-slate-600 font-semibold whitespace-nowrap">${row.service_detail || 'General Consulting'}</td>
+                <td class="p-4 text-center whitespace-nowrap"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold uppercase">${row.service_category}</div></td>
+                <td class="p-4 text-center whitespace-nowrap"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500 text-xs"></i>${row.assigned_staff || 'TBD'}</div></td>
+                <td class="p-4 text-center whitespace-nowrap"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 border border-cyan-200 rounded-xl text-xs font-semibold text-cyan-700 shadow-sm"><i class="fas fa-user-check text-xs"></i>${row.alloted_by || 'N/A'}</div></td>
+                <td class="p-4 text-center font-semibold text-slate-600 text-sm whitespace-nowrap">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
+                <td class="p-4 text-center whitespace-nowrap"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i>${row.status}</span></td>
+                <td class="p-4 text-slate-600 text-sm font-normal max-w-[220px]" title="${fullRemarks.replace(/"/g, '&quot;')}"><span class="block leading-5">${shortRemarks}</span></td>
+                <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap max-w-[160px] overflow-hidden text-ellipsis">${row.updated_by || 'N/A'}</td>
+                <td class="p-4 text-right whitespace-nowrap"><div class="flex justify-end gap-2"><button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-trash-alt"></i></button></div></td>
             </tr>`;
     });
 }
@@ -258,14 +264,16 @@ async function fetchVault() {
     const tbody = document.getElementById('vaultTableBody');
     tbody.innerHTML = "";
     data.forEach(v => {
+        const fullPass = v.password || '';
+        const shortPass = fullPass.length > 20 ? fullPass.substring(0, 18) + '…' : fullPass;
         tbody.innerHTML += `
             <tr class="group hover:bg-slate-50">
-                <td class="p-4 font-bold text-blue-900 text-sm">${v.client_name || 'N/A'}</td>
-                <td class="p-4 font-semibold text-slate-700 text-sm"><span class="px-2 py-1 bg-slate-100 rounded-lg text-xs">${v.category}</span></td>
-                <td class="p-4 font-semibold text-blue-600 text-sm">${v.username}</td>
-                <td class="p-4 font-mono text-sm"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${v.password}</span></td>
-                <td class="p-4 text-sm font-semibold text-blue-700">${v.updated_by || 'N/A'}</td>
-                <td class="p-4 text-right"><div class="flex gap-3 justify-end items-center">
+                <td class="p-4 font-bold text-blue-900 text-sm whitespace-nowrap">${v.client_name || 'N/A'}</td>
+                <td class="p-4 whitespace-nowrap"><span class="px-2 py-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-700">${v.category}</span></td>
+                <td class="p-4 font-semibold text-blue-600 text-sm whitespace-nowrap">${v.username}</td>
+                <td class="p-4 font-mono text-sm whitespace-nowrap" title="${fullPass.replace(/"/g,'&quot;')}"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${shortPass}</span></td>
+                <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${v.updated_by || 'N/A'}</td>
+                <td class="p-4 text-right whitespace-nowrap"><div class="flex gap-3 justify-end items-center">
                     <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-pencil"></i></button>
                     <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-trash-alt"></i></button>
                 </div></td>
@@ -509,14 +517,16 @@ function searchVault(query) {
     const tbody = document.getElementById('vaultTableBody');
     tbody.innerHTML = "";
     filtered.forEach(v => {
+        const fullPass = v.password || '';
+        const shortPass = fullPass.length > 20 ? fullPass.substring(0, 18) + '\u2026' : fullPass;
         tbody.innerHTML += `
             <tr class="group hover:bg-slate-50">
-                <td class="p-4 font-bold text-blue-900 text-sm">${v.client_name || 'N/A'}</td>
-                <td class="p-4 font-semibold text-slate-700 text-sm"><span class="px-2 py-1 bg-slate-100 rounded-lg text-xs">${v.category}</span></td>
-                <td class="p-4 font-semibold text-blue-600 text-sm">${v.username}</td>
-                <td class="p-4 font-mono text-sm"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${v.password}</span></td>
-                <td class="p-4 text-sm font-semibold text-blue-700">${v.updated_by || 'N/A'}</td>
-                <td class="p-4 text-right"><div class="flex gap-3 justify-end items-center">
+                <td class="p-4 font-bold text-blue-900 text-sm whitespace-nowrap">${v.client_name || 'N/A'}</td>
+                <td class="p-4 whitespace-nowrap"><span class="px-2 py-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-700">${v.category}</span></td>
+                <td class="p-4 font-semibold text-blue-600 text-sm whitespace-nowrap">${v.username}</td>
+                <td class="p-4 font-mono text-sm whitespace-nowrap" title="${fullPass.replace(/"/g,'&quot;')}"><span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner">${shortPass}</span></td>
+                <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${v.updated_by || 'N/A'}</td>
+                <td class="p-4 text-right whitespace-nowrap"><div class="flex gap-3 justify-end items-center">
                     <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-pencil"></i></button>
                     <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-trash-alt"></i></button>
                 </div></td>
@@ -543,15 +553,21 @@ function renderDSC(data) {
     if (!tbody) return;
     tbody.innerHTML = "";
     data.forEach(d => {
+        const fullRem = d.remarks || '—';
+        const shortRem = fullRem.length > 50 ? fullRem.substring(0, 48) + '\u2026' : fullRem;
+        const updatedAt = d.updated_at ? (() => {
+            const dt = new Date(d.updated_at);
+            return dt.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ', ' + dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+        })() : 'N/A';
         tbody.innerHTML += `
             <tr class="border-b border-slate-200 hover:bg-slate-50">
-                <td class="p-4 font-bold text-sm text-slate-800">${d.company_name || ''}</td>
-                <td class="p-4 font-semibold text-sm text-slate-600">${d.client_name || ''}</td>
-                <td class="p-4 font-semibold text-sm">${d.status || ''}</td>
-                <td class="p-4 font-semibold text-sm text-slate-600">${d.expiry_date || ''}</td>
-                <td class="p-4 text-sm text-slate-600">${d.remarks || ''}</td>
-                <td class="p-4 text-sm font-semibold text-blue-700">${d.updated_by || 'N/A'}</td>
-                <td class="p-4 text-sm font-semibold text-slate-500">${d.updated_at ? new Date(d.updated_at).toLocaleString('en-IN') : 'N/A'}</td>
+                <td class="p-4 font-bold text-sm text-slate-800 whitespace-nowrap">${d.company_name || ''}</td>
+                <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">${d.client_name || ''}</td>
+                <td class="p-4 font-semibold text-sm whitespace-nowrap">${d.status || ''}</td>
+                <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">${d.expiry_date || ''}</td>
+                <td class="p-4 text-sm text-slate-600 max-w-[200px]" title="${fullRem.replace(/"/g,'&quot;')}"><span class="block">${shortRem}</span></td>
+                <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${d.updated_by || 'N/A'}</td>
+                <td class="p-4 text-sm font-semibold text-slate-500 whitespace-nowrap">${updatedAt}</td>
                 <td class="p-4 text-right whitespace-nowrap">
                     <div class="flex gap-2 justify-end items-center">
                         <button onclick='editDSC(${JSON.stringify(d)})' class="px-3 py-1 bg-blue-500 text-white rounded text-sm font-semibold">Edit</button>
