@@ -78,16 +78,16 @@ function renderTable(data, targetId) {
 
         // Remarks — chip style: short preview, click to expand inline
         const fullRemarks = row.remarks || '—';
-        const hasLong = fullRemarks.length > 40;
-        const shortRemarks = hasLong ? fullRemarks.substring(0, 38) + '…' : fullRemarks;
+        const hasLong = fullRemarks !== '\u2014' && fullRemarks.length > 32;
+        const shortRemarks = hasLong ? fullRemarks.substring(0, 30) + '\u2026' : fullRemarks;
         const rid = 'rem_' + row.id;
         const remarkCell = hasLong
-            ? `<div class="flex items-start gap-2">
-                <span id="${rid}_short" class="text-sm text-slate-600 font-normal leading-5">${shortRemarks}</span>
-                <span id="${rid}_full" class="text-sm text-slate-600 font-normal leading-5 hidden">${fullRemarks}</span>
-                <button onclick="toggleRemark('${rid}')" class="flex-shrink-0 mt-0.5 px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-500 text-[10px] font-bold rounded-lg border border-blue-200 transition-all" id="${rid}_btn">more</button>
+            ? `<div style="display:flex;align-items:center;gap:6px;">
+                <span id="${rid}_short" style="font-size:13px;color:#475569;white-space:nowrap;">${shortRemarks}</span>
+                <span id="${rid}_full" style="font-size:13px;color:#475569;white-space:normal;display:none;">${fullRemarks}</span>
+                <button onclick="toggleRemark('${rid}')" id="${rid}_btn" style="flex-shrink:0;padding:1px 7px;background:#eff6ff;border:1px solid #bfdbfe;color:#3b82f6;font-size:10px;font-weight:700;border-radius:6px;cursor:pointer;line-height:18px;">more</button>
                </div>`
-            : `<span class="text-sm text-slate-600 font-normal leading-5">${fullRemarks}</span>`;
+            : `<span style="font-size:13px;color:#475569;white-space:nowrap;">${fullRemarks}</span>`;
 
         tbody.innerHTML += `
             <tr class="group transition-all hover:bg-slate-50/80">
@@ -100,7 +100,7 @@ function renderTable(data, targetId) {
                 <td class="p-4 text-center font-semibold text-slate-600 text-sm whitespace-nowrap">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
                 <td class="p-4 text-center whitespace-nowrap"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i>${row.status}</span></td>
                 <td class="p-4 max-w-[260px]">${remarkCell}</td>
-                <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap max-w-[160px] overflow-hidden text-ellipsis">${row.updated_by || 'N/A'}</td>
+                <td class="p-4 whitespace-nowrap"><span style="display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:#1d4ed8;vertical-align:middle;" title="${row.updated_by || ''}">${row.updated_by || 'N/A'}</span></td>
                 <td class="p-4 text-right whitespace-nowrap"><div class="flex justify-end gap-2"><button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-trash-alt"></i></button></div></td>
             </tr>`;
     });
