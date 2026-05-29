@@ -76,30 +76,28 @@ function renderTable(data, targetId) {
         }
         const lastUpdate = row.updated_at ? `${datePart}, ${timePart}` : 'Syncing...';
 
-        // Remarks — chip style: short preview, click to expand inline
-        const fullRemarks = row.remarks || '—';
-        const hasLong = fullRemarks !== '\u2014' && fullRemarks.length > 32;
-        const shortRemarks = hasLong ? fullRemarks.substring(0, 30) + '\u2026' : fullRemarks;
-        const rid = 'rem_' + row.id;
-        const remarkCell = hasLong
-            ? `<div style="display:flex;align-items:center;gap:6px;">
-                <span id="${rid}_short" style="font-size:13px;color:#475569;white-space:nowrap;">${shortRemarks}</span>
-                <span id="${rid}_full" style="font-size:13px;color:#475569;white-space:normal;display:none;">${fullRemarks}</span>
-                <button onclick="toggleRemark('${rid}')" id="${rid}_btn" style="flex-shrink:0;padding:1px 7px;background:#eff6ff;border:1px solid #bfdbfe;color:#3b82f6;font-size:10px;font-weight:700;border-radius:6px;cursor:pointer;line-height:18px;">more</button>
-               </div>`
-            : `<span style="font-size:13px;color:#475569;white-space:nowrap;">${fullRemarks}</span>`;
+        // Service — first 3 words line 1, rest line 2
+        const svcWords = (row.service_detail || 'General Consulting').split(' ');
+        const svcLine1 = svcWords.slice(0, 3).join(' ');
+        const svcLine2 = svcWords.slice(3).join(' ');
+        const svcDisplay = svcLine2
+            ? `<span style="display:block;font-size:13px;font-weight:600;color:#475569;">${svcLine1}</span><span style="display:block;font-size:12px;font-weight:500;color:#94a3b8;">${svcLine2}</span>`
+            : `<span style="font-size:13px;font-weight:600;color:#475569;">${svcLine1}</span>`;
 
+        // Remarks — single line, truncate at 45 chars, full text on hover
+        const fullRemarks = row.remarks || '—';
+        const shortRemarks = fullRemarks.length > 45 ? fullRemarks.substring(0, 43) + '\u2026' : fullRemarks;
         tbody.innerHTML += `
             <tr class="group transition-all hover:bg-slate-50/80">
                 <td class="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">${row.client_name}</td>
                 <td class="p-4 whitespace-nowrap"><div class="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><i class="far fa-clock text-blue-400"></i>${lastUpdate}</div></td>
-                <td class="p-4 text-center text-sm text-slate-600 font-semibold whitespace-nowrap">${row.service_detail || 'General Consulting'}</td>
+                <td class="p-4 text-center" style="min-width:130px;">${svcDisplay}</td>
                 <td class="p-4 text-center whitespace-nowrap"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold uppercase">${row.service_category}</div></td>
                 <td class="p-4 text-center whitespace-nowrap"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500 text-xs"></i>${row.assigned_staff || 'TBD'}</div></td>
                 <td class="p-4 text-center whitespace-nowrap"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 border border-cyan-200 rounded-xl text-xs font-semibold text-cyan-700 shadow-sm"><i class="fas fa-user-check text-xs"></i>${row.alloted_by || 'N/A'}</div></td>
                 <td class="p-4 text-center font-semibold text-slate-600 text-sm whitespace-nowrap">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
                 <td class="p-4 text-center whitespace-nowrap"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i>${row.status}</span></td>
-                <td class="p-4 max-w-[260px]">${remarkCell}</td>
+                <td class="p-4 whitespace-nowrap" title="${fullRemarks.replace(/"/g, '&quot;')}"><span style="font-size:13px;color:#475569;font-weight:400;">${shortRemarks}</span></td>
                 <td class="p-4 whitespace-nowrap"><span style="display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:#1d4ed8;vertical-align:middle;" title="${row.updated_by || ''}">${row.updated_by || 'N/A'}</span></td>
                 <td class="p-4 text-right whitespace-nowrap"><div class="flex justify-end gap-2"><button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-trash-alt"></i></button></div></td>
             </tr>`;
