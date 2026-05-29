@@ -1392,21 +1392,6 @@ async function checkApproval(user) {
     }
 }
 
-function showApp(user) {
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('appScreen').classList.remove('hidden');
-    document.getElementById('appScreen').classList.add('flex');
-    const gmailEl = document.getElementById('userGmail');
-    if (gmailEl) gmailEl.innerText = user.email;
-    const name = user.email;
-    const p1 = document.getElementById("profileInitial");
-    const p2 = document.getElementById("profileInitial2");
-    if (p1) p1.innerText = name.charAt(0).toUpperCase();
-    if (p2) p2.innerText = name.charAt(0).toUpperCase();
-    showSection('dashboard');
-    showToast(`Welcome back, ${name.split('@')[0]}!`, 'success');
-}
-
 async function logout() {
     try {
         await supabaseClient.auth.signOut();
@@ -3085,6 +3070,10 @@ function showApp(user) {
     currentUserName = user.email;
     const gmailEl = document.getElementById('userGmail');
     if (gmailEl) gmailEl.innerText = user.email;
+    const p1 = document.getElementById("profileInitial");
+    const p2 = document.getElementById("profileInitial2");
+    if (p1) p1.innerText = user.email.charAt(0).toUpperCase();
+    if (p2) p2.innerText = user.email.charAt(0).toUpperCase();
     showSection('dashboard');
 
     // Naye functions call karo
