@@ -46,7 +46,10 @@ async function fetchRecords(reset = true) {
 }
 
 // ============================================================
-// FIXED: Consistent font sizes across all table cells
+// FIXED renderTable
+// 1. Service: har 2 words ek line — clean multi-line wrap
+// 2. Remarks: working inline more/less toggle (style.display)
+// 3. Updated By: professional blue chip, full email on hover
 // ============================================================
 function renderTable(data, targetId) {
     currentExportData = data;
@@ -56,18 +59,21 @@ function renderTable(data, targetId) {
     tbody.innerHTML = data.length === 0
         ? `<tr><td colspan="11" class="p-20 text-center text-slate-400 font-bold text-sm">No active records found.</td></tr>`
         : "";
+
     data.forEach(row => {
         const statusClass = {
             'Completed': 'st-completed',
             'Pending': 'st-pending',
             'Processing': 'st-processing'
         }[row.status] || 'bg-slate-100';
+
         const statusIcon = {
             'Completed': 'fa-circle-check',
             'Pending': 'fa-circle-exclamation',
             'Processing': 'fa-spinner fa-spin'
         }[row.status] || 'fa-info-circle';
-        // Update Info — compact single line: "28 May, 03:11 PM"
+
+        // Last Update — compact single line
         let datePart = '', timePart = '';
         if (row.updated_at) {
             const d = new Date(row.updated_at);
@@ -76,48 +82,101 @@ function renderTable(data, targetId) {
         }
         const lastUpdate = row.updated_at ? `${datePart}, ${timePart}` : 'Syncing...';
 
-        // Service — first 3 words line 1, rest line 2
+        // Service — split every 2 words onto new lines
         const svcWords = (row.service_detail || 'General Consulting').split(' ');
-        const svcLine1 = svcWords.slice(0, 3).join(' ');
-        const svcLine2 = svcWords.slice(3).join(' ');
-        const svcDisplay = svcLine2
-            ? `<span style="display:block;font-size:13px;font-weight:600;color:#475569;">${svcLine1}</span><span style="display:block;font-size:12px;font-weight:500;color:#94a3b8;">${svcLine2}</span>`
-            : `<span style="font-size:13px;font-weight:600;color:#475569;">${svcLine1}</span>`;
+        let svcLines = [];
+        for (let i = 0; i < svcWords.length; i += 2) {
+            svcLines.push(svcWords.slice(i, i + 2).join(' '));
+        }
+        const svcDisplay = svcLines.map((line, idx) =>
+            `<span style="display:block;font-size:${idx === 0 ? '13px' : '12px'};font-weight:${idx === 0 ? '600' : '500'};color:${idx === 0 ? '#334155' : '#94a3b8'};line-height:1.5;">${line}</span>`
+        ).join('');
 
-        // Remarks — single line, truncate at 45 chars, full text on hover
-        const fullRemarks = row.remarks || '—';
-        const shortRemarks = fullRemarks.length > 45 ? fullRemarks.substring(0, 43) + '\u2026' : fullRemarks;
+        // Remarks — inline expand/collapse using style.display (reliable)
+        const uid = `rmk_${row.id}`;
+        const safeRemarks = (row.remarks || '—').replace(/`/g, '&#96;');
+        const CUTOFF = 55;
+        const needsExpand = (row.remarks || '').length > CUTOFF;
+        const shortRemarks = needsExpand
+            ? (row.remarks || '').substring(0, CUTOFF - 1) + '\u2026'
+            : (row.remarks || '—');
+
+        const remarksCell = needsExpand ? `
+            <div style="min-width:180px;max-width:260px;">
+                <span id="${uid}_s" style="font-size:13px;color:#475569;font-weight:400;">${shortRemarks}</span>
+                <span id="${uid}_f" style="font-size:13px;color:#475569;font-weight:400;display:none;">${safeRemarks}</span>
+                <button onclick="toggleRemark('${uid}')" id="${uid}_btn"
+                    style="margin-left:4px;font-size:11px;font-weight:700;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;vertical-align:middle;">more</button>
+            </div>`
+            : `<span style="font-size:13px;color:#475569;font-weight:400;">${shortRemarks}</span>`;
+
+        // Updated By — clean blue chip, full email on hover
+        const updatedBy = row.updated_by || 'N/A';
+        const updatedByShort = updatedBy.includes('@') ? updatedBy.split('@')[0] : updatedBy;
+        const updatedByCell = `
+            <div style="display:inline-flex;align-items:center;gap:5px;max-width:145px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:4px 9px;" title="${updatedBy}">
+                <i class="fas fa-user-circle" style="color:#3b82f6;font-size:12px;flex-shrink:0;"></i>
+                <span style="font-size:12px;font-weight:600;color:#1d4ed8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${updatedByShort}</span>
+            </div>`;
+
         tbody.innerHTML += `
             <tr class="group transition-all hover:bg-slate-50/80">
                 <td class="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">${row.client_name}</td>
-                <td class="p-4 whitespace-nowrap"><div class="flex items-center gap-1.5 text-xs font-semibold text-slate-400"><i class="far fa-clock text-blue-400"></i>${lastUpdate}</div></td>
-                <td class="p-4 text-center" style="min-width:130px;">${svcDisplay}</td>
-                <td class="p-4 text-center whitespace-nowrap"><div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold uppercase">${row.service_category}</div></td>
-                <td class="p-4 text-center whitespace-nowrap"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm"><i class="fas fa-user-tie text-blue-500 text-xs"></i>${row.assigned_staff || 'TBD'}</div></td>
-                <td class="p-4 text-center whitespace-nowrap"><div class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 border border-cyan-200 rounded-xl text-xs font-semibold text-cyan-700 shadow-sm"><i class="fas fa-user-check text-xs"></i>${row.alloted_by || 'N/A'}</div></td>
-                <td class="p-4 text-center font-semibold text-slate-600 text-sm whitespace-nowrap">${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}</td>
-                <td class="p-4 text-center whitespace-nowrap"><span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i>${row.status}</span></td>
-                <td class="p-4 whitespace-nowrap" title="${fullRemarks.replace(/"/g, '&quot;')}"><span style="font-size:13px;color:#475569;font-weight:400;">${shortRemarks}</span></td>
-                <td class="p-4 whitespace-nowrap"><span style="display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:#1d4ed8;vertical-align:middle;" title="${row.updated_by || ''}">${row.updated_by || 'N/A'}</span></td>
-                <td class="p-4 text-right whitespace-nowrap"><div class="flex justify-end gap-2"><button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-edit"></i></button><button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"><i class="fas fa-trash-alt"></i></button></div></td>
+                <td class="p-4 whitespace-nowrap">
+                    <div class="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                        <i class="far fa-clock text-blue-400"></i>${lastUpdate}
+                    </div>
+                </td>
+                <td class="p-4" style="min-width:140px;max-width:200px;">${svcDisplay}</td>
+                <td class="p-4 text-center whitespace-nowrap">
+                    <div class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold uppercase">${row.service_category}</div>
+                </td>
+                <td class="p-4 text-center whitespace-nowrap">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 shadow-sm">
+                        <i class="fas fa-user-tie text-blue-500 text-xs"></i>${row.assigned_staff || 'TBD'}
+                    </div>
+                </td>
+                <td class="p-4 text-center whitespace-nowrap">
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 border border-cyan-200 rounded-xl text-xs font-semibold text-cyan-700 shadow-sm">
+                        <i class="fas fa-user-check text-xs"></i>${row.alloted_by || 'N/A'}
+                    </div>
+                </td>
+                <td class="p-4 text-center font-semibold text-slate-600 text-sm whitespace-nowrap">
+                    ${row.deadline ? new Date(row.deadline).toLocaleDateString('en-GB') : 'N/A'}
+                </td>
+                <td class="p-4 text-center whitespace-nowrap">
+                    <span class="status-pill ${statusClass}"><i class="fas ${statusIcon}"></i>${row.status}</span>
+                </td>
+                <td class="p-4">${remarksCell}</td>
+                <td class="p-4 whitespace-nowrap">${updatedByCell}</td>
+                <td class="p-4 text-right whitespace-nowrap">
+                    <div class="flex justify-end gap-2">
+                        <button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </td>
             </tr>`;
     });
 }
 
-
-function toggleRemark(rid) {
-    const short = document.getElementById(rid + '_short');
-    const full  = document.getElementById(rid + '_full');
-    const btn   = document.getElementById(rid + '_btn');
+// FIXED toggleRemark — style.display use karta hai, class nahi
+function toggleRemark(uid) {
+    const short = document.getElementById(uid + '_s');
+    const full  = document.getElementById(uid + '_f');
+    const btn   = document.getElementById(uid + '_btn');
     if (!short || !full || !btn) return;
-    const isExpanded = !full.classList.contains('hidden');
-    if (isExpanded) {
-        full.classList.add('hidden');
-        short.classList.remove('hidden');
+    const expanded = full.style.display !== 'none';
+    if (expanded) {
+        full.style.display = 'none';
+        short.style.display = 'inline';
         btn.innerText = 'more';
     } else {
-        short.classList.add('hidden');
-        full.classList.remove('hidden');
+        short.style.display = 'none';
+        full.style.display = 'inline';
         btn.innerText = 'less';
     }
 }
@@ -143,13 +202,11 @@ async function handleSubmit() {
         : await supabaseClient.from('witcorp_records').insert([payload]);
 
     if (!error) {
-        // FIXED: Activity log now shows meaningful info, not just name
         const actionText = id
             ? `Updated Record: ${payload.client_name} | ${payload.service_category} | Status: ${payload.status}`
             : `Added Record: ${payload.client_name} | ${payload.service_category} | ${payload.service_detail || 'N/A'}`;
         saveActivity(actionText);
 
-        // FIXED: notification only to OTHER users (not the one who made the change)
         await createNotificationForOthers(
             id ? "Record Updated" : "New Record Added",
             `${payload.client_name} — ${payload.service_category} updated by ${currentUserName}`,
@@ -190,7 +247,6 @@ function editRecord(row) {
 
 async function deleteRecord(id) {
     if (confirm("Confirm: Are you sure you want to delete this record?")) {
-        // Find record before deleting for proper activity log
         const rec = allRecords.find(r => r.id === id);
         await supabaseClient.from('witcorp_records').delete().eq('id', id);
         const logText = rec
@@ -290,7 +346,7 @@ async function fetchVault() {
     tbody.innerHTML = "";
     data.forEach(v => {
         const fullPass = v.password || '';
-        const shortPass = fullPass.length > 20 ? fullPass.substring(0, 18) + '…' : fullPass;
+        const shortPass = fullPass.length > 20 ? fullPass.substring(0, 18) + '\u2026' : fullPass;
         tbody.innerHTML += `
             <tr class="group hover:bg-slate-50">
                 <td class="p-4 font-bold text-blue-900 text-sm whitespace-nowrap">${v.client_name || 'N/A'}</td>
@@ -689,10 +745,6 @@ document.addEventListener("click", function (event) {
 function openThemeSettings() { document.getElementById("themeModal").classList.remove("hidden"); }
 function closeThemeSettings() { document.getElementById("themeModal").classList.add("hidden"); }
 
-// ============================================================
-// FIXED: createNotificationForOthers — data entry karne wale
-//        ko khud ka notification nahi milega (is_self flag store karte hain)
-// ============================================================
 async function createNotification(title, message, type = "info", reference = "") {
     await supabaseClient.from('witcorp_notifications').insert([{
         title, message, type, reference,
@@ -702,7 +754,6 @@ async function createNotification(title, message, type = "info", reference = "")
 }
 
 async function createNotificationForOthers(title, message, type = "info", reference = "") {
-    // Store notification — real-time channel mein created_by check se self-notification filter ho jaata hai
     await supabaseClient.from('witcorp_notifications').insert([{
         title, message, type, reference,
         created_by: currentUserName,
@@ -767,20 +818,14 @@ async function openNotification(id, type, reference) {
     document.getElementById('notificationPanel').classList.add('hidden');
 }
 
-// ============================================================
-// FIXED: Real-time — apni khud ki notification sound nahi bajegi
-//        created_by === currentUserName hone par skip karo
-// ============================================================
 supabaseClient
     .channel('live-notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'witcorp_notifications' }, async (payload) => {
-        // FIXED: Jo khud ne data enter kiya usse notification + sound nahi milega
         if (payload.new.created_by === currentUserName) return;
 
         allNotifications.unshift(payload.new);
         renderNotifications();
 
-        // FIXED: notificationSound check properly karo
         const notificationEnabled = localStorage.getItem("notificationSound");
         if (notificationEnabled !== "off") {
             try {
@@ -879,9 +924,6 @@ window.addEventListener('load', async () => {
     }
 });
 
-// ============================================================
-// FIXED: Notification sound toggle — properly ON/OFF dikhega
-// ============================================================
 function loadNotificationSetting() {
     const sound = localStorage.getItem("notificationSound");
     const status = document.getElementById("notificationStatus");
@@ -911,13 +953,10 @@ function closeActivityModal() { document.getElementById("activityModal").classLi
 function saveActivity(text) {
     let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
     activity.unshift({ text, time: new Date().toLocaleString('en-IN') });
-    if (activity.length > 100) activity = activity.slice(0, 100); // max 100 entries
+    if (activity.length > 100) activity = activity.slice(0, 100);
     localStorage.setItem("myActivity", JSON.stringify(activity));
 }
 
-// ============================================================
-// FIXED: My Activity — meaningful labels + icons, no raw IDs
-// ============================================================
 function loadMyActivity() {
     let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
     const iconMap = {
@@ -935,7 +974,6 @@ function loadMyActivity() {
         activity.forEach(item => {
             const verb = Object.keys(iconMap).find(k => item.text.startsWith(k)) || 'Default';
             const icon = iconMap[verb];
-            // Parse parts for better display
             const parts = item.text.split('|').map(p => p.trim());
             const mainText = parts[0] || item.text;
             const details = parts.slice(1);
