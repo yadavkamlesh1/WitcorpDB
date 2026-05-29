@@ -1058,10 +1058,17 @@ function showSection(id) {
     if (id === 'vaultManagement') document.getElementById('nav-vault')?.classList.add('active');
     if (id === 'dscManagement') document.getElementById('nav-dsc')?.classList.add('active');
     // Management section active highlights
-    if (id === 'dashboard') document.getElementById('nav-accounting')?.classList.add('active');
+    // Management nav active highlight
+    const filterMap = {
+        'GST': 'nav-gst', 'ROC': 'nav-roc', 'IT': 'nav-it',
+        'PT': 'nav-pt', 'TDS': 'nav-tds', 'DIRECTOR KYC': 'nav-dkyc',
+        'UDIN': 'nav-udin', 'FOOD': 'nav-food', 'MSME': 'nav-msme',
+        'PAYROLL': 'nav-payroll', 'REPORTS': 'nav-reports'
+    };
     if (id === 'filterView') {
-        const activeFilter = document.querySelector('.filter-nav-btn.active');
-        if (activeFilter) activeFilter.classList.add('active');
+        const activeVal = window._lastFilterValue;
+        const navId = filterMap[activeVal];
+        if (navId) document.getElementById(navId)?.classList.add('active');
     }
     if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
     if (id === 'clientManagement') fetchClients();
@@ -1076,6 +1083,7 @@ function showSection(id) {
 // FILTER BY FIELD
 // ============================================================
 function filterByField(field, value) {
+    window._lastFilterValue = value;
     showSection('filterView');
     let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
     const titles = {
