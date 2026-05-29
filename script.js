@@ -1826,10 +1826,20 @@ supabaseClient
 
             const notificationEnabled = localStorage.getItem("notificationSound");
             if (notificationEnabled !== "off") {
-                try {
-                    const audio = new Audio('./notification.mp3'); // FIX: Local file instead of external URL
-                    audio.play().catch(() => {});
-                } catch(e) {}
+                // Browser ke built-in sound use karo (temporary):
+try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.frequency.value = 800;
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+} catch(e) {}
+        
                 navigator.serviceWorker?.ready.then(reg => {
                     reg.showNotification(payload.new.title || "New Update", {
                         body: payload.new.message || "Database updated",
