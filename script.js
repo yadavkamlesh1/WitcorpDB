@@ -679,7 +679,7 @@ function editRecord(row) {
     document.getElementById('serviceDetail').value = row.service_detail || '';
     document.getElementById('assignedStaff').value = row.assigned_staff || '';
     document.getElementById('allotedBy').value = row.alloted_by || '';
-    document.getElementById('deadline').value = row.deadline ? row.deadline.split('T')[0] : "";
+    document.getElementById('deadline').value = row.deadline ? row.deadline.substring(0, 10) : "";
     document.getElementById('status').value = row.status;
     document.getElementById('remarks').value = row.remarks || '';
     document.getElementById('formTitle').innerText = "Modify Existing Profile";
@@ -885,7 +885,7 @@ function renderVaultTable(data) {
                 <td class="p-4 font-mono text-sm whitespace-nowrap">
                     <div class="flex items-center gap-2">
                         <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner" id="${vId}_pass">${maskedPass}</span>
-                        <button onclick="toggleVaultPassword('${vId}', '${fullPass.replace(/'/g,"\\'")}')"
+                        <button onclick="toggleVaultPassword('${vId}')" data-pwd="${btoa(fullPass)}"
                             class="text-slate-400 hover:text-blue-600 transition-all text-xs" title="Show/Hide">
                             <i class="fas fa-eye" id="${vId}_eye"></i>
                         </button>
@@ -1535,8 +1535,8 @@ function renderNotifications() {
                     <i class="fas ${typeIcon[n.type] || 'fa-bell'} text-xs"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="font-bold text-sm text-slate-800">${n.title}</div>
-                    <div class="text-xs text-slate-500 mt-0.5">${n.message}</div>
+                    const div = document.createElement('div');
+                     div.textContent = n.title;
                     <div class="text-[10px] text-blue-500 mt-1 font-semibold">${new Date(n.created_at).toLocaleString('en-IN')}</div>
                 </div>
                 ${!n.is_read ? '<span class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></span>' : ''}
@@ -1545,7 +1545,7 @@ function renderNotifications() {
 
     list.querySelectorAll('[data-notif-id]').forEach(el => {
         el.addEventListener('click', function () {
-            openNotification(parseInt(this.dataset.notifId), this.dataset.notifType, this.dataset.notifRef);
+            openNotification(parseInt(this.dataset.notifId, 10), this.dataset.notifType, this.dataset.notifRef);
         });
     });
 }
