@@ -862,6 +862,7 @@ async function fetchVault() {
     const { data, error } = await supabaseClient
         .from('witcorp_credentials')
         .select('*')
+        .order('client_name', { ascending: true })
         .limit(300);
     if (error) return;
     allVault = data;
@@ -1056,6 +1057,12 @@ function showSection(id) {
     if (id === 'clientManagement') document.getElementById('nav-client')?.classList.add('active');
     if (id === 'vaultManagement') document.getElementById('nav-vault')?.classList.add('active');
     if (id === 'dscManagement') document.getElementById('nav-dsc')?.classList.add('active');
+    // Management section active highlights
+    if (id === 'dashboard') document.getElementById('nav-accounting')?.classList.add('active');
+    if (id === 'filterView') {
+        const activeFilter = document.querySelector('.filter-nav-btn.active');
+        if (activeFilter) activeFilter.classList.add('active');
+    }
     if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
     if (id === 'clientManagement') fetchClients();
     if (id === 'vaultManagement') fetchVault();
@@ -1280,7 +1287,7 @@ async function fetchDSC() {
     const { data, error } = await supabaseClient
         .from('witcorp_dsc')
         .select('*')
-        .order('updated_at', { ascending: false });
+        .order('company_name', { ascending: true })
     if (error) { console.log("DSC FETCH ERROR:", error); return; }
     allDSC = data || [];
     currentExportData = allDSC;
