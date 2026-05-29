@@ -123,8 +123,7 @@ function renderTable(data, targetId) {
             <div style="min-width:180px;max-width:260px;">
                 <span id="${uid}_s" style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>
                 <span id="${uid}_f" style="font-size:13px;color:#475569;font-weight:400;display:none;">${safeFull}</span>
-                <button id="${uid}_btn"
-                    onclick="(function(){var s=document.getElementById('${uid}_s'),f=document.getElementById('${uid}_f'),b=document.getElementById('${uid}_btn');if(!s||!f||!b)return;var exp=f.style.display!=='none';f.style.display=exp?'none':'inline';s.style.display=exp?'inline':'none';b.innerText=exp?'more':'less';})()"
+                <button data-rmk="${uid}" class="rmk-toggle-btn"
                     style="margin-left:4px;font-size:11px;font-weight:700;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;vertical-align:middle;">more</button>
             </div>`
             : `<span style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>`;
@@ -182,7 +181,24 @@ function renderTable(data, targetId) {
     });
 }
 
-// FIXED toggleRemark — style.display use karta hai, class nahi
+// ============================================================
+// REMARKS TOGGLE — event delegation, no inline onclick needed
+// Koi bhi quotes/apostrophe ho remarks mein — kaam karega
+// ============================================================
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.rmk-toggle-btn');
+    if (!btn) return;
+    const uid = btn.getAttribute('data-rmk');
+    if (!uid) return;
+    const s = document.getElementById(uid + '_s');
+    const f = document.getElementById(uid + '_f');
+    if (!s || !f) return;
+    const expanded = f.style.display !== 'none';
+    f.style.display = expanded ? 'none' : 'inline';
+    s.style.display = expanded ? 'inline' : 'none';
+    btn.innerText = expanded ? 'more' : 'less';
+});
+
 function toggleRemark(uid) {
     const short = document.getElementById(uid + '_s');
     const full  = document.getElementById(uid + '_f');
