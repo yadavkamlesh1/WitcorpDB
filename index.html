@@ -14,6 +14,9 @@
 </head>
 <body id="appBody" class="min-h-screen overflow-x-hidden bg-slate-100">
 
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-[999999] flex flex-col gap-3 pointer-events-none"></div>
+
   <!-- LOGIN / REGISTER SCREEN -->
   <div id="authScreen" class="fixed inset-0 flex items-center justify-center bg-[#1A2E5A] z-[9999]">
     <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md text-center">
@@ -191,66 +194,94 @@
     <main class="flex-1 w-full overflow-y-auto p-3 sm:p-4 lg:p-12" id="mainContent">
 
       <!-- TOP PROFILE BAR -->
-      <div class="flex justify-end items-center mb-6 relative">
+      <div class="flex justify-between items-center mb-6 relative">
 
-        <!-- NOTIFICATION BELL -->
-        <div class="relative mr-5">
-          <button onclick="toggleNotificationPanel()" class="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-slate-700 relative">
-            <i class="fas fa-bell text-lg"></i>
-            <span id="notificationCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
-          </button>
-          <!-- NOTIFICATION PANEL -->
-          <div id="notificationPanel" class="hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95vw] sm:w-[380px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
-            <div class="p-4 border-b font-black text-slate-700">Notifications</div>
-            <div id="notificationList" class="max-h-[500px] overflow-y-auto divide-y"></div>
-          </div>
+        <!-- BREADCRUMB -->
+        <div id="breadcrumb" class="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-400">
+          <i class="fas fa-home text-blue-400"></i>
+          <span id="breadcrumbText">Dashboard</span>
         </div>
 
-        <!-- PROFILE BUTTON -->
-        <div class="relative">
-          <button onclick="toggleProfileMenu()" class="w-12 h-12 rounded-full bg-[#1A2E5A] text-white flex items-center justify-center font-black text-lg shadow-lg border-2 border-white">
-            <span id="profileInitial">K</span>
-            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-600">Profile</div>
-          </button>
+        <div class="flex items-center gap-3 ml-auto">
+          <!-- LAST SYNC -->
+          <div id="lastSyncBadge" class="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold border">
+            <i class="fas fa-clock text-blue-400"></i>
+            <span id="lastSyncText">Syncing...</span>
+          </div>
 
-          <!-- PROFILE DROPDOWN -->
-          <div id="profileMenu" class="hidden absolute right-0 mt-3 w-[340px] max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50">
-            <div class="bg-[#1A2E5A] p-5 text-white">
-              <div class="flex items-start gap-4">
-                <div class="w-14 h-14 rounded-full bg-white text-[#1e3a8a] flex items-center justify-center font-black text-2xl">
-                  <span id="profileInitial2">K</span>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div id="userGmail" class="text-xs text-blue-100 break-words leading-5 mt-1 overflow-hidden"></div>
+          <!-- NOTIFICATION BELL -->
+          <div class="relative">
+            <button onclick="toggleNotificationPanel()" class="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-slate-700 relative hover:bg-blue-50 transition-all">
+              <i class="fas fa-bell text-lg"></i>
+              <span id="notificationCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+            </button>
+          </div>
+
+          <!-- PROFILE BUTTON -->
+          <div class="relative">
+            <button onclick="toggleProfileMenu()" class="w-12 h-12 rounded-full bg-[#1A2E5A] text-white flex items-center justify-center font-black text-lg shadow-lg border-2 border-white hover:bg-blue-800 transition-all">
+              <span id="profileInitial">K</span>
+              <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-600 whitespace-nowrap">Profile</div>
+            </button>
+
+            <!-- PROFILE DROPDOWN -->
+            <div id="profileMenu" class="hidden absolute right-0 mt-3 w-[340px] max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50">
+              <div class="bg-[#1A2E5A] p-5 text-white">
+                <div class="flex items-start gap-4">
+                  <div class="w-14 h-14 rounded-full bg-white text-[#1e3a8a] flex items-center justify-center font-black text-2xl">
+                    <span id="profileInitial2">K</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div id="userGmail" class="text-xs text-blue-100 break-words leading-5 mt-1 overflow-hidden"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="p-3">
-              <button onclick="openThemeSettings()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-                <i class="fas fa-palette"></i> Theme Settings
-              </button>
-              <button onclick="toggleNotificationSetting()" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-                <div class="flex items-center gap-3"><i class="fas fa-bell"></i> Notification Sound</div>
-                <span id="notificationStatus" class="text-green-600 font-black">ON</span>
-              </button>
-              <button onclick="openMyActivity()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-                <i class="fas fa-clock-rotate-left"></i> My Activity
-              </button>
-              <button onclick="openExportModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
-                <i class="fas fa-file-export"></i> Export Data
-              </button>
-              <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
-                <i class="fas fa-right-from-bracket"></i> Logout
-              </button>
+              <div class="p-3">
+                <button onclick="openThemeSettings()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                  <i class="fas fa-palette"></i> Theme Settings
+                </button>
+                <button onclick="toggleNotificationSetting()" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                  <div class="flex items-center gap-3"><i class="fas fa-bell"></i> Notification Sound</div>
+                  <span id="notificationStatus" class="text-green-600 font-black">ON</span>
+                </button>
+                <button onclick="openMyActivity()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                  <i class="fas fa-clock-rotate-left"></i> My Activity
+                </button>
+                <button onclick="openExportModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
+                  <i class="fas fa-file-export"></i> Export Data
+                </button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all">
+                  <i class="fas fa-right-from-bracket"></i> Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- NOTIFICATION PANEL (moved outside relative parent, fixed position) -->
+      <div id="notificationPanel" class="hidden fixed top-20 right-6 w-[95vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
+        <div class="p-4 border-b flex items-center justify-between">
+          <span class="font-black text-slate-700">Notifications</span>
+          <button onclick="markAllRead()" class="text-xs text-blue-600 font-bold hover:underline">Mark All Read</button>
+        </div>
+        <div id="notificationList" class="max-h-[500px] overflow-y-auto divide-y"></div>
+      </div>
+
       <!-- GLOBAL SEARCH -->
       <div id="globalSearchBox" class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
         <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-        <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search Client, Service or Staff..." class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
+        <input type="text" id="globalSearch" oninput="handleSearch(this.value)" placeholder="Search Client, Service or Staff...  (Ctrl+K)" class="w-full pl-14 pr-6 py-5 bg-white rounded-2xl shadow-sm border border-slate-200 outline-none focus:border-blue-500 font-bold text-slate-700 transition-all">
+      </div>
+
+      <!-- DEADLINE ALERT BANNER -->
+      <div id="deadlineAlertBanner" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+        <i class="fas fa-triangle-exclamation text-red-500 text-lg"></i>
+        <div>
+          <p class="font-black text-red-700 text-sm">Deadline Alert</p>
+          <p id="deadlineAlertText" class="text-red-600 text-xs mt-0.5"></p>
+        </div>
+        <button onclick="document.getElementById('deadlineAlertBanner').classList.add('hidden')" class="ml-auto text-red-400 hover:text-red-600 text-lg">&times;</button>
       </div>
 
       <!-- DASHBOARD SECTION -->
@@ -260,6 +291,40 @@
         <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-10">
           <h2 class="text-3xl font-black text-slate-800 tracking-tight">Workspace Overview</h2>
           <div class="flex items-center gap-3 flex-wrap">
+            <!-- MULTI FILTER ROW -->
+            <select id="filterStatus" onchange="applyMultiFilter()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 outline-none">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Completed">Completed</option>
+            </select>
+            <select id="filterCategory" onchange="applyMultiFilter()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 outline-none">
+              <option value="">All Categories</option>
+              <option value="Sales">Sales</option>
+              <option value="Purchases">Purchases</option>
+              <option value="GST">GST</option>
+              <option value="ROC">ROC</option>
+              <option value="IT">Income Tax</option>
+              <option value="PT">Professional Tax</option>
+              <option value="TDS">TDS</option>
+              <option value="DIRECTOR KYC">Director KYC</option>
+              <option value="UDIN">UDIN</option>
+              <option value="FOOD">Food License</option>
+              <option value="MSME">MSME</option>
+              <option value="PAYROLL">Payroll</option>
+              <option value="REPORTS">Reports</option>
+              <option value="Sundry Debtors">Sundry Debtors</option>
+              <option value="Sundry Creditors">Sundry Creditors</option>
+              <option value="Payroll Entries">Payroll Entries</option>
+              <option value="Bank Statement">Bank Statement</option>
+              <option value="GST Transfer Entries">GST Transfer Entries</option>
+              <option value="Depreciation Entries">Depreciation Entries</option>
+              <option value="TDS Entries">TDS Entries</option>
+              <option value="Miscellaneous Ledgers">Miscellaneous Ledgers</option>
+            </select>
+            <button onclick="resetFilters()" class="px-3 py-2 bg-slate-100 text-slate-500 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all">
+              <i class="fas fa-filter-circle-xmark mr-1"></i> Reset
+            </button>
             <button onclick="refreshData()" id="refreshBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow">
               <i class="fas fa-rotate-right mr-1"></i> Refresh
             </button>
@@ -271,20 +336,23 @@
 
         <!-- STAT CARDS -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-          <div onclick="filterByField('all')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group cursor-pointer">
+          <div onclick="filterByField('all')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group cursor-pointer hover:shadow-md transition-all">
             <i class="fas fa-folder-tree absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
             <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Portfolios</p>
             <h3 id="statTotal" class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 mt-2">0</h3>
+            <p id="statTotalSub" class="text-[10px] text-slate-400 font-semibold mt-1"></p>
           </div>
-          <div onclick="filterByField('status', 'Completed')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-emerald-500 group relative overflow-hidden cursor-pointer">
+          <div onclick="filterByField('status', 'Completed')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-emerald-500 group relative overflow-hidden cursor-pointer hover:shadow-md transition-all">
             <i class="fas fa-circle-check absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
             <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Completed</p>
             <h3 id="statDone" class="text-3xl sm:text-4xl lg:text-5xl font-black text-emerald-600 mt-2">0</h3>
+            <p id="statDoneSub" class="text-[10px] text-emerald-400 font-semibold mt-1"></p>
           </div>
-          <div onclick="filterByField('status', 'Pending')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-rose-500 group relative overflow-hidden cursor-pointer">
+          <div onclick="filterByField('status', 'Pending')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-rose-500 group relative overflow-hidden cursor-pointer hover:shadow-md transition-all">
             <i class="fas fa-clock absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
             <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Pending Action</p>
             <h3 id="statPending" class="text-3xl sm:text-4xl lg:text-5xl font-black text-rose-600 mt-2">0</h3>
+            <p id="statPendingSub" class="text-[10px] text-rose-400 font-semibold mt-1"></p>
           </div>
         </div>
 
@@ -305,11 +373,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Client Name</label>
-              <input type="text" id="clientName" list="clientSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
+              <input type="text" id="clientName" list="clientSuggestions" oninput="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-bold transition-all">
             </div>
             <div class="space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
-              <select id="serviceCategory" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+              <select id="serviceCategory" onchange="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
                 <option value="Sales">Sales</option>
                 <option value="Purchases">Purchases</option>
                 <option value="Sundry Debtors">Sundry Debtors</option>
@@ -335,23 +403,23 @@
             </div>
             <div class="space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Service Detail</label>
-              <input type="text" id="serviceDetail" list="serviceSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+              <input type="text" id="serviceDetail" list="serviceSuggestions" oninput="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
             </div>
             <div class="space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Assign Staff</label>
-              <input type="text" id="assignedStaff" list="staffSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+              <input type="text" id="assignedStaff" list="staffSuggestions" oninput="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
             </div>
             <div class="space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Alloted By</label>
-              <input type="text" id="allotedBy" list="allotedSuggestions" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+              <input type="text" id="allotedBy" list="allotedSuggestions" oninput="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
             </div>
             <div class="space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Deadline</label>
-              <input type="date" id="deadline" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+              <input type="date" id="deadline" oninput="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
             </div>
             <div class="space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Current Status</label>
-              <select id="status" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+              <select id="status" onchange="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
                 <option value="Pending">Pending 🚫</option>
                 <option value="Processing">Processing ⏳</option>
                 <option value="Completed">Completed 🟢</option>
@@ -359,7 +427,7 @@
             </div>
             <div class="md:col-span-2 space-y-3">
               <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Remarks / Notes</label>
-              <input type="text" id="remarks" placeholder="Add specific case notes here..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+              <input type="text" id="remarks" oninput="markFormDirty()" placeholder="Add specific case notes here..." class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
             </div>
           </div>
           <div class="mt-10 flex gap-5">
@@ -370,32 +438,65 @@
           </div>
         </div>
 
+        <!-- BULK ACTION BAR -->
+        <div id="bulkActionBar" class="hidden mb-4 p-4 bg-blue-600 text-white rounded-2xl flex items-center gap-4 flex-wrap">
+          <span id="bulkSelectedCount" class="font-black text-sm">0 selected</span>
+          <select id="bulkStatusSelect" class="px-3 py-2 rounded-xl text-sm font-bold text-slate-800 outline-none">
+            <option value="Pending">Mark Pending</option>
+            <option value="Processing">Mark Processing</option>
+            <option value="Completed">Mark Completed</option>
+          </select>
+          <button onclick="applyBulkStatus()" class="px-4 py-2 bg-white text-blue-700 rounded-xl font-black text-sm hover:bg-blue-50">Apply Status</button>
+          <button onclick="clearBulkSelection()" class="ml-auto px-4 py-2 bg-blue-700 rounded-xl font-bold text-sm hover:bg-blue-800">Clear Selection</button>
+        </div>
+
         <!-- RECORDS TABLE -->
         <div class="lighting-border bg-white overflow-hidden border border-slate-100 shadow-lg">
           <div class="p-4 border-b flex justify-between items-center bg-slate-50/30">
             <h4 class="font-black text-slate-800 uppercase text-xs tracking-[0.2em]">Live Records Database</h4>
+            <span id="recordCountBadge" class="text-xs font-bold text-slate-400"></span>
           </div>
-          <div class="scroll-container">
+          <!-- SKELETON LOADER -->
+          <div id="tableSkeleton" class="p-6 space-y-3">
+            <div class="skeleton-row h-10 bg-slate-100 rounded-xl animate-pulse"></div>
+            <div class="skeleton-row h-10 bg-slate-100 rounded-xl animate-pulse" style="opacity:0.7"></div>
+            <div class="skeleton-row h-10 bg-slate-100 rounded-xl animate-pulse" style="opacity:0.5"></div>
+            <div class="skeleton-row h-10 bg-slate-100 rounded-xl animate-pulse" style="opacity:0.3"></div>
+          </div>
+          <div class="scroll-container" id="mainTableWrapper" style="display:none;">
             <table class="w-full text-left border-collapse min-w-[900px] text-xs sm:text-sm">
               <thead>
                 <tr class="bg-slate-50/50">
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Client</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Last Update</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Service</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Category</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Assigned Staff</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Alloted By</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Deadline</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-center tracking-wider">Status</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Remarks</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b tracking-wider">Updated By</th>
-                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b text-right tracking-wider">Actions</th>
+                  <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded">
+                  </th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b tracking-wider cursor-pointer hover:text-blue-600 transition-colors" onclick="sortTable('client_name')">
+                    Client <i class="fas fa-sort ml-1 opacity-40" id="sort_client_name"></i>
+                  </th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b tracking-wider cursor-pointer hover:text-blue-600 transition-colors" onclick="sortTable('updated_at')">
+                    Last Update <i class="fas fa-sort ml-1 opacity-40" id="sort_updated_at"></i>
+                  </th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b text-center tracking-wider">Service</th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b text-center tracking-wider cursor-pointer hover:text-blue-600 transition-colors" onclick="sortTable('service_category')">
+                    Category <i class="fas fa-sort ml-1 opacity-40" id="sort_service_category"></i>
+                  </th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b text-center tracking-wider">Assigned Staff</th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b text-center tracking-wider">Alloted By</th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b text-center tracking-wider cursor-pointer hover:text-blue-600 transition-colors" onclick="sortTable('deadline')">
+                    Deadline <i class="fas fa-sort ml-1 opacity-40" id="sort_deadline"></i>
+                  </th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b text-center tracking-wider cursor-pointer hover:text-blue-600 transition-colors" onclick="sortTable('status')">
+                    Status <i class="fas fa-sort ml-1 opacity-40" id="sort_status"></i>
+                  </th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b tracking-wider">Remarks</th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b tracking-wider">Updated By</th>
+                  <th class="p-4 text-[10px] font-black uppercase border-b text-right tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody id="mainTableBody" class="divide-y divide-slate-50"></tbody>
             </table>
             <div class="p-6 text-center">
-              <button id="loadMoreBtn" onclick="fetchRecords(false)" class="bg-[#1A2E5A] text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-800">Load More</button>
+              <button id="loadMoreBtn" onclick="fetchRecords(false)" class="bg-[#1A2E5A] text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-800 transition-all" style="display:none;">Load More</button>
             </div>
           </div>
         </div>
@@ -424,15 +525,21 @@
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-            <div class="p-6 bg-blue-600 text-white font-black uppercase text-center text-xs tracking-widest">Private Limited</div>
+            <div class="p-6 bg-blue-600 text-white font-black uppercase text-center text-xs tracking-widest flex items-center justify-center gap-2">
+              Private Limited <span id="pvtLtdCount" class="bg-blue-500 px-2 py-0.5 rounded-full text-[10px]">0</span>
+            </div>
             <div id="pvtLtdList" class="p-6 space-y-4"></div>
           </div>
           <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-            <div class="p-6 bg-purple-600 text-white font-black uppercase text-center text-xs tracking-widest">LLP Organization</div>
+            <div class="p-6 bg-purple-600 text-white font-black uppercase text-center text-xs tracking-widest flex items-center justify-center gap-2">
+              LLP Organization <span id="llpCount" class="bg-purple-500 px-2 py-0.5 rounded-full text-[10px]">0</span>
+            </div>
             <div id="llpList" class="p-6 space-y-4"></div>
           </div>
           <div class="lighting-border bg-white border border-slate-100 overflow-hidden">
-            <div class="p-6 bg-slate-700 text-white font-black uppercase text-center text-xs tracking-widest">Proprietor / Others</div>
+            <div class="p-6 bg-slate-700 text-white font-black uppercase text-center text-xs tracking-widest flex items-center justify-center gap-2">
+              Proprietor / Others <span id="othersCount" class="bg-slate-600 px-2 py-0.5 rounded-full text-[10px]">0</span>
+            </div>
             <div id="othersList" class="p-6 space-y-4"></div>
           </div>
         </div>
@@ -580,7 +687,6 @@
           <div class="h-28 bg-gradient-to-r from-slate-100 to-white"></div>
           <div class="p-3 font-bold text-center">Light Mode</div>
         </div>
-
         <div class="col-span-full mt-8 mb-2">
           <h3 class="text-xl font-black text-slate-700">Sidebar Themes</h3>
         </div>
