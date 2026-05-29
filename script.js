@@ -1,4 +1,4 @@
-// WITCORP HUB — ENTERPRISE SCRIPT
+// WITCORP HUB — ENTERPRISE SCRIPT (FIXED VERSION)
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -22,7 +22,10 @@ let sortAsc = true;
 let isFormDirty = false;
 // Bulk selection
 let selectedRowIds = new Set();
+
+// ============================================================
 // TOAST NOTIFICATION SYSTEM — replaces all alert()
+// ============================================================
 function showToast(message, type = 'success', duration = 3500) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -65,7 +68,10 @@ function removeToast(toast) {
     toast.classList.add('translate-x-full', 'opacity-0');
     setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
 }
+
+// ============================================================
 // LAST SYNC TIMESTAMP
+// ============================================================
 function updateLastSync() {
     const badge = document.getElementById('lastSyncBadge');
     const text = document.getElementById('lastSyncText');
@@ -74,7 +80,10 @@ function updateLastSync() {
     const now = new Date();
     text.innerText = 'Synced ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
+
+// ============================================================
 // BREADCRUMB
+// ============================================================
 function updateBreadcrumb(section) {
     const map = {
         dashboard: 'Dashboard',
@@ -86,7 +95,10 @@ function updateBreadcrumb(section) {
     const el = document.getElementById('breadcrumbText');
     if (el) el.innerText = map[section] || 'Dashboard';
 }
+
+// ============================================================
 // FORM DIRTY STATE
+// ============================================================
 function markFormDirty() {
     isFormDirty = true;
 }
@@ -94,7 +106,10 @@ function markFormDirty() {
 function clearDirtyState() {
     isFormDirty = false;
 }
+
+// ============================================================
 // DEADLINE ALERT BANNER
+// ============================================================
 function checkDeadlineAlerts(data) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -156,7 +171,14 @@ async function fetchRecords(reset = true) {
             .select('*')
             .order('updated_at', { ascending: false })
             .range(from, to);
-        if (!error && data) {
+        
+        if (error) {
+            console.error("fetchRecords error:", error);
+            showToast('Failed to fetch records. Check connection.', 'error');
+            return;
+        }
+        
+        if (data) {
             const uniqueData = data.filter(n => !allRecords.some(o => o.id === n.id));
             allRecords = [...allRecords, ...uniqueData];
             renderTable(allRecords, 'mainTableBody');
@@ -172,8 +194,8 @@ async function fetchRecords(reset = true) {
             if (badge) badge.innerText = `${allRecords.length} records`;
         }
     } catch (err) {
-        console.error("fetchRecords error:", err);
-        showToast('Failed to fetch records. Check connection.', 'error');
+        console.error("fetchRecords exception:", err);
+        showToast('Error loading records. Please try again.', 'error');
     } finally {
         isFetchingRecords = false;
         if (skeleton && wrapper) {
@@ -257,7 +279,7 @@ function toggleSelectAll(checkbox) {
     const checkboxes = document.querySelectorAll('.row-checkbox');
     checkboxes.forEach(cb => {
         cb.checked = checkbox.checked;
-        const id = parseInt(cb.dataset.id);
+        const id = parseInt(cb.dataset.id, 10);
         if (checkbox.checked) {
             selectedRowIds.add(id);
         } else {
@@ -312,7 +334,6 @@ async function applyBulkStatus() {
 
     const ids = [...selectedRowIds];
 
-    // Full snapshot — status, updated_at, updated_by teeno save karo
     const previousStatuses = ids.map(id => {
         const rec = allRecords.find(r => r.id === id);
         return {
@@ -620,55 +641,72 @@ document.addEventListener('click', function(e) {
 // ============================================================
 async function handleSubmit() {
     const id = document.getElementById('editId').value;
-    const payload = {
-        status: document.getElementById('status').value,
-        remarks: document.getElementById('remarks').value,
-        client_name: document.getElementById('clientName').value,
-        service_category: document.getElementById('serviceCategory').value,
-        service_detail: document.getElementById('serviceDetail').value,
-        assigned_staff: document.getElementById('assignedStaff').value,
-        alloted_by: document.getElementById('allotedBy').value,
-        deadline: document.getElementById('deadline').value || null,
-        updated_at: new Date().toISOString(),
-        updated_by: currentUserName
-    };
-    if (!payload.client_name) {
+    const clientName = document.getElementById('clientName').value?.trim();
+    const serviceCategory = document.getElementById('serviceCategory').value?.trim();
+    const deadline = document.getElementById('deadline').value?.trim();
+
+    if (!clientName) {
         showToast('Client Name is mandatory.', 'error');
         return;
     }
+
+    if (!serviceCategory) {
+        showToast('Service Category is mandatory.', 'error');
+        return;
+    }
+
+    const payload = {
+        status: document.getElementById('status').value,
+        remarks: document.getElementById('remarks').value,
+        client_name: clientName,
+        service_category: serviceCategory,
+        service_detail: document.getElementById('serviceDetail').value,
+        assigned_staff: document.getElementById('assignedStaff').value,
+        alloted_by: document.getElementById('allotedBy').value,
+        deadline: deadline || null,
+        updated_at: new Date().toISOString(),
+        updated_by: currentUserName
+    };
 
     const btn = document.getElementById('submitBtn');
     const origHtml = btn.innerHTML;
     btn.innerHTML = `<i class="fas fa-spinner fa-spin text-xl"></i> Syncing...`;
     btn.disabled = true;
 
-    const { error } = id
-        ? await supabaseClient.from('witcorp_records').update(payload).eq('id', id)
-        : await supabaseClient.from('witcorp_records').insert([payload]);
+    try {
+        const { error } = id
+            ? await supabaseClient.from('witcorp_records').update(payload).eq('id', parseInt(id, 10))
+            : await supabaseClient.from('witcorp_records').insert([payload]);
 
-    btn.innerHTML = origHtml;
-    btn.disabled = false;
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
 
-    if (!error) {
-        const actionText = id
-            ? `Updated Record: ${payload.client_name} | ${payload.service_category} | Status: ${payload.status}`
-            : `Added Record: ${payload.client_name} | ${payload.service_category} | ${payload.service_detail || 'N/A'}`;
-        saveActivity(actionText);
+        if (!error) {
+            const actionText = id
+                ? `Updated Record: ${payload.client_name} | ${payload.service_category} | Status: ${payload.status}`
+                : `Added Record: ${payload.client_name} | ${payload.service_category} | ${payload.service_detail || 'N/A'}`;
+            saveActivity(actionText);
 
-        await createNotificationForOthers(
-            id ? "Record Updated" : "New Record Added",
-            `${payload.client_name} — ${payload.service_category} updated by ${currentUserName}`,
-            "record",
-            payload.client_name
-        );
+            await createNotificationForOthers(
+                id ? "Record Updated" : "New Record Added",
+                `${payload.client_name} — ${payload.service_category} updated by ${currentUserName}`,
+                "record",
+                payload.client_name
+            );
 
-        showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
-        clearForm();
-        clearDirtyState();
-        await fetchRecords(true);
-        showSection('dashboard');
-    } else {
-        showToast('Sync Error: Please check connection.', 'error');
+            showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
+            clearForm();
+            clearDirtyState();
+            await fetchRecords(true);
+            showSection('dashboard');
+        } else {
+            showToast('Sync Error: Please check connection.', 'error');
+        }
+    } catch (err) {
+        console.error("handleSubmit error:", err);
+        showToast('Submission failed. Please try again.', 'error');
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
     }
 }
 
@@ -679,7 +717,7 @@ function editRecord(row) {
     document.getElementById('serviceDetail').value = row.service_detail || '';
     document.getElementById('assignedStaff').value = row.assigned_staff || '';
     document.getElementById('allotedBy').value = row.alloted_by || '';
-    document.getElementById('deadline').value = row.deadline ? row.deadline.split('T')[0] : "";
+    document.getElementById('deadline').value = row.deadline ? row.deadline.substring(0, 10) : "";
     document.getElementById('status').value = row.status;
     document.getElementById('remarks').value = row.remarks || '';
     document.getElementById('formTitle').innerText = "Modify Existing Profile";
@@ -697,16 +735,21 @@ function editRecord(row) {
 async function deleteRecord(id) {
     if (confirm("Confirm: Are you sure you want to delete this record?")) {
         const rec = allRecords.find(r => r.id === id);
-        const { error } = await supabaseClient.from('witcorp_records').delete().eq('id', id);
-        if (!error) {
-            const logText = rec
-                ? `Deleted Record: ${rec.client_name} | ${rec.service_category} | ${rec.service_detail || 'N/A'}`
-                : `Deleted Record ID: ${id}`;
-            saveActivity(logText);
-            showToast(rec ? `Deleted: ${rec.client_name}` : 'Record deleted', 'warning');
-            fetchRecords();
-        } else {
-            showToast('Delete failed. Check connection.', 'error');
+        try {
+            const { error } = await supabaseClient.from('witcorp_records').delete().eq('id', parseInt(id, 10));
+            if (!error) {
+                const logText = rec
+                    ? `Deleted Record: ${rec.client_name} | ${rec.service_category} | ${rec.service_detail || 'N/A'}`
+                    : `Deleted Record ID: ${id}`;
+                saveActivity(logText);
+                showToast(rec ? `Deleted: ${rec.client_name}` : 'Record deleted', 'warning');
+                await fetchRecords(true);
+            } else {
+                showToast('Delete failed. Check connection.', 'error');
+            }
+        } catch (err) {
+            console.error("deleteRecord error:", err);
+            showToast('Delete operation failed.', 'error');
         }
     }
 }
@@ -715,64 +758,72 @@ async function deleteRecord(id) {
 // FETCH CLIENTS — with record count badges
 // ============================================================
 async function fetchClients() {
-    const { data, error } = await supabaseClient
-        .from('witcorp_clients')
-        .select('*')
-        .order('client_name', { ascending: true })
-        .limit(300);
-    if (error) return;
-    allClients = data;
-    currentExportData = data;
-    currentExportType = "clients";
-    setupPredictions();
+    try {
+        const { data, error } = await supabaseClient
+            .from('witcorp_clients')
+            .select('*')
+            .order('client_name', { ascending: true })
+            .limit(300);
+        if (error) {
+            console.error("fetchClients error:", error);
+            return;
+        }
+        allClients = data || [];
+        currentExportData = data;
+        currentExportType = "clients";
+        setupPredictions();
 
-    const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
-    const counts = { 'Pvt Ltd': 0, 'LLP': 0, 'Others': 0 };
+        const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
+        const counts = { 'Pvt Ltd': 0, 'LLP': 0, 'Others': 0 };
 
-    Object.values(containers).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = "";
-    });
-
-    if (data.length === 0) {
         Object.values(containers).forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.innerHTML = `<div class="text-center py-8 text-slate-300 font-bold text-sm"><i class="fas fa-users text-3xl block mb-2"></i>No clients yet</div>`;
+            if (el) el.innerHTML = "";
         });
+
+        if (data.length === 0) {
+            Object.values(containers).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = `<div class="text-center py-8 text-slate-300 font-bold text-sm"><i class="fas fa-users text-3xl block mb-2"></i>No clients yet</div>`;
+            });
+        }
+        data.sort((a, b) => (a.client_name || '').toLowerCase().localeCompare((b.client_name || '').toLowerCase()));
+        data.forEach(c => {
+            const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
+            counts[typeKey]++;
+            const listId = containers[typeKey];
+
+            const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
+            const recordBadge = clientRecordCount > 0
+                ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
+                : '';
+
+            document.getElementById(listId).innerHTML += `
+                <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
+                    <div class="flex items-center gap-2">
+                        <div class="font-bold text-slate-800 text-sm flex-1">${c.client_name}</div>
+                        ${recordBadge}
+                    </div>
+                    <div class="text-xs text-slate-500 font-semibold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i>${c.contact_number}</div>
+                    <div class="text-xs text-blue-600 font-semibold break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i>${c.email_id}</div>
+                    <div class="text-xs text-green-600 font-semibold mt-1">Updated By: ${c.updated_by || 'N/A'}</div>
+                    <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
+                        <button onclick='editClient(${JSON.stringify(c)})' class="text-xs text-blue-600 font-bold uppercase hover:scale-110 transition-transform">Modify</button>
+                        <button onclick="deleteClient(${c.id})" class="text-xs text-rose-500 font-bold uppercase hover:scale-110 transition-transform">Delete</button>
+                    </div>
+                </div>`;
+        });
+
+        const pvtCount = document.getElementById('pvtLtdCount');
+        const llpCount = document.getElementById('llpCount');
+        const othersCount = document.getElementById('othersCount');
+        if (pvtCount) pvtCount.innerText = counts['Pvt Ltd'];
+        if (llpCount) llpCount.innerText = counts['LLP'];
+        if (othersCount) othersCount.innerText = counts['Others'];
+    } catch (err) {
+        console.error("fetchClients exception:", err);
+        showToast('Error loading clients.', 'error');
     }
-     data.sort((a, b) => (a.client_name || '').toLowerCase().localeCompare((b.client_name || '').toLowerCase()));
-    data.forEach(c => {
-        const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
-        counts[typeKey]++;
-        const listId = containers[typeKey];
-
-        const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
-        const recordBadge = clientRecordCount > 0
-            ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
-            : '';
-
-        document.getElementById(listId).innerHTML += `
-            <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
-                <div class="flex items-center gap-2">
-                    <div class="font-bold text-slate-800 text-sm flex-1">${c.client_name}</div>
-                    ${recordBadge}
-                </div>
-                <div class="text-xs text-slate-500 font-semibold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i>${c.contact_number}</div>
-                <div class="text-xs text-blue-600 font-semibold break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i>${c.email_id}</div>
-                <div class="text-xs text-green-600 font-semibold mt-1">Updated By: ${c.updated_by || 'N/A'}</div>
-                <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
-                    <button onclick='editClient(${JSON.stringify(c)})' class="text-xs text-blue-600 font-bold uppercase hover:scale-110 transition-transform">Modify</button>
-                    <button onclick="deleteClient(${c.id})" class="text-xs text-rose-500 font-bold uppercase hover:scale-110 transition-transform">Delete</button>
-                </div>
-            </div>`;
-    });
-
-    const pvtCount = document.getElementById('pvtLtdCount');
-    const llpCount = document.getElementById('llpCount');
-    const othersCount = document.getElementById('othersCount');
-    if (pvtCount) pvtCount.innerText = counts['Pvt Ltd'];
-    if (llpCount) llpCount.innerText = counts['LLP'];
-    if (othersCount) othersCount.innerText = counts['Others'];
 }
 
 function editClient(c) {
@@ -787,66 +838,92 @@ function editClient(c) {
 
 async function saveClient() {
     const id = document.getElementById('cEditId').value;
-    const payload = {
-        client_name: document.getElementById('cName').value,
-        contact_number: document.getElementById('cPhone').value,
-        email_id: document.getElementById('cEmail').value,
-        entity_type: document.getElementById('cType').value,
-        updated_by: currentUserName
-    };
-    if (!payload.client_name) {
+    const clientName = document.getElementById('cName').value?.trim();
+    const phone = document.getElementById('cPhone').value?.trim();
+    const email = document.getElementById('cEmail').value?.trim();
+    const type = document.getElementById('cType').value;
+
+    if (!clientName) {
         showToast('Entity Name Required', 'error');
         return;
     }
-    const { error } = id
-        ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', id)
-        : await supabaseClient.from('witcorp_clients').insert([payload]);
-    if (!error) {
-        await createNotificationForOthers(
-            id ? "Client Updated" : "New Client Added",
-            `${payload.client_name} profile updated by ${currentUserName}`,
-            "client"
-        );
-        saveActivity(`${id ? 'Updated' : 'Added'} Client: ${payload.client_name} | ${payload.entity_type}`);
-        showToast(`${id ? 'Updated' : 'Added'}: ${payload.client_name}`, 'success');
-        fetchClients();
-        document.getElementById('cEditId').value = "";
-        ['cName', 'cPhone', 'cEmail'].forEach(i => document.getElementById(i).value = "");
-        document.getElementById('clientBtn').innerText = "Save Client Profile";
-    } else {
-        showToast('Save failed. Check connection.', 'error');
+
+    const payload = {
+        client_name: clientName,
+        contact_number: phone,
+        email_id: email,
+        entity_type: type,
+        updated_by: currentUserName
+    };
+
+    try {
+        const { error } = id
+            ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', parseInt(id, 10))
+            : await supabaseClient.from('witcorp_clients').insert([payload]);
+        
+        if (!error) {
+            await createNotificationForOthers(
+                id ? "Client Updated" : "New Client Added",
+                `${payload.client_name} profile updated by ${currentUserName}`,
+                "client"
+            );
+            saveActivity(`${id ? 'Updated' : 'Added'} Client: ${payload.client_name} | ${payload.entity_type}`);
+            showToast(`${id ? 'Updated' : 'Added'}: ${payload.client_name}`, 'success');
+            await fetchClients();
+            document.getElementById('cEditId').value = "";
+            ['cName', 'cPhone', 'cEmail'].forEach(i => document.getElementById(i).value = "");
+            document.getElementById('clientBtn').innerText = "Save Client Profile";
+        } else {
+            showToast('Save failed. Check connection.', 'error');
+        }
+    } catch (err) {
+        console.error("saveClient error:", err);
+        showToast('Save operation failed.', 'error');
     }
 }
 
 async function deleteClient(id) {
     if (confirm("Action: Delete client profile?")) {
         const c = allClients.find(x => x.id === id);
-        const { error } = await supabaseClient.from('witcorp_clients').delete().eq('id', id);
-        if (!error) {
-            if (c) saveActivity(`Deleted Client: ${c.client_name} | ${c.entity_type}`);
-            showToast(c ? `Deleted: ${c.client_name}` : 'Client deleted', 'warning');
-            fetchClients();
-        } else {
-            showToast('Delete failed.', 'error');
+        try {
+            const { error } = await supabaseClient.from('witcorp_clients').delete().eq('id', parseInt(id, 10));
+            if (!error) {
+                if (c) saveActivity(`Deleted Client: ${c.client_name} | ${c.entity_type}`);
+                showToast(c ? `Deleted: ${c.client_name}` : 'Client deleted', 'warning');
+                await fetchClients();
+            } else {
+                showToast('Delete failed.', 'error');
+            }
+        } catch (err) {
+            console.error("deleteClient error:", err);
+            showToast('Delete operation failed.', 'error');
         }
     }
 }
 
 // ============================================================
-// FETCH VAULT — with password show/hide & copy button
+// FETCH VAULT — with password show/hide & copy button (FIXED)
 // ============================================================
 async function fetchVault() {
-    const { data, error } = await supabaseClient
-        .from('witcorp_credentials')
-        .select('*')
-        .order('client_name', { ascending: true })
-        .limit(300);
-    if (error) return;
-    allVault = data;
-    currentExportData = data;
-    currentExportType = "vault";
-    setupPredictions();
-    renderVaultTable(data);
+    try {
+        const { data, error } = await supabaseClient
+            .from('witcorp_credentials')
+            .select('*')
+            .order('client_name', { ascending: true })
+            .limit(300);
+        if (error) {
+            console.error("fetchVault error:", error);
+            return;
+        }
+        allVault = data || [];
+        currentExportData = data;
+        currentExportType = "vault";
+        setupPredictions();
+        renderVaultTable(data);
+    } catch (err) {
+        console.error("fetchVault exception:", err);
+        showToast('Error loading vault.', 'error');
+    }
 }
 
 function renderVaultTable(data) {
@@ -868,6 +945,7 @@ function renderVaultTable(data) {
         const fullPass = v.password || '';
         const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
         const vId = `vault_${v.id}`;
+        const encodedPass = btoa(fullPass); // FIX: Encode password
 
         tbody.innerHTML += `
             <tr class="group hover:bg-slate-50" id="${vId}_row">
@@ -884,12 +962,12 @@ function renderVaultTable(data) {
                 </td>
                 <td class="p-4 font-mono text-sm whitespace-nowrap">
                     <div class="flex items-center gap-2">
-                        <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner" id="${vId}_pass">${maskedPass}</span>
-                        <button onclick="toggleVaultPassword('${vId}', '${fullPass.replace(/'/g,"\\'")}')"
+                        <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner" id="${vId}_pass" data-pwd="${encodedPass}">${maskedPass}</span>
+                        <button onclick="toggleVaultPassword('${vId}')"
                             class="text-slate-400 hover:text-blue-600 transition-all text-xs" title="Show/Hide">
                             <i class="fas fa-eye" id="${vId}_eye"></i>
                         </button>
-                        <button onclick="copyToClipboard('${fullPass.replace(/'/g,"\\'")}', 'Password')"
+                        <button onclick="copyPasswordSafe('${vId}')"
                             class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-600 transition-all text-xs" title="Copy Password">
                             <i class="fas fa-copy"></i>
                         </button>
@@ -906,13 +984,54 @@ function renderVaultTable(data) {
     });
 }
 
-function toggleVaultPassword(vId, fullPass) {
+function toggleVaultPassword(vId) {
     const passEl = document.getElementById(vId + '_pass');
     const eyeEl = document.getElementById(vId + '_eye');
     if (!passEl || !eyeEl) return;
+    
+    const encodedPass = passEl.getAttribute('data-pwd');
+    if (!encodedPass) return;
+    
     const isHidden = passEl.textContent.includes('•');
-    passEl.textContent = isHidden ? fullPass : '•'.repeat(Math.min(fullPass.length, 12));
-    eyeEl.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    if (isHidden) {
+        try {
+            const fullPass = atob(encodedPass); // FIX: Decode password
+            passEl.textContent = fullPass;
+            eyeEl.className = 'fas fa-eye-slash';
+        } catch (err) {
+            console.error("Password decode error:", err);
+            showToast('Error decoding password', 'error');
+        }
+    } else {
+        const fullPass = passEl.textContent;
+        const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
+        passEl.textContent = maskedPass;
+        eyeEl.className = 'fas fa-eye';
+    }
+}
+
+function copyPasswordSafe(vId) {
+    const passEl = document.getElementById(vId + '_pass');
+    if (!passEl) return;
+    
+    let password;
+    const encodedPass = passEl.getAttribute('data-pwd');
+    
+    if (encodedPass && passEl.textContent.includes('•')) {
+        // Password is hidden, decode from data attribute
+        try {
+            password = atob(encodedPass);
+        } catch (err) {
+            console.error("Password decode error:", err);
+            showToast('Error decoding password', 'error');
+            return;
+        }
+    } else {
+        // Password is visible, use textContent
+        password = passEl.textContent;
+    }
+    
+    copyToClipboard(password, 'Password');
 }
 
 function copyToClipboard(text, label) {
@@ -941,47 +1060,65 @@ function editVault(v) {
 
 async function saveVault() {
     const id = document.getElementById('vEditId').value;
-    const payload = {
-        client_name: document.getElementById('vClient').value,
-        category: document.getElementById('vCat').value,
-        username: document.getElementById('vUser').value,
-        password: document.getElementById('vPass').value,
-        updated_by: currentUserName
-    };
-    if (!payload.category || !payload.client_name) {
+    const clientName = document.getElementById('vClient').value?.trim();
+    const category = document.getElementById('vCat').value?.trim();
+    const username = document.getElementById('vUser').value?.trim();
+    const password = document.getElementById('vPass').value?.trim();
+
+    if (!category || !clientName) {
         showToast('Required fields missing.', 'error');
         return;
     }
-    const { error } = id
-        ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', id)
-        : await supabaseClient.from('witcorp_credentials').insert([payload]);
-    if (!error) {
-        await createNotificationForOthers(
-            id ? "Vault Updated" : "Credentials Added",
-            `${payload.client_name} credentials updated by ${currentUserName}`,
-            "vault"
-        );
-        saveActivity(`${id ? 'Updated' : 'Added'} Vault: ${payload.client_name} | ${payload.category}`);
-        showToast(`${id ? 'Updated' : 'Saved'}: ${payload.client_name} credentials`, 'success');
-        fetchVault();
-        document.getElementById('vEditId').value = "";
-        ['vClient', 'vCat', 'vUser', 'vPass'].forEach(i => document.getElementById(i).value = "");
-        document.getElementById('vaultBtn').innerText = "Store Securely";
-    } else {
-        showToast('Save failed. Check connection.', 'error');
+
+    const payload = {
+        client_name: clientName,
+        category: category,
+        username: username,
+        password: password,
+        updated_by: currentUserName
+    };
+
+    try {
+        const { error } = id
+            ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', parseInt(id, 10))
+            : await supabaseClient.from('witcorp_credentials').insert([payload]);
+        
+        if (!error) {
+            await createNotificationForOthers(
+                id ? "Vault Updated" : "Credentials Added",
+                `${payload.client_name} credentials updated by ${currentUserName}`,
+                "vault"
+            );
+            saveActivity(`${id ? 'Updated' : 'Added'} Vault: ${payload.client_name} | ${payload.category}`);
+            showToast(`${id ? 'Updated' : 'Saved'}: ${payload.client_name} credentials`, 'success');
+            await fetchVault();
+            document.getElementById('vEditId').value = "";
+            ['vClient', 'vCat', 'vUser', 'vPass'].forEach(i => document.getElementById(i).value = "");
+            document.getElementById('vaultBtn').innerText = "Store Securely";
+        } else {
+            showToast('Save failed. Check connection.', 'error');
+        }
+    } catch (err) {
+        console.error("saveVault error:", err);
+        showToast('Save operation failed.', 'error');
     }
 }
 
 async function deleteVault(id) {
     if (confirm("Security: Confirm credential deletion?")) {
         const v = allVault.find(x => x.id === id);
-        const { error } = await supabaseClient.from('witcorp_credentials').delete().eq('id', id);
-        if (!error) {
-            if (v) saveActivity(`Deleted Vault: ${v.client_name} | ${v.category}`);
-            showToast(v ? `Deleted: ${v.client_name}` : 'Credential deleted', 'warning');
-            fetchVault();
-        } else {
-            showToast('Delete failed.', 'error');
+        try {
+            const { error } = await supabaseClient.from('witcorp_credentials').delete().eq('id', parseInt(id, 10));
+            if (!error) {
+                if (v) saveActivity(`Deleted Vault: ${v.client_name} | ${v.category}`);
+                showToast(v ? `Deleted: ${v.client_name}` : 'Credential deleted', 'warning');
+                await fetchVault();
+            } else {
+                showToast('Delete failed.', 'error');
+            }
+        } catch (err) {
+            console.error("deleteVault error:", err);
+            showToast('Delete operation failed.', 'error');
         }
     }
 }
@@ -1034,8 +1171,7 @@ function showSection(id) {
     if (id === 'clientManagement') document.getElementById('nav-client')?.classList.add('active');
     if (id === 'vaultManagement') document.getElementById('nav-vault')?.classList.add('active');
     if (id === 'dscManagement') document.getElementById('nav-dsc')?.classList.add('active');
-    // Management section active highlights
-    // Management nav active highlight
+    
     const filterMap = {
         'GST': 'nav-gst', 'ROC': 'nav-roc', 'IT': 'nav-it',
         'PT': 'nav-pt', 'TDS': 'nav-tds', 'DIRECTOR KYC': 'nav-dkyc',
@@ -1160,32 +1296,69 @@ function clearForm() {
 // AUTH
 // ============================================================
 async function registerUser() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const { data, error } = await supabaseClient.auth.signUp({ email, password });
-    if (error) { document.getElementById('authMsg').innerText = error.message; return; }
-    const user = data.user;
-    await supabaseClient.from('witcorp_users').insert([{ id: user.id, email: user.email, role: 'user', approved: true }]);
-    document.getElementById('authMsg').innerText = "Registered Successfully! Now login.";
+    const email = document.getElementById("email")?.value;
+    const password = document.getElementById("password")?.value;
+    
+    if (!email || !password) {
+        document.getElementById('authMsg').innerText = "Email and password required";
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) { 
+            document.getElementById('authMsg').innerText = error.message; 
+            return; 
+        }
+        const user = data.user;
+        if (user) {
+            await supabaseClient.from('witcorp_users').insert([{ id: user.id, email: user.email, role: 'user', approved: true }]);
+            document.getElementById('authMsg').innerText = "Registered Successfully! Now login.";
+        }
+    } catch (err) {
+        console.error("registerUser error:", err);
+        document.getElementById('authMsg').innerText = "Registration failed. Please try again.";
+    }
 }
 
 async function loginUser() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) { document.getElementById('authMsg').innerText = error.message; return; }
-    checkApproval(data.user);
+    const email = document.getElementById('email')?.value;
+    const password = document.getElementById('password')?.value;
+    
+    if (!email || !password) {
+        document.getElementById('authMsg').innerText = "Email and password required";
+        return;
+    }
+
+    try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) { 
+            document.getElementById('authMsg').innerText = error.message; 
+            return; 
+        }
+        if (data.user) {
+            checkApproval(data.user);
+        }
+    } catch (err) {
+        console.error("loginUser error:", err);
+        document.getElementById('authMsg').innerText = "Login failed. Please try again.";
+    }
 }
 
 async function checkApproval(user) {
-    const { data } = await supabaseClient.from('witcorp_users').select('approved').eq('id', user.id).single();
-    if (!data || !data.approved) {
-        showToast('Not approved by admin yet', 'error');
-        logout();
-        return;
+    try {
+        const { data } = await supabaseClient.from('witcorp_users').select('approved').eq('id', user.id).single();
+        if (!data || !data.approved) {
+            showToast('Not approved by admin yet', 'error');
+            await logout();
+            return;
+        }
+        currentUserName = user.email;
+        showApp(user);
+    } catch (err) {
+        console.error("checkApproval error:", err);
+        showToast('Approval check failed', 'error');
     }
-    currentUserName = user.email;
-    showApp(user);
 }
 
 function showApp(user) {
@@ -1204,12 +1377,17 @@ function showApp(user) {
 }
 
 async function logout() {
-    await supabaseClient.auth.signOut();
-    location.reload();
+    try {
+        await supabaseClient.auth.signOut();
+        location.reload();
+    } catch (err) {
+        console.error("logout error:", err);
+        location.reload();
+    }
 }
 
 supabaseClient.auth.getSession().then(({ data }) => {
-    if (data.session) checkApproval(data.session.user);
+    if (data?.session) checkApproval(data.session.user);
 });
 
 // ============================================================
@@ -1270,16 +1448,24 @@ function searchClients(query) {
 // DSC FUNCTIONS
 // ============================================================
 async function fetchDSC() {
-    const { data, error } = await supabaseClient
-        .from('witcorp_dsc')
-        .select('*')
-        .order('company_name', { ascending: true })
-    if (error) { console.log("DSC FETCH ERROR:", error); return; }
-    allDSC = data || [];
-    currentExportData = allDSC;
-    currentExportType = "dsc";
-    setupPredictions();
-    renderDSC(allDSC);
+    try {
+        const { data, error } = await supabaseClient
+            .from('witcorp_dsc')
+            .select('*')
+            .order('company_name', { ascending: true });
+        if (error) { 
+            console.error("DSC FETCH ERROR:", error); 
+            return; 
+        }
+        allDSC = data || [];
+        currentExportData = allDSC;
+        currentExportType = "dsc";
+        setupPredictions();
+        renderDSC(allDSC);
+    } catch (err) {
+        console.error("fetchDSC exception:", err);
+        showToast('Error loading DSC records.', 'error');
+    }
 }
 
 function renderDSC(data) {
@@ -1357,45 +1543,59 @@ async function saveDSC() {
     const btn = document.getElementById('dscBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+    
     const id = document.getElementById('dEditId').value;
-    const payload = {
-        company_name: document.getElementById('dCompany').value.trim(),
-        client_name: document.getElementById('dClient').value.trim(),
-        status: document.getElementById('dStatus').value,
-        expiry_date: document.getElementById('dExpiry').value,
-        remarks: document.getElementById('dRemarks').value.trim(),
-        updated_by: currentUserName,
-        updated_at: new Date().toISOString()
-    };
-    if (!payload.company_name) {
+    const companyName = document.getElementById('dCompany').value?.trim();
+    
+    if (!companyName) {
         btn.disabled = false;
         btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
         showToast('Company Name Required', 'error');
         return;
     }
-    let error;
-    if (id) { ({ error } = await supabaseClient.from('witcorp_dsc').update(payload).eq('id', id)); }
-    else { ({ error } = await supabaseClient.from('witcorp_dsc').insert([payload])); }
-    if (!error) {
-        await createNotificationForOthers(
-            id ? "DSC Updated" : "New DSC Added",
-            `${payload.company_name} DSC updated by ${currentUserName}`,
-            "dsc"
-        );
-        saveActivity(`${id ? 'Updated' : 'Added'} DSC: ${payload.company_name} | ${payload.client_name} | Status: ${payload.status}`);
-        showToast(`DSC ${id ? 'updated' : 'saved'}: ${payload.company_name}`, 'success');
-        await new Promise(r => setTimeout(r, 300));
-        await fetchDSC();
-        document.getElementById('dEditId').value = "";
-        ['dCompany', 'dClient', 'dExpiry', 'dRemarks'].forEach(i => document.getElementById(i).value = "");
-        document.getElementById('dStatus').value = "Valid";
-        document.getElementById('dscBtn').innerText = "Save DSC Status";
-    } else {
-        showToast('Save failed. Check connection.', 'error');
-        console.error("DSC ERROR:", error);
+
+    const payload = {
+        company_name: companyName,
+        client_name: document.getElementById('dClient').value?.trim(),
+        status: document.getElementById('dStatus').value,
+        expiry_date: document.getElementById('dExpiry').value,
+        remarks: document.getElementById('dRemarks').value?.trim(),
+        updated_by: currentUserName,
+        updated_at: new Date().toISOString()
+    };
+
+    try {
+        let error;
+        if (id) { 
+            ({ error } = await supabaseClient.from('witcorp_dsc').update(payload).eq('id', parseInt(id, 10))); 
+        } else { 
+            ({ error } = await supabaseClient.from('witcorp_dsc').insert([payload])); 
+        }
+        
+        if (!error) {
+            await createNotificationForOthers(
+                id ? "DSC Updated" : "New DSC Added",
+                `${payload.company_name} DSC updated by ${currentUserName}`,
+                "dsc"
+            );
+            saveActivity(`${id ? 'Updated' : 'Added'} DSC: ${payload.company_name} | ${payload.client_name} | Status: ${payload.status}`);
+            showToast(`DSC ${id ? 'updated' : 'saved'}: ${payload.company_name}`, 'success');
+            await new Promise(r => setTimeout(r, 300));
+            await fetchDSC();
+            document.getElementById('dEditId').value = "";
+            ['dCompany', 'dClient', 'dExpiry', 'dRemarks'].forEach(i => document.getElementById(i).value = "");
+            document.getElementById('dStatus').value = "Valid";
+            document.getElementById('dscBtn').innerText = "Save DSC Status";
+        } else {
+            showToast('Save failed. Check connection.', 'error');
+        }
+    } catch (err) {
+        console.error("saveDSC error:", err);
+        showToast('Save operation failed.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
     }
-    btn.disabled = false;
-    if (!error) btn.innerHTML = 'Save DSC Status';
 }
 
 function editDSC(d) {
@@ -1403,7 +1603,7 @@ function editDSC(d) {
     document.getElementById('dCompany').value = d.company_name;
     document.getElementById('dClient').value = d.client_name;
     document.getElementById('dStatus').value = (d.status === "Valid" || d.status === "Expired" || d.status === "No DSC") ? d.status : "Valid";
-    document.getElementById('dExpiry').value = d.expiry_date ? d.expiry_date.split('T')[0] : "";
+    document.getElementById('dExpiry').value = d.expiry_date ? d.expiry_date.substring(0, 10) : "";
     document.getElementById('dRemarks').value = d.remarks || '';
     document.getElementById('dscBtn').innerText = "Update DSC Status";
     document.getElementById('dCompany').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1412,13 +1612,18 @@ function editDSC(d) {
 async function deleteDSC(id) {
     if (confirm("Delete DSC Record?")) {
         const d = allDSC.find(x => x.id === id);
-        const { error } = await supabaseClient.from('witcorp_dsc').delete().eq('id', id);
-        if (!error) {
-            if (d) saveActivity(`Deleted DSC: ${d.company_name} | ${d.client_name}`);
-            showToast(d ? `Deleted: ${d.company_name}` : 'DSC deleted', 'warning');
-            await fetchDSC();
-        } else {
-            showToast('Delete failed.', 'error');
+        try {
+            const { error } = await supabaseClient.from('witcorp_dsc').delete().eq('id', parseInt(id, 10));
+            if (!error) {
+                if (d) saveActivity(`Deleted DSC: ${d.company_name} | ${d.client_name}`);
+                showToast(d ? `Deleted: ${d.company_name}` : 'DSC deleted', 'warning');
+                await fetchDSC();
+            } else {
+                showToast('Delete failed.', 'error');
+            }
+        } catch (err) {
+            console.error("deleteDSC error:", err);
+            showToast('Delete operation failed.', 'error');
         }
     }
 }
@@ -1437,7 +1642,7 @@ function searchDSC(query) {
 // SERVICE WORKER
 // ============================================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(() => console.log("SW registered"));
+    navigator.serviceWorker.register('./sw.js').then(() => console.log("SW registered")).catch(err => console.error("SW registration error:", err));
 }
 
 // ============================================================
@@ -1465,42 +1670,58 @@ function openThemeSettings() { document.getElementById("themeModal").classList.r
 function closeThemeSettings() { document.getElementById("themeModal").classList.add("hidden"); }
 
 // ============================================================
-// NOTIFICATIONS
+// NOTIFICATIONS (FIXED - XSS PREVENTION)
 // ============================================================
 async function createNotification(title, message, type = "info", reference = "") {
-    await supabaseClient.from('witcorp_notifications').insert([{
-        title, message, type, reference,
-        created_by: currentUserName,
-        is_read: false
-    }]);
+    try {
+        await supabaseClient.from('witcorp_notifications').insert([{
+            title, message, type, reference,
+            created_by: currentUserName,
+            is_read: false
+        }]);
+    } catch (err) {
+        console.error("createNotification error:", err);
+    }
 }
 
 async function createNotificationForOthers(title, message, type = "info", reference = "") {
-    await supabaseClient.from('witcorp_notifications').insert([{
-        title, message, type, reference,
-        created_by: currentUserName,
-        is_read: false
-    }]);
+    try {
+        await supabaseClient.from('witcorp_notifications').insert([{
+            title, message, type, reference,
+            created_by: currentUserName,
+            is_read: false
+        }]);
+    } catch (err) {
+        console.error("createNotificationForOthers error:", err);
+    }
 }
 
 async function fetchNotifications() {
-    const { data, error } = await supabaseClient
-        .from('witcorp_notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-    if (error) return;
-    allNotifications = data;
-    renderNotifications();
+    try {
+        const { data, error } = await supabaseClient
+            .from('witcorp_notifications')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+        if (error) return;
+        allNotifications = data || [];
+        renderNotifications();
+    } catch (err) {
+        console.error("fetchNotifications error:", err);
+    }
 }
 
 async function markAllRead() {
     const unreadIds = allNotifications.filter(n => !n.is_read).map(n => n.id);
     if (unreadIds.length === 0) return;
-    await supabaseClient.from('witcorp_notifications').update({ is_read: true }).in('id', unreadIds);
-    allNotifications.forEach(n => n.is_read = true);
-    renderNotifications();
-    showToast('All notifications marked as read', 'info', 2000);
+    try {
+        await supabaseClient.from('witcorp_notifications').update({ is_read: true }).in('id', unreadIds);
+        allNotifications.forEach(n => n.is_read = true);
+        renderNotifications();
+        showToast('All notifications marked as read', 'info', 2000);
+    } catch (err) {
+        console.error("markAllRead error:", err);
+    }
 }
 
 function renderNotifications() {
@@ -1524,29 +1745,51 @@ function renderNotifications() {
 
     allNotifications.forEach(n => {
         const typeIcon = { record: 'fa-file-alt', client: 'fa-address-card', vault: 'fa-shield-halved', dsc: 'fa-key' };
-        list.innerHTML += `
-            <div
-                data-notif-id="${n.id}"
-                data-notif-type="${n.type}"
-                data-notif-ref="${(n.reference || '').replace(/"/g, '&quot;')}"
-                class="p-4 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 items-start
-                ${!n.is_read ? 'bg-blue-50 border-l-4 border-blue-400' : 'bg-white'}">
-                <div class="w-8 h-8 rounded-full ${!n.is_read ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'} flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <i class="fas ${typeIcon[n.type] || 'fa-bell'} text-xs"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-bold text-sm text-slate-800">${n.title}</div>
-                    <div class="text-xs text-slate-500 mt-0.5">${n.message}</div>
-                    <div class="text-[10px] text-blue-500 mt-1 font-semibold">${new Date(n.created_at).toLocaleString('en-IN')}</div>
-                </div>
-                ${!n.is_read ? '<span class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></span>' : ''}
-            </div>`;
-    });
-
-    list.querySelectorAll('[data-notif-id]').forEach(el => {
-        el.addEventListener('click', function () {
-            openNotification(parseInt(this.dataset.notifId), this.dataset.notifType, this.dataset.notifRef);
+        
+        // FIX: Use textContent instead of innerHTML to prevent XSS
+        const notifDiv = document.createElement('div');
+        notifDiv.dataset.notifId = n.id;
+        notifDiv.dataset.notifType = n.type;
+        notifDiv.dataset.notifRef = n.reference || '';
+        notifDiv.className = `p-4 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 items-start ${!n.is_read ? 'bg-blue-50 border-l-4 border-blue-400' : 'bg-white'}`;
+        
+        const iconDiv = document.createElement('div');
+        iconDiv.className = `w-8 h-8 rounded-full ${!n.is_read ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'} flex items-center justify-center flex-shrink-0 mt-0.5`;
+        iconDiv.innerHTML = `<i class="fas ${typeIcon[n.type] || 'fa-bell'} text-xs"></i>`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'flex-1 min-w-0';
+        
+        const titleEl = document.createElement('div');
+        titleEl.className = 'font-bold text-sm text-slate-800';
+        titleEl.textContent = n.title; // FIX: Safe text content
+        
+        const messageEl = document.createElement('div');
+        messageEl.className = 'text-xs text-slate-500 mt-0.5';
+        messageEl.textContent = n.message; // FIX: Safe text content
+        
+        const timeEl = document.createElement('div');
+        timeEl.className = 'text-[10px] text-blue-500 mt-1 font-semibold';
+        timeEl.textContent = new Date(n.created_at).toLocaleString('en-IN');
+        
+        contentDiv.appendChild(titleEl);
+        contentDiv.appendChild(messageEl);
+        contentDiv.appendChild(timeEl);
+        
+        notifDiv.appendChild(iconDiv);
+        notifDiv.appendChild(contentDiv);
+        
+        if (!n.is_read) {
+            const readDot = document.createElement('span');
+            readDot.className = 'w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2';
+            notifDiv.appendChild(readDot);
+        }
+        
+        notifDiv.addEventListener('click', function () {
+            openNotification(parseInt(this.dataset.notifId, 10), this.dataset.notifType, this.dataset.notifRef);
         });
+        
+        list.appendChild(notifDiv);
     });
 }
 
@@ -1555,15 +1798,19 @@ function toggleNotificationPanel() {
 }
 
 async function openNotification(id, type, reference) {
-    await supabaseClient.from('witcorp_notifications').update({ is_read: true }).eq('id', id);
-    const target = allNotifications.find(n => n.id === id);
-    if (target) target.is_read = true;
-    renderNotifications();
-    if (type === "record") { showSection('dashboard'); handleSearch(reference); }
-    if (type === "client") { showSection('clientManagement'); searchClients(reference); }
-    if (type === "vault") { showSection('vaultManagement'); searchVault(reference); }
-    if (type === "dsc") { showSection('dscManagement'); searchDSC(reference); }
-    document.getElementById('notificationPanel').classList.add('hidden');
+    try {
+        await supabaseClient.from('witcorp_notifications').update({ is_read: true }).eq('id', parseInt(id, 10));
+        const target = allNotifications.find(n => n.id === id);
+        if (target) target.is_read = true;
+        renderNotifications();
+        if (type === "record") { showSection('dashboard'); handleSearch(reference); }
+        if (type === "client") { showSection('clientManagement'); searchClients(reference); }
+        if (type === "vault") { showSection('vaultManagement'); searchVault(reference); }
+        if (type === "dsc") { showSection('dscManagement'); searchDSC(reference); }
+        document.getElementById('notificationPanel').classList.add('hidden');
+    } catch (err) {
+        console.error("openNotification error:", err);
+    }
 }
 
 // ============================================================
@@ -1572,32 +1819,39 @@ async function openNotification(id, type, reference) {
 supabaseClient
     .channel('live-notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'witcorp_notifications' }, async (payload) => {
-        if (payload.new.created_by === currentUserName) return;
-        allNotifications.unshift(payload.new);
-        renderNotifications();
+        try {
+            if (payload.new.created_by === currentUserName) return;
+            allNotifications.unshift(payload.new);
+            renderNotifications();
 
-        const notificationEnabled = localStorage.getItem("notificationSound");
-        if (notificationEnabled !== "off") {
-            try {
-                const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
-                audio.play().catch(() => {});
-            } catch(e) {}
-            navigator.serviceWorker?.ready.then(reg => {
-                reg.showNotification(payload.new.title || "New Update", {
-                    body: payload.new.message || "Database updated",
-                    icon: "./logo.png",
-                    badge: "./logo.png"
-                });
-            }).catch(() => {});
+            const notificationEnabled = localStorage.getItem("notificationSound");
+            if (notificationEnabled !== "off") {
+                try {
+                    const audio = new Audio('./notification.mp3'); // FIX: Local file instead of external URL
+                    audio.play().catch(() => {});
+                } catch(e) {}
+                navigator.serviceWorker?.ready.then(reg => {
+                    reg.showNotification(payload.new.title || "New Update", {
+                        body: payload.new.message || "Database updated",
+                        icon: "./logo.png",
+                        badge: "./logo.png"
+                    });
+                }).catch(() => {});
+            }
+
+            showToast(payload.new.title + ': ' + payload.new.message, 'info');
+            await fetchRecords(true);
+        } catch (err) {
+            console.error("Realtime subscription error:", err);
         }
-
-        showToast(payload.new.title + ': ' + payload.new.message, 'info');
-        fetchRecords(true);
     })
     .subscribe((status) => { console.log("NOTIFICATION STATUS:", status); });
 
 window.addEventListener('DOMContentLoaded', () => { fetchNotifications(); });
+
+// ============================================================
 // THEMES
+// ============================================================
 function changeTheme(theme) {
     const body = document.body;
     ['theme-ocean', 'theme-dark', 'theme-green', 'theme-purple', 'theme-light'].forEach(t => body.classList.remove(t));
@@ -1627,7 +1881,10 @@ window.addEventListener('load', () => {
     if (savedSidebar) changeSidebarTheme(savedSidebar);
     loadNotificationSetting();
 });
+
+// ============================================================
 // AUTOCOMPLETE / PREDICTIONS
+// ============================================================
 function setupPredictions() {
     const clientList = document.getElementById('clientSuggestions');
     const uniqueClients = [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
@@ -1653,18 +1910,29 @@ function setupPredictions() {
     const uniqueVault = [...new Set(allVault.map(v => v.category).filter(Boolean))];
     if (vaultList) vaultList.innerHTML = uniqueVault.map(name => `<option value="${name}">`).join('');
 }
+
+// ============================================================
 // FORGOT PASSWORD
+// ============================================================
 async function forgotPassword() {
-    const email = document.getElementById("email").value;
+    const email = document.getElementById("email")?.value;
     if (!email) {
         document.getElementById('authMsg').innerText = "Please enter your email first";
         return;
     }
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname + "?reset=true"
-    });
-    if (error) { document.getElementById('authMsg').innerText = error.message; }
-    else { document.getElementById('authMsg').innerText = "Password reset link sent to your email."; }
+    try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname + "?reset=true"
+        });
+        if (error) { 
+            document.getElementById('authMsg').innerText = error.message; 
+        } else { 
+            document.getElementById('authMsg').innerText = "Password reset link sent to your email."; 
+        }
+    } catch (err) {
+        console.error("forgotPassword error:", err);
+        document.getElementById('authMsg').innerText = "Reset failed. Please try again.";
+    }
 }
 
 window.addEventListener('load', async () => {
@@ -1672,15 +1940,24 @@ window.addEventListener('load', async () => {
     if (hash.includes("access_token") && hash.includes("type=recovery")) {
         const newPassword = prompt("Enter New Password");
         if (!newPassword) return;
-        const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-        if (error) { showToast(error.message, 'error'); }
-        else {
-            showToast("Password updated successfully!", 'success');
-            window.location.href = window.location.pathname;
+        try {
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+            if (error) { 
+                showToast(error.message, 'error'); 
+            } else {
+                showToast("Password updated successfully!", 'success');
+                window.location.href = window.location.pathname;
+            }
+        } catch (err) {
+            console.error("Password update error:", err);
+            showToast("Password update failed. Please try again.", 'error');
         }
     }
 });
+
+// ============================================================
 // NOTIFICATION SOUND SETTING
+// ============================================================
 function loadNotificationSetting() {
     const sound = localStorage.getItem("notificationSound");
     const status = document.getElementById("notificationStatus");
@@ -1701,57 +1978,76 @@ function toggleNotificationSetting() {
     localStorage.setItem("notificationSound", current === "off" ? "on" : "off");
     loadNotificationSetting();
 }
+
+// ============================================================
 // EXPORT MODAL
+// ============================================================
 function openExportModal() { document.getElementById("exportModal").classList.remove("hidden"); }
 function closeExportModal() { document.getElementById("exportModal").classList.add("hidden"); }
 function openMyActivity() { document.getElementById("activityModal").classList.remove("hidden"); loadMyActivity(); }
 function closeActivityModal() { document.getElementById("activityModal").classList.add("hidden"); }
-// ACTIVITY LOG
+
+// ============================================================
+// ACTIVITY LOG (FIX: Limit entries to prevent localStorage overflow)
+// ============================================================
 function saveActivity(text) {
-    let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
-    activity.unshift({ text, time: new Date().toLocaleString('en-IN') });
-    if (activity.length > 100) activity = activity.slice(0, 100);
-    localStorage.setItem("myActivity", JSON.stringify(activity));
+    try {
+        let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
+        activity.unshift({ text, time: new Date().toLocaleString('en-IN') });
+        if (activity.length > 50) activity = activity.slice(0, 50); // FIX: Reduced from 100 to 50
+        localStorage.setItem("myActivity", JSON.stringify(activity));
+    } catch (err) {
+        console.error("saveActivity error:", err);
+        localStorage.removeItem("myActivity"); // Clear if too large
+    }
 }
 
 function loadMyActivity() {
-    let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
-    const iconMap = {
-        'Added': 'fa-circle-plus text-emerald-500',
-        'Updated': 'fa-pen-to-square text-blue-500',
-        'Deleted': 'fa-trash-can text-rose-500',
-        'Exported': 'fa-file-export text-purple-500',
-        'Bulk': 'fa-layer-group text-cyan-500',
-        'Default': 'fa-clock-rotate-left text-slate-400'
-    };
+    try {
+        let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
+        const iconMap = {
+            'Added': 'fa-circle-plus text-emerald-500',
+            'Updated': 'fa-pen-to-square text-blue-500',
+            'Deleted': 'fa-trash-can text-rose-500',
+            'Exported': 'fa-file-export text-purple-500',
+            'Bulk': 'fa-layer-group text-cyan-500',
+            'Default': 'fa-clock-rotate-left text-slate-400'
+        };
 
-    let html = "";
-    if (activity.length === 0) {
-        html = `<div class="text-center text-slate-400 py-10 font-semibold">No activity recorded yet.</div>`;
-    } else {
-        activity.forEach(item => {
-            const verb = Object.keys(iconMap).find(k => item.text.startsWith(k)) || 'Default';
-            const icon = iconMap[verb];
-            const parts = item.text.split('|').map(p => p.trim());
-            const mainText = parts[0] || item.text;
-            const details = parts.slice(1);
+        let html = "";
+        if (activity.length === 0) {
+            html = `<div class="text-center text-slate-400 py-10 font-semibold">No activity recorded yet.</div>`;
+        } else {
+            activity.forEach(item => {
+                const verb = Object.keys(iconMap).find(k => item.text.startsWith(k)) || 'Default';
+                const icon = iconMap[verb];
+                const parts = item.text.split('|').map(p => p.trim());
+                const mainText = parts[0] || item.text;
+                const details = parts.slice(1);
 
-            html += `
-                <div class="flex items-start gap-3 border-b border-slate-100 py-4 last:border-0">
-                    <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <i class="fas ${icon} text-sm"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-sm text-slate-800">${mainText}</div>
-                        ${details.length ? `<div class="text-sm text-slate-500 mt-0.5">${details.join(' · ')}</div>` : ''}
-                        <div class="text-xs text-blue-500 font-semibold mt-1">${item.time}</div>
-                    </div>
-                </div>`;
-        });
+                html += `
+                    <div class="flex items-start gap-3 border-b border-slate-100 py-4 last:border-0">
+                        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fas ${icon} text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-sm text-slate-800">${mainText}</div>
+                            ${details.length ? `<div class="text-sm text-slate-500 mt-0.5">${details.join(' · ')}</div>` : ''}
+                            <div class="text-xs text-blue-500 font-semibold mt-1">${item.time}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+        document.getElementById("activityList").innerHTML = html;
+    } catch (err) {
+        console.error("loadMyActivity error:", err);
+        document.getElementById("activityList").innerHTML = `<div class="text-center text-red-500 py-10 font-semibold">Error loading activity</div>`;
     }
-    document.getElementById("activityList").innerHTML = html;
 }
+
+// ============================================================
 // EXPORT FUNCTIONS
+// ============================================================
 function exportCSV() {
     let rows = currentExportData || [];
     if (rows.length === 0) { showToast('No records found to export', 'warning'); return; }
@@ -1834,7 +2130,10 @@ function exportPDF() {
     saveActivity("Exported PDF Report: " + currentExportType);
     showToast('PDF exported successfully', 'success');
 }
+
+// ============================================================
 // GREEN TABLE HEADERS
+// ============================================================
 function applyGreenHeaders() {
     document.querySelectorAll('th').forEach(th => {
         th.style.color = '#16a34a';
@@ -1846,7 +2145,10 @@ function applyGreenHeaders() {
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(applyGreenHeaders, 400);
 });
+
+// ============================================================
 // KEYBOARD SHORTCUTS — Ctrl+K for search, Escape to close
+// ============================================================
 document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
