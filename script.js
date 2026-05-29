@@ -63,14 +63,12 @@ function showToast(message, type = 'success', duration = 3500) {
     toast.querySelector('button').onclick = () => removeToast(toast);
     container.appendChild(toast);
 
-    // Animate in
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             toast.classList.remove('translate-x-full');
         });
     });
 
-    // Auto remove
     setTimeout(() => removeToast(toast), duration);
 }
 
@@ -165,7 +163,6 @@ async function fetchRecords(reset = true) {
     if (isFetchingRecords) return;
     isFetchingRecords = true;
 
-    // Show skeleton, hide table
     const skeleton = document.getElementById('tableSkeleton');
     const wrapper = document.getElementById('mainTableWrapper');
     if (reset && skeleton && wrapper) {
@@ -194,7 +191,6 @@ async function fetchRecords(reset = true) {
             const btn = document.getElementById("loadMoreBtn");
             if (btn) btn.style.display = data.length < PAGE_SIZE ? "none" : "block";
 
-            // Update record count badge
             const badge = document.getElementById('recordCountBadge');
             if (badge) badge.innerText = `${allRecords.length} records`;
         }
@@ -203,7 +199,6 @@ async function fetchRecords(reset = true) {
         showToast('Failed to fetch records. Check connection.', 'error');
     } finally {
         isFetchingRecords = false;
-        // Hide skeleton, show table
         if (skeleton && wrapper) {
             skeleton.style.display = 'none';
             wrapper.style.display = 'block';
@@ -222,7 +217,6 @@ function sortTable(field) {
         sortAsc = true;
     }
 
-    // Reset all sort icons
     document.querySelectorAll('[id^="sort_"]').forEach(el => {
         el.className = 'fas fa-sort ml-1 opacity-40';
     });
@@ -303,7 +297,6 @@ function toggleRowSelect(id, checked) {
         selectedRowIds.delete(id);
     }
     updateBulkBar();
-    // Update select-all state
     const allCbs = document.querySelectorAll('.row-checkbox');
     const selectAllCb = document.getElementById('selectAllCheckbox');
     if (selectAllCb) {
@@ -332,24 +325,123 @@ function clearBulkSelection() {
     updateBulkBar();
 }
 
+// ============================================================
+// BULK STATUS APPLY — WITH FULL UNDO SUPPORT
+// ============================================================
 async function applyBulkStatus() {
     if (selectedRowIds.size === 0) return;
     const newStatus = document.getElementById('bulkStatusSelect')?.value;
     if (!newStatus) return;
 
     const ids = [...selectedRowIds];
+
+    // Full snapshot — status, updated_at, updated_by teeno save karo
+    const previousStatuses = ids.map(id => {
+        const rec = allRecords.find(r => r.id === id);
+        return {
+            id,
+            status: rec?.status || 'Pending',
+            updated_at: rec?.updated_at || new Date().toISOString(),
+            updated_by: rec?.updated_by || ''
+        };
+    });
+
     const { error } = await supabaseClient
         .from('witcorp_records')
         .update({ status: newStatus, updated_at: new Date().toISOString(), updated_by: currentUserName })
         .in('id', ids);
 
     if (!error) {
-        showToast(`${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`, 'success');
         saveActivity(`Bulk Update: ${ids.length} records → ${newStatus}`);
         clearBulkSelection();
         await fetchRecords(true);
+
+        showUndoToast(
+            `${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`,
+            previousStatuses,
+            120000
+        );
     } else {
         showToast('Bulk update failed. Check connection.', 'error');
+    }
+}
+
+function showUndoToast(message, previousStatuses, duration = 120000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-4 rounded-2xl text-white font-bold text-sm shadow-2xl transform translate-x-full transition-all duration-300 bg-slate-700`;
+    toast.style.maxWidth = '420px';
+
+    let secondsLeft = Math.floor(duration / 1000);
+
+    toast.innerHTML = `
+        <i class="fas fa-circle-check text-emerald-400 text-lg flex-shrink-0"></i>
+        <div class="flex-1">
+            <div>${message}</div>
+            <div style="font-size:11px;opacity:0.6;font-weight:400;margin-top:2px;">
+                Undo available for <span id="undoSecs">${secondsLeft}s</span>
+            </div>
+        </div>
+        <button id="undoActionBtn"
+            style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+            ↩ Undo
+        </button>
+        <button id="undoCloseBtn"
+            style="opacity:0.6;font-size:18px;background:none;border:none;color:#fff;cursor:pointer;padding:0;margin-left:4px;">&times;</button>
+    `;
+
+    toast.querySelector('#undoCloseBtn').onclick = () => {
+        clearInterval(ticker);
+        removeToast(toast);
+    };
+
+    toast.querySelector('#undoActionBtn').onclick = async () => {
+        clearInterval(ticker);
+        removeToast(toast);
+        await undoBulkStatus(previousStatuses);
+    };
+
+    container.appendChild(toast);
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.remove('translate-x-full')));
+
+    // Live countdown
+    const ticker = setInterval(() => {
+        secondsLeft--;
+        const el = document.getElementById('undoSecs');
+        if (el) {
+            if (secondsLeft >= 60) {
+                const m = Math.floor(secondsLeft / 60);
+                const s = secondsLeft % 60;
+                el.textContent = `${m}m ${s < 10 ? '0' + s : s}s`;
+            } else {
+                el.textContent = `${secondsLeft}s`;
+            }
+        }
+        if (secondsLeft <= 0) clearInterval(ticker);
+    }, 1000);
+
+    setTimeout(() => { clearInterval(ticker); removeToast(toast); }, duration);
+}
+
+async function undoBulkStatus(previousStatuses) {
+    let anyError = false;
+
+    for (const { id, status, updated_at, updated_by } of previousStatuses) {
+        const { error } = await supabaseClient
+            .from('witcorp_records')
+            .update({ status, updated_at, updated_by })
+            .eq('id', id);
+        if (error) anyError = true;
+    }
+
+    if (!anyError) {
+        saveActivity(`Undo Bulk Update: ${previousStatuses.length} records restored`);
+        showToast(`${previousStatuses.length} record${previousStatuses.length > 1 ? 's' : ''} fully restored`, 'info');
+        await fetchRecords(true);
+    } else {
+        showToast('Undo partially failed. Check connection.', 'error');
     }
 }
 
@@ -400,7 +492,6 @@ function renderTable(data, targetId) {
             'Processing': 'fa-spinner fa-spin'
         }[row.status] || 'fa-info-circle';
 
-        // Row color coding
         let rowBg = '';
         if (row.deadline && row.status !== 'Completed') {
             const dl = new Date(row.deadline);
@@ -416,7 +507,6 @@ function renderTable(data, targetId) {
             rowBg = 'hover:bg-slate-50/80';
         }
 
-        // Last Update
         let datePart = '', timePart = '';
         if (row.updated_at) {
             const d = new Date(row.updated_at);
@@ -425,7 +515,6 @@ function renderTable(data, targetId) {
         }
         const lastUpdate = row.updated_at ? `${datePart}, ${timePart}` : 'Syncing...';
 
-        // Service display
         const svcFull = row.service_detail || 'General Consulting';
         const svcWords = svcFull.split(' ');
         let svcLines = [];
@@ -440,7 +529,6 @@ function renderTable(data, targetId) {
             `<span style="display:block;font-size:13px;font-weight:600;color:#334155;line-height:1.6;">${line}</span>`
         ).join('');
 
-        // Remarks toggle
         _rmkCounter++;
         const uid = `rmk_${_rmkCounter}`;
         const fullRemarksRaw = row.remarks || '—';
@@ -458,7 +546,6 @@ function renderTable(data, targetId) {
             </div>`
             : `<span style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>`;
 
-        // Updated By chip
         const updatedBy = row.updated_by || 'N/A';
         const updatedByShort = updatedBy.includes('@') ? updatedBy.split('@')[0] : updatedBy;
         const updatedByCell = `
@@ -467,7 +554,6 @@ function renderTable(data, targetId) {
                 <span style="font-size:12px;font-weight:600;color:#1d4ed8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${updatedByShort}</span>
             </div>`;
 
-        // Deadline display
         let deadlineDisplay = 'N/A';
         let deadlineBadge = '';
         if (row.deadline) {
@@ -683,7 +769,6 @@ async function fetchClients() {
         counts[typeKey]++;
         const listId = containers[typeKey];
 
-        // Get record count for this client
         const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
         const recordBadge = clientRecordCount > 0
             ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
@@ -705,7 +790,6 @@ async function fetchClients() {
             </div>`;
     });
 
-    // Update count badges in headers
     const pvtCount = document.getElementById('pvtLtdCount');
     const llpCount = document.getElementById('llpCount');
     const othersCount = document.getElementById('othersCount');
@@ -857,7 +941,6 @@ function copyToClipboard(text, label) {
     navigator.clipboard.writeText(text).then(() => {
         showToast(`${label} copied to clipboard`, 'info', 2000);
     }).catch(() => {
-        // Fallback for older browsers
         const ta = document.createElement('textarea');
         ta.value = text;
         document.body.appendChild(ta);
@@ -926,7 +1009,7 @@ async function deleteVault(id) {
 }
 
 // ============================================================
-// SEARCH VAULT — uses renderVaultTable
+// SEARCH VAULT
 // ============================================================
 function searchVault(query) {
     const q = query.toLowerCase();
@@ -953,7 +1036,6 @@ function toggleAccountingHubDesktop() {
 // SHOW SECTION — with breadcrumb + unsaved changes guard
 // ============================================================
 function showSection(id) {
-    // Unsaved changes warning
     if (isFormDirty && id !== 'dashboard') {
         const leave = confirm("You have unsaved changes in the form. Leave anyway?");
         if (!leave) return;
@@ -1234,7 +1316,6 @@ function renderDSC(data) {
                 dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
         })() : 'N/A';
 
-        // DSC status styling
         const statusColors = {
             'Valid': 'bg-emerald-100 text-emerald-700 border-emerald-200',
             'Expired': 'bg-red-100 text-red-700 border-red-200',
@@ -1242,7 +1323,6 @@ function renderDSC(data) {
         };
         const statusStyle = statusColors[d.status] || statusColors['No DSC'];
 
-        // Check if expiry is soon (within 30 days)
         let expiryBadge = '';
         if (d.expiry_date && d.status === 'Valid') {
             const expiry = new Date(d.expiry_date);
@@ -1379,7 +1459,6 @@ document.addEventListener("click", function (event) {
     if (menu && !event.target.closest("#profileMenu") && !event.target.closest("[onclick='toggleProfileMenu()']")) {
         menu.classList.add("hidden");
     }
-    // Close notification panel on outside click
     const notifPanel = document.getElementById("notificationPanel");
     if (notifPanel && !event.target.closest("#notificationPanel") && !event.target.closest("[onclick='toggleNotificationPanel()']")) {
         notifPanel.classList.add("hidden");
@@ -1804,14 +1883,12 @@ window.addEventListener('DOMContentLoaded', () => {
 // KEYBOARD SHORTCUTS — Ctrl+K for search, Escape to close
 // ============================================================
 document.addEventListener('keydown', function(e) {
-    // Ctrl+K / Cmd+K → focus global search
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         const searchBox = document.getElementById('globalSearch');
         if (searchBox) {
             searchBox.focus();
             searchBox.select();
-            // Make sure dashboard is shown
             const dashSection = document.getElementById('dashboard');
             if (dashSection && !dashSection.classList.contains('active')) {
                 document.getElementById('globalSearchBox').style.display = 'block';
@@ -1819,7 +1896,6 @@ document.addEventListener('keydown', function(e) {
             }
         }
     }
-    // Escape → close notification panel, profile menu
     if (e.key === 'Escape') {
         document.getElementById('notificationPanel')?.classList.add('hidden');
         document.getElementById('profileMenu')?.classList.add('hidden');
