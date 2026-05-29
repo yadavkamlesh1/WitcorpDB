@@ -1,4 +1,4 @@
-// WITCORP HUB — ENTERPRISE SCRIPT (FINAL FIXED VERSION — PART 1)
+// WITCORP HUB — ENTERPRISE SCRIPT (FIXED VERSION)
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -15,13 +15,13 @@ let currentUserName = "";
 let recordPage = 0;
 const PAGE_SIZE = 100;
 let isFetchingRecords = false;
-// Sort state
 let sortField = null;
 let sortAsc = true;
-// Form dirty state
 let isFormDirty = false;
-// Bulk selection
 let selectedRowIds = new Set();
+// FIX 8: Single interval references — prevent duplicate intervals on re-login
+let _onlineUsersInterval = null;
+let _presenceInterval = null;
 
 // ============================================================
 // TOAST NOTIFICATION SYSTEM
@@ -29,20 +29,14 @@ let selectedRowIds = new Set();
 function showToast(message, type = 'success', duration = 3500) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-
     const icons = {
-        success: 'fa-circle-check',
-        error: 'fa-circle-xmark',
-        warning: 'fa-triangle-exclamation',
-        info: 'fa-circle-info'
+        success: 'fa-circle-check', error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation', info: 'fa-circle-info'
     };
     const colors = {
-        success: 'bg-emerald-600',
-        error: 'bg-red-600',
-        warning: 'bg-amber-500',
-        info: 'bg-blue-600'
+        success: 'bg-emerald-600', error: 'bg-red-600',
+        warning: 'bg-amber-500', info: 'bg-blue-600'
     };
-
     const toast = document.createElement('div');
     toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-4 rounded-2xl text-white font-bold text-sm shadow-2xl transform translate-x-full transition-all duration-300 ${colors[type] || colors.info}`;
     toast.style.maxWidth = '360px';
@@ -51,16 +45,9 @@ function showToast(message, type = 'success', duration = 3500) {
         <span class="flex-1">${message}</span>
         <button class="ml-2 opacity-70 hover:opacity-100 text-lg leading-none">&times;</button>
     `;
-
     toast.querySelector('button').onclick = () => removeToast(toast);
     container.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            toast.classList.remove('translate-x-full');
-        });
-    });
-
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.remove('translate-x-full')));
     setTimeout(() => removeToast(toast), duration);
 }
 
@@ -99,13 +86,8 @@ function updateBreadcrumb(section) {
 // ============================================================
 // FORM DIRTY STATE
 // ============================================================
-function markFormDirty() {
-    isFormDirty = true;
-}
-
-function clearDirtyState() {
-    isFormDirty = false;
-}
+function markFormDirty() { isFormDirty = true; }
+function clearDirtyState() { isFormDirty = false; }
 
 // ============================================================
 // DEADLINE ALERT BANNER
@@ -122,7 +104,6 @@ function checkDeadlineAlerts(data) {
         d.setHours(0, 0, 0, 0);
         return d >= today && d < dayAfter;
     });
-
     const overdue = data.filter(r => {
         if (!r.deadline || r.status === 'Completed') return false;
         const d = new Date(r.deadline);
@@ -133,11 +114,9 @@ function checkDeadlineAlerts(data) {
     const banner = document.getElementById('deadlineAlertBanner');
     const text = document.getElementById('deadlineAlertText');
     if (!banner || !text) return;
-
     const parts = [];
     if (overdue.length > 0) parts.push(`${overdue.length} overdue record${overdue.length > 1 ? 's' : ''}`);
     if (urgent.length > 0) parts.push(`${urgent.length} due today/tomorrow`);
-
     if (parts.length > 0) {
         text.innerText = parts.join(' · ') + ' — action required.';
         banner.classList.remove('hidden');
@@ -152,14 +131,12 @@ function checkDeadlineAlerts(data) {
 async function fetchRecords(reset = true) {
     if (isFetchingRecords) return;
     isFetchingRecords = true;
-
     const skeleton = document.getElementById('tableSkeleton');
     const wrapper = document.getElementById('mainTableWrapper');
     if (reset && skeleton && wrapper) {
         skeleton.style.display = 'block';
         wrapper.style.display = 'none';
     }
-
     try {
         if (reset) { recordPage = 0; allRecords = []; }
         const from = recordPage * PAGE_SIZE;
@@ -175,7 +152,6 @@ async function fetchRecords(reset = true) {
             showToast('Failed to fetch records. Check connection.', 'error');
             return;
         }
-
         if (data) {
             const uniqueData = data.filter(n => !allRecords.some(o => o.id === n.id));
             allRecords = [...allRecords, ...uniqueData];
@@ -187,7 +163,6 @@ async function fetchRecords(reset = true) {
             recordPage++;
             const btn = document.getElementById("loadMoreBtn");
             if (btn) btn.style.display = data.length < PAGE_SIZE ? "none" : "block";
-
             const badge = document.getElementById('recordCountBadge');
             if (badge) badge.innerText = `${allRecords.length} records`;
         }
@@ -207,25 +182,12 @@ async function fetchRecords(reset = true) {
 // SORT TABLE
 // ============================================================
 function sortTable(field) {
-    if (sortField === field) {
-        sortAsc = !sortAsc;
-    } else {
-        sortField = field;
-        sortAsc = true;
-    }
-
-    document.querySelectorAll('[id^="sort_"]').forEach(el => {
-        el.className = 'fas fa-sort ml-1 opacity-40';
-    });
-
+    if (sortField === field) { sortAsc = !sortAsc; } else { sortField = field; sortAsc = true; }
+    document.querySelectorAll('[id^="sort_"]').forEach(el => { el.className = 'fas fa-sort ml-1 opacity-40'; });
     const icon = document.getElementById('sort_' + field);
-    if (icon) {
-        icon.className = `fas fa-sort-${sortAsc ? 'up' : 'down'} ml-1 text-blue-500`;
-    }
-
+    if (icon) icon.className = `fas fa-sort-${sortAsc ? 'up' : 'down'} ml-1 text-blue-500`;
     const sorted = [...allRecords].sort((a, b) => {
-        let av = a[field] || '';
-        let bv = b[field] || '';
+        let av = a[field] || '', bv = b[field] || '';
         if (field === 'updated_at' || field === 'deadline') {
             av = av ? new Date(av).getTime() : 0;
             bv = bv ? new Date(bv).getTime() : 0;
@@ -237,7 +199,6 @@ function sortTable(field) {
         if (av > bv) return sortAsc ? 1 : -1;
         return 0;
     });
-
     renderTable(sorted, 'mainTableBody');
 }
 
@@ -247,14 +208,11 @@ function sortTable(field) {
 function applyMultiFilter() {
     const statusVal = document.getElementById('filterStatus')?.value || '';
     const categoryVal = document.getElementById('filterCategory')?.value || '';
-
     let filtered = [...allRecords];
     if (statusVal) filtered = filtered.filter(r => r.status === statusVal);
     if (categoryVal) filtered = filtered.filter(r => r.service_category === categoryVal);
-
     renderTable(filtered, 'mainTableBody');
     updateStats(filtered);
-
     const badge = document.getElementById('recordCountBadge');
     if (badge) badge.innerText = `${filtered.length} records`;
 }
@@ -278,21 +236,13 @@ function toggleSelectAll(checkbox) {
     checkboxes.forEach(cb => {
         cb.checked = checkbox.checked;
         const id = parseInt(cb.dataset.id, 10);
-        if (checkbox.checked) {
-            selectedRowIds.add(id);
-        } else {
-            selectedRowIds.delete(id);
-        }
+        if (checkbox.checked) { selectedRowIds.add(id); } else { selectedRowIds.delete(id); }
     });
     updateBulkBar();
 }
 
 function toggleRowSelect(id, checked) {
-    if (checked) {
-        selectedRowIds.add(id);
-    } else {
-        selectedRowIds.delete(id);
-    }
+    if (checked) { selectedRowIds.add(id); } else { selectedRowIds.delete(id); }
     updateBulkBar();
     const allCbs = document.querySelectorAll('.row-checkbox');
     const selectAllCb = document.getElementById('selectAllCheckbox');
@@ -329,33 +279,20 @@ async function applyBulkStatus() {
     if (selectedRowIds.size === 0) return;
     const newStatus = document.getElementById('bulkStatusSelect')?.value;
     if (!newStatus) return;
-
     const ids = [...selectedRowIds];
-
     const previousStatuses = ids.map(id => {
         const rec = allRecords.find(r => r.id === id);
-        return {
-            id,
-            status: rec?.status || 'Pending',
-            updated_at: rec?.updated_at || new Date().toISOString(),
-            updated_by: rec?.updated_by || ''
-        };
+        return { id, status: rec?.status || 'Pending', updated_at: rec?.updated_at || new Date().toISOString(), updated_by: rec?.updated_by || '' };
     });
-
     const { error } = await supabaseClient
         .from('witcorp_records')
         .update({ status: newStatus, updated_at: new Date().toISOString(), updated_by: currentUserName })
         .in('id', ids);
-
     if (!error) {
         saveActivity(`Bulk Update: ${ids.length} records → ${newStatus}`);
         clearBulkSelection();
         await fetchRecords(true);
-        showUndoToast(
-            `${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`,
-            previousStatuses,
-            120000
-        );
+        showUndoToast(`${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`, previousStatuses, 120000);
     } else {
         showToast('Bulk update failed. Check connection.', 'error');
     }
@@ -364,13 +301,10 @@ async function applyBulkStatus() {
 function showUndoToast(message, previousStatuses, duration = 120000) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-
     const toast = document.createElement('div');
     toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-4 rounded-2xl text-white font-bold text-sm shadow-2xl transform translate-x-full transition-all duration-300 bg-slate-700`;
     toast.style.maxWidth = '420px';
-
     let secondsLeft = Math.floor(duration / 1000);
-
     toast.innerHTML = `
         <i class="fas fa-circle-check text-emerald-400 text-lg flex-shrink-0"></i>
         <div class="flex-1">
@@ -379,28 +313,13 @@ function showUndoToast(message, previousStatuses, duration = 120000) {
                 Undo available for <span id="undoSecs">${secondsLeft}s</span>
             </div>
         </div>
-        <button id="undoActionBtn"
-            style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;">
-            ↩ Undo
-        </button>
-        <button id="undoCloseBtn"
-            style="opacity:0.6;font-size:18px;background:none;border:none;color:#fff;cursor:pointer;padding:0;margin-left:4px;">&times;</button>
+        <button id="undoActionBtn" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:5px 14px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;">↩ Undo</button>
+        <button id="undoCloseBtn" style="opacity:0.6;font-size:18px;background:none;border:none;color:#fff;cursor:pointer;padding:0;margin-left:4px;">&times;</button>
     `;
-
-    toast.querySelector('#undoCloseBtn').onclick = () => {
-        clearInterval(ticker);
-        removeToast(toast);
-    };
-
-    toast.querySelector('#undoActionBtn').onclick = async () => {
-        clearInterval(ticker);
-        removeToast(toast);
-        await undoBulkStatus(previousStatuses);
-    };
-
+    toast.querySelector('#undoCloseBtn').onclick = () => { clearInterval(ticker); removeToast(toast); };
+    toast.querySelector('#undoActionBtn').onclick = async () => { clearInterval(ticker); removeToast(toast); await undoBulkStatus(previousStatuses); };
     container.appendChild(toast);
     requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.remove('translate-x-full')));
-
     const ticker = setInterval(() => {
         secondsLeft--;
         const el = toast.querySelector('#undoSecs');
@@ -415,20 +334,15 @@ function showUndoToast(message, previousStatuses, duration = 120000) {
         }
         if (secondsLeft <= 0) clearInterval(ticker);
     }, 1000);
-
     setTimeout(() => { clearInterval(ticker); removeToast(toast); }, duration);
 }
 
 async function undoBulkStatus(previousStatuses) {
     let anyError = false;
     for (const { id, status, updated_at, updated_by } of previousStatuses) {
-        const { error } = await supabaseClient
-            .from('witcorp_records')
-            .update({ status, updated_at, updated_by })
-            .eq('id', id);
+        const { error } = await supabaseClient.from('witcorp_records').update({ status, updated_at, updated_by }).eq('id', id);
         if (error) anyError = true;
     }
-
     if (!anyError) {
         saveActivity(`Undo Bulk Update: ${previousStatuses.length} records restored`);
         showToast(`${previousStatuses.length} record${previousStatuses.length > 1 ? 's' : ''} fully restored`, 'info');
@@ -451,17 +365,15 @@ function renderTable(data, targetId) {
 
     if (data.length === 0) {
         tbody.innerHTML = `
-            <tr>
-                <td colspan="12" class="p-16 text-center">
-                    <div class="flex flex-col items-center gap-4">
-                        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-folder-open text-3xl text-slate-300"></i>
-                        </div>
-                        <p class="font-black text-slate-400 text-sm uppercase tracking-wider">No records found</p>
-                        <p class="text-xs text-slate-300">Try adjusting your filters or add a new record above</p>
+            <tr><td colspan="12" class="p-16 text-center">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-folder-open text-3xl text-slate-300"></i>
                     </div>
-                </td>
-            </tr>`;
+                    <p class="font-black text-slate-400 text-sm uppercase tracking-wider">No records found</p>
+                    <p class="text-xs text-slate-300">Try adjusting your filters or add a new record above</p>
+                </div>
+            </td></tr>`;
         return;
     }
 
@@ -469,31 +381,18 @@ function renderTable(data, targetId) {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
     tbody.innerHTML = '';
 
     data.forEach(row => {
-        const statusClass = {
-            'Completed': 'st-completed',
-            'Pending': 'st-pending',
-            'Processing': 'st-processing'
-        }[row.status] || 'bg-slate-100';
-
-        const statusIcon = {
-            'Completed': 'fa-circle-check',
-            'Pending': 'fa-circle-exclamation',
-            'Processing': 'fa-spinner fa-spin'
-        }[row.status] || 'fa-info-circle';
+        const statusClass = { 'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing' }[row.status] || 'bg-slate-100';
+        const statusIcon = { 'Completed': 'fa-circle-check', 'Pending': 'fa-circle-exclamation', 'Processing': 'fa-spinner fa-spin' }[row.status] || 'fa-info-circle';
 
         let rowBg = 'hover:bg-slate-50/80';
         if (row.deadline && row.status !== 'Completed') {
             const dl = new Date(row.deadline);
             dl.setHours(0, 0, 0, 0);
-            if (dl < today) {
-                rowBg = 'bg-red-50 hover:bg-red-100/60';
-            } else if (dl.getTime() === today.getTime() || dl.getTime() === tomorrow.getTime()) {
-                rowBg = 'bg-amber-50 hover:bg-amber-100/60';
-            }
+            if (dl < today) { rowBg = 'bg-red-50 hover:bg-red-100/60'; }
+            else if (dl.getTime() === today.getTime() || dl.getTime() === tomorrow.getTime()) { rowBg = 'bg-amber-50 hover:bg-amber-100/60'; }
         }
 
         let datePart = '', timePart = '';
@@ -507,16 +406,9 @@ function renderTable(data, targetId) {
         const svcFull = row.service_detail || 'General Consulting';
         const svcWords = svcFull.split(' ');
         let svcLines = [];
-        if (svcWords.length <= 3) {
-            svcLines = [svcFull];
-        } else {
-            for (let i = 0; i < svcWords.length; i += 3) {
-                svcLines.push(svcWords.slice(i, i + 3).join(' '));
-            }
-        }
-        const svcDisplay = svcLines.map(line =>
-            `<span style="display:block;font-size:13px;font-weight:600;color:#334155;line-height:1.6;">${line}</span>`
-        ).join('');
+        if (svcWords.length <= 3) { svcLines = [svcFull]; }
+        else { for (let i = 0; i < svcWords.length; i += 3) svcLines.push(svcWords.slice(i, i + 3).join(' ')); }
+        const svcDisplay = svcLines.map(line => `<span style="display:block;font-size:13px;font-weight:600;color:#334155;line-height:1.6;">${line}</span>`).join('');
 
         _rmkCounter++;
         const uid = `rmk_${_rmkCounter}`;
@@ -526,13 +418,12 @@ function renderTable(data, targetId) {
         const safeFull = fullRemarksRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         const safeShortHtml = safeShort.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-        const remarksCell = needsExpand ? `
-            <div style="min-width:180px;max-width:260px;">
+        const remarksCell = needsExpand
+            ? `<div style="min-width:180px;max-width:260px;">
                 <span id="${uid}_s" style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>
                 <span id="${uid}_f" style="font-size:13px;color:#475569;font-weight:400;display:none;">${safeFull}</span>
-                <button data-rmk="${uid}" class="rmk-toggle-btn"
-                    style="margin-left:4px;font-size:11px;font-weight:700;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;vertical-align:middle;">more</button>
-            </div>`
+                <button data-rmk="${uid}" class="rmk-toggle-btn" style="margin-left:4px;font-size:11px;font-weight:700;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;vertical-align:middle;">more</button>
+               </div>`
             : `<span style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>`;
 
         const updatedBy = row.updated_by || 'N/A';
@@ -543,8 +434,7 @@ function renderTable(data, targetId) {
                 <span style="font-size:12px;font-weight:600;color:#1d4ed8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${updatedByShort}</span>
             </div>`;
 
-        let deadlineDisplay = 'N/A';
-        let deadlineBadge = '';
+        let deadlineDisplay = 'N/A', deadlineBadge = '';
         if (row.deadline) {
             const dl = new Date(row.deadline);
             dl.setHours(0, 0, 0, 0);
@@ -561,6 +451,12 @@ function renderTable(data, targetId) {
         }
 
         const isChecked = selectedRowIds.has(row.id) ? 'checked' : '';
+
+        // FIX 6: Safe JSON for onclick — prevent single-quote injection breaking HTML attribute
+        const safeJson = JSON.stringify(row).replace(/'/g, "&#39;");
+
+        // FIX 5: Safe client name for onclick string params
+        const safeClientName = row.client_name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         tbody.innerHTML += `
             <tr class="group transition-all ${rowBg}" id="row_${row.id}">
@@ -599,31 +495,25 @@ function renderTable(data, targetId) {
                 <td class="p-4 text-right whitespace-nowrap">
                     <div class="flex justify-end gap-2 flex-wrap">
                         <button onclick="togglePin(${row.id})" id="pin_${row.id}"
-                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-amber-50 hover:text-amber-500 transition-all shadow-sm hover:scale-110 text-sm"
-                            title="Pin Record">
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-amber-50 hover:text-amber-500 transition-all shadow-sm hover:scale-110 text-sm" title="Pin Record">
                             <i class="fas fa-thumbtack"></i>
                         </button>
-                        <button onclick="openCommentsModal(${row.id}, '${row.client_name.replace(/'/g, "\\'")}')"
-                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-purple-50 hover:text-purple-600 transition-all shadow-sm hover:scale-110 text-sm"
-                            title="Comments">
+                        <button onclick="openCommentsModal(${row.id}, '${safeClientName}')"
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-purple-50 hover:text-purple-600 transition-all shadow-sm hover:scale-110 text-sm" title="Comments">
                             <i class="fas fa-comments"></i>
                         </button>
-                        <button onclick="openSubtasksModal(${row.id}, '${row.client_name.replace(/'/g, "\\'")}')"
-                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all shadow-sm hover:scale-110 text-sm"
-                            title="Checklist">
+                        <button onclick="openSubtasksModal(${row.id}, '${safeClientName}')"
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all shadow-sm hover:scale-110 text-sm" title="Checklist">
                             <i class="fas fa-list-check"></i>
                         </button>
                         <button onclick="openAuditModal(${row.id})"
-                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all shadow-sm hover:scale-110 text-sm"
-                            title="Change History">
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all shadow-sm hover:scale-110 text-sm" title="Change History">
                             <i class="fas fa-clock-rotate-left"></i>
                         </button>
-                        <button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"
-                            title="Edit">
+                        <button onclick='editRecord(${safeJson})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"
-                            title="Delete">
+                        <button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm" title="Delete">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -637,16 +527,27 @@ function renderTable(data, targetId) {
 // ============================================================
 document.addEventListener('click', function(e) {
     const btn = e.target.closest('.rmk-toggle-btn');
-    if (!btn) return;
-    const uid = btn.getAttribute('data-rmk');
-    if (!uid) return;
-    const s = document.getElementById(uid + '_s');
-    const f = document.getElementById(uid + '_f');
-    if (!s || !f) return;
-    const expanded = f.style.display !== 'none';
-    f.style.display = expanded ? 'none' : 'inline';
-    s.style.display = expanded ? 'inline' : 'none';
-    btn.innerText = expanded ? 'more' : 'less';
+    if (btn) {
+        const uid = btn.getAttribute('data-rmk');
+        if (!uid) return;
+        const s = document.getElementById(uid + '_s');
+        const f = document.getElementById(uid + '_f');
+        if (!s || !f) return;
+        const expanded = f.style.display !== 'none';
+        f.style.display = expanded ? 'none' : 'inline';
+        s.style.display = expanded ? 'inline' : 'none';
+        btn.innerText = expanded ? 'more' : 'less';
+        return;
+    }
+    // FIX 7: Consolidated click-outside handlers
+    const profileMenu = document.getElementById("profileMenu");
+    if (profileMenu && !e.target.closest("#profileMenu") && !e.target.closest("[onclick*='toggleProfileMenu']")) {
+        profileMenu.classList.add("hidden");
+    }
+    const notifPanel = document.getElementById("notificationPanel");
+    if (notifPanel && !e.target.closest("#notificationPanel") && !e.target.closest("[onclick*='toggleNotificationPanel']")) {
+        notifPanel.classList.add("hidden");
+    }
 });
 
 // ============================================================
@@ -694,19 +595,15 @@ async function handleSubmit() {
             } else {
                 await saveAuditTrail('witcorp_records', 'new', 'INSERT', null, payload);
             }
-
             const actionText = id
                 ? `Updated Record: ${payload.client_name} | ${payload.service_category} | Status: ${payload.status}`
                 : `Added Record: ${payload.client_name} | ${payload.service_category} | ${payload.service_detail || 'N/A'}`;
             saveActivity(actionText);
-
             await createNotificationForOthers(
                 id ? "Record Updated" : "New Record Added",
                 `${payload.client_name} — ${payload.service_category} updated by ${currentUserName}`,
-                "record",
-                payload.client_name
+                "record", payload.client_name
             );
-
             showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
             clearForm();
             clearDirtyState();
@@ -736,12 +633,14 @@ function editRecord(row) {
     document.getElementById('formTitle').innerText = "Modify Existing Profile";
     document.getElementById('submitBtn').innerHTML = `<i class="fas fa-arrows-rotate mr-2"></i> Confirm Changes`;
     document.getElementById('editBadge').classList.remove('hidden');
-    ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline'].forEach(id => {
-        document.getElementById(id).disabled = true;
+    // FIX 1: Only disable specific fields, keep status/remarks editable
+    ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline'].forEach(fId => {
+        const el = document.getElementById(fId);
+        if (el) el.disabled = true;
     });
     showSection('dashboard');
     setTimeout(() => {
-        document.getElementById('entryFormAnchor').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.getElementById('entryFormAnchor')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 100);
 }
 
@@ -768,15 +667,32 @@ async function deleteRecord(id) {
 }
 
 // ============================================================
+// CLEAR FORM — FIX 1: Re-enable all fields on clear
+// ============================================================
+function clearForm() {
+    document.getElementById('editId').value = "";
+    document.getElementById('formTitle').innerText = "Management Portal";
+    document.getElementById('submitBtn').innerHTML = `<i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB`;
+    document.getElementById('editBadge').classList.add('hidden');
+    ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline', 'status', 'remarks'].forEach(fId => {
+        const el = document.getElementById(fId);
+        if (!el) return;
+        el.disabled = false; // Always re-enable first
+        if (fId === 'serviceCategory') { el.value = 'Sales'; }
+        else if (fId === 'status') { el.value = 'Pending'; }
+        else { el.value = ""; }
+    });
+    clearDirtyState();
+}
+
+// ============================================================
 // FETCH CLIENTS
 // ============================================================
 async function fetchClients() {
     try {
         const { data, error } = await supabaseClient
-            .from('witcorp_clients')
-            .select('*')
-            .order('client_name', { ascending: true })
-            .limit(300);
+            .from('witcorp_clients').select('*')
+            .order('client_name', { ascending: true }).limit(300);
         if (error) { console.error("fetchClients error:", error); return; }
         allClients = data || [];
         currentExportData = data;
@@ -785,11 +701,7 @@ async function fetchClients() {
 
         const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
         const counts = { 'Pvt Ltd': 0, 'LLP': 0, 'Others': 0 };
-
-        Object.values(containers).forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = "";
-        });
+        Object.values(containers).forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ""; });
 
         if (data.length === 0) {
             Object.values(containers).forEach(id => {
@@ -806,9 +718,9 @@ async function fetchClients() {
             const listId = containers[typeKey];
             const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
             const recordBadge = clientRecordCount > 0
-                ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
-                : '';
-
+                ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>` : '';
+            // FIX 6: Safe JSON for onclick
+            const safeClientJson = JSON.stringify(c).replace(/'/g, "&#39;");
             document.getElementById(listId).innerHTML += `
                 <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
                     <div class="flex items-center gap-2">
@@ -819,7 +731,7 @@ async function fetchClients() {
                     <div class="text-xs text-blue-600 font-semibold break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i>${c.email_id}</div>
                     <div class="text-xs text-green-600 font-semibold mt-1">Updated By: ${c.updated_by || 'N/A'}</div>
                     <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
-                        <button onclick='editClient(${JSON.stringify(c)})' class="text-xs text-blue-600 font-bold uppercase hover:scale-110 transition-transform">Modify</button>
+                        <button onclick='editClient(${safeClientJson})' class="text-xs text-blue-600 font-bold uppercase hover:scale-110 transition-transform">Modify</button>
                         <button onclick="deleteClient(${c.id})" class="text-xs text-rose-500 font-bold uppercase hover:scale-110 transition-transform">Delete</button>
                     </div>
                 </div>`;
@@ -853,41 +765,22 @@ async function saveClient() {
     const phone = document.getElementById('cPhone').value?.trim();
     const email = document.getElementById('cEmail').value?.trim();
     const type = document.getElementById('cType').value;
-
     if (!clientName) { showToast('Entity Name Required', 'error'); return; }
-
-    const payload = {
-        client_name: clientName,
-        contact_number: phone,
-        email_id: email,
-        entity_type: type,
-        updated_by: currentUserName
-    };
-
+    const payload = { client_name: clientName, contact_number: phone, email_id: email, entity_type: type, updated_by: currentUserName };
     try {
         const { error } = id
             ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', parseInt(id, 10))
             : await supabaseClient.from('witcorp_clients').insert([payload]);
-
         if (!error) {
-            await createNotificationForOthers(
-                id ? "Client Updated" : "New Client Added",
-                `${payload.client_name} profile updated by ${currentUserName}`,
-                "client"
-            );
+            await createNotificationForOthers(id ? "Client Updated" : "New Client Added", `${payload.client_name} profile updated by ${currentUserName}`, "client");
             saveActivity(`${id ? 'Updated' : 'Added'} Client: ${payload.client_name} | ${payload.entity_type}`);
             showToast(`${id ? 'Updated' : 'Added'}: ${payload.client_name}`, 'success');
             await fetchClients();
             document.getElementById('cEditId').value = "";
             ['cName', 'cPhone', 'cEmail'].forEach(i => document.getElementById(i).value = "");
             document.getElementById('clientBtn').innerText = "Save Client Profile";
-        } else {
-            showToast('Save failed. Check connection.', 'error');
-        }
-    } catch (err) {
-        console.error("saveClient error:", err);
-        showToast('Save operation failed.', 'error');
-    }
+        } else { showToast('Save failed. Check connection.', 'error'); }
+    } catch (err) { console.error("saveClient error:", err); showToast('Save operation failed.', 'error'); }
 }
 
 async function deleteClient(id) {
@@ -899,13 +792,8 @@ async function deleteClient(id) {
                 if (c) saveActivity(`Deleted Client: ${c.client_name} | ${c.entity_type}`);
                 showToast(c ? `Deleted: ${c.client_name}` : 'Client deleted', 'warning');
                 await fetchClients();
-            } else {
-                showToast('Delete failed.', 'error');
-            }
-        } catch (err) {
-            console.error("deleteClient error:", err);
-            showToast('Delete operation failed.', 'error');
-        }
+            } else { showToast('Delete failed.', 'error'); }
+        } catch (err) { console.error("deleteClient error:", err); showToast('Delete operation failed.', 'error'); }
     }
 }
 
@@ -915,42 +803,39 @@ async function deleteClient(id) {
 async function fetchVault() {
     try {
         const { data, error } = await supabaseClient
-            .from('witcorp_credentials')
-            .select('*')
-            .order('client_name', { ascending: true })
-            .limit(300);
+            .from('witcorp_credentials').select('*')
+            .order('client_name', { ascending: true }).limit(300);
         if (error) { console.error("fetchVault error:", error); return; }
         allVault = data || [];
         currentExportData = data;
         currentExportType = "vault";
         setupPredictions();
         renderVaultTable(data);
-    } catch (err) {
-        console.error("fetchVault exception:", err);
-        showToast('Error loading vault.', 'error');
-    }
+    } catch (err) { console.error("fetchVault exception:", err); showToast('Error loading vault.', 'error'); }
 }
 
 function renderVaultTable(data) {
     const tbody = document.getElementById('vaultTableBody');
     if (!tbody) return;
     tbody.innerHTML = "";
-
     if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-16 text-center">
             <div class="flex flex-col items-center gap-4">
                 <i class="fas fa-shield-halved text-4xl text-slate-200"></i>
                 <p class="font-black text-slate-400 text-sm uppercase">No credentials stored</p>
-            </div>
-        </td></tr>`;
+            </div></td></tr>`;
         return;
     }
-
     data.forEach(v => {
         const fullPass = v.password || '';
         const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
         const vId = `vault_${v.id}`;
-        const encodedPass = btoa(unescape(encodeURIComponent(fullPass))); // FIX: Safe base64 for unicode passwords
+        // FIX 4: Consistent safe base64 encode for unicode support
+        let encodedPass = '';
+        try { encodedPass = btoa(unescape(encodeURIComponent(fullPass))); } catch (e) { encodedPass = btoa(fullPass); }
+        // FIX 6: Safe JSON for editVault onclick
+        const safeVaultJson = JSON.stringify(v).replace(/'/g, "&#39;");
+        const safeUsername = v.username.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
         tbody.innerHTML += `
             <tr class="group hover:bg-slate-50" id="${vId}_row">
@@ -959,7 +844,7 @@ function renderVaultTable(data) {
                 <td class="p-4 font-semibold text-blue-600 text-sm whitespace-nowrap">
                     <div class="flex items-center gap-2">
                         <span>${v.username}</span>
-                        <button onclick="copyToClipboard('${v.username.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}', 'Username')"
+                        <button onclick="copyToClipboard('${safeUsername}', 'Username')"
                             class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-600 transition-all text-xs" title="Copy Username">
                             <i class="fas fa-copy"></i>
                         </button>
@@ -968,8 +853,7 @@ function renderVaultTable(data) {
                 <td class="p-4 font-mono text-sm whitespace-nowrap">
                     <div class="flex items-center gap-2">
                         <span class="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl shadow-inner" id="${vId}_pass" data-pwd="${encodedPass}">${maskedPass}</span>
-                        <button onclick="toggleVaultPassword('${vId}')"
-                            class="text-slate-400 hover:text-blue-600 transition-all text-xs" title="Show/Hide">
+                        <button onclick="toggleVaultPassword('${vId}')" class="text-slate-400 hover:text-blue-600 transition-all text-xs" title="Show/Hide">
                             <i class="fas fa-eye" id="${vId}_eye"></i>
                         </button>
                         <button onclick="copyPasswordSafe('${vId}')"
@@ -981,7 +865,7 @@ function renderVaultTable(data) {
                 <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${v.updated_by || 'N/A'}</td>
                 <td class="p-4 text-right whitespace-nowrap">
                     <div class="flex gap-3 justify-end items-center">
-                        <button onclick='editVault(${JSON.stringify(v)})' class="text-blue-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-pencil"></i></button>
+                        <button onclick='editVault(${safeVaultJson})' class="text-blue-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-pencil"></i></button>
                         <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </td>
@@ -989,28 +873,29 @@ function renderVaultTable(data) {
     });
 }
 
+// FIX 4: Consistent password encode/decode
+function _encodePass(plainText) {
+    try { return btoa(unescape(encodeURIComponent(plainText))); } catch (e) { return btoa(plainText); }
+}
+function _decodePass(encoded) {
+    try { return decodeURIComponent(escape(atob(encoded))); } catch (e) { return atob(encoded); }
+}
+
 function toggleVaultPassword(vId) {
     const passEl = document.getElementById(vId + '_pass');
     const eyeEl = document.getElementById(vId + '_eye');
     if (!passEl || !eyeEl) return;
-
     const encodedPass = passEl.getAttribute('data-pwd');
     if (!encodedPass) return;
-
     const isHidden = passEl.textContent.includes('•');
     if (isHidden) {
         try {
-            const fullPass = decodeURIComponent(escape(atob(encodedPass))); // FIX: Reverse of safe encode
-            passEl.textContent = fullPass;
+            passEl.textContent = _decodePass(encodedPass);
             eyeEl.className = 'fas fa-eye-slash';
-        } catch (err) {
-            console.error("Password decode error:", err);
-            showToast('Error decoding password', 'error');
-        }
+        } catch (err) { console.error("Password decode error:", err); showToast('Error decoding password', 'error'); }
     } else {
         const fullPass = passEl.textContent;
-        const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
-        passEl.textContent = maskedPass;
+        passEl.textContent = '•'.repeat(Math.min(fullPass.length, 12));
         eyeEl.className = 'fas fa-eye';
     }
 }
@@ -1018,22 +903,14 @@ function toggleVaultPassword(vId) {
 function copyPasswordSafe(vId) {
     const passEl = document.getElementById(vId + '_pass');
     if (!passEl) return;
-
     const encodedPass = passEl.getAttribute('data-pwd');
     let password;
-
     if (encodedPass && passEl.textContent.includes('•')) {
-        try {
-            password = decodeURIComponent(escape(atob(encodedPass))); // FIX: Consistent decode
-        } catch (err) {
-            console.error("Password decode error:", err);
-            showToast('Error decoding password', 'error');
-            return;
-        }
+        try { password = _decodePass(encodedPass); }
+        catch (err) { console.error("Password decode error:", err); showToast('Error decoding password', 'error'); return; }
     } else {
         password = passEl.textContent;
     }
-
     copyToClipboard(password, 'Password');
 }
 
@@ -1041,9 +918,7 @@ function copyToClipboard(text, label) {
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(() => {
             showToast(`${label} copied to clipboard`, 'info', 2000);
-        }).catch(() => {
-            fallbackCopy(text, label);
-        });
+        }).catch(() => fallbackCopy(text, label));
     } else {
         fallbackCopy(text, label);
     }
@@ -1081,41 +956,22 @@ async function saveVault() {
     const category = document.getElementById('vCat').value?.trim();
     const username = document.getElementById('vUser').value?.trim();
     const password = document.getElementById('vPass').value?.trim();
-
     if (!category || !clientName) { showToast('Required fields missing.', 'error'); return; }
-
-    const payload = {
-        client_name: clientName,
-        category: category,
-        username: username,
-        password: password,
-        updated_by: currentUserName
-    };
-
+    const payload = { client_name: clientName, category, username, password, updated_by: currentUserName };
     try {
         const { error } = id
             ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', parseInt(id, 10))
             : await supabaseClient.from('witcorp_credentials').insert([payload]);
-
         if (!error) {
-            await createNotificationForOthers(
-                id ? "Vault Updated" : "Credentials Added",
-                `${payload.client_name} credentials updated by ${currentUserName}`,
-                "vault"
-            );
+            await createNotificationForOthers(id ? "Vault Updated" : "Credentials Added", `${payload.client_name} credentials updated by ${currentUserName}`, "vault");
             saveActivity(`${id ? 'Updated' : 'Added'} Vault: ${payload.client_name} | ${payload.category}`);
             showToast(`${id ? 'Updated' : 'Saved'}: ${payload.client_name} credentials`, 'success');
             await fetchVault();
             document.getElementById('vEditId').value = "";
             ['vClient', 'vCat', 'vUser', 'vPass'].forEach(i => document.getElementById(i).value = "");
             document.getElementById('vaultBtn').innerText = "Store Securely";
-        } else {
-            showToast('Save failed. Check connection.', 'error');
-        }
-    } catch (err) {
-        console.error("saveVault error:", err);
-        showToast('Save operation failed.', 'error');
-    }
+        } else { showToast('Save failed. Check connection.', 'error'); }
+    } catch (err) { console.error("saveVault error:", err); showToast('Save operation failed.', 'error'); }
 }
 
 async function deleteVault(id) {
@@ -1127,19 +983,11 @@ async function deleteVault(id) {
                 if (v) saveActivity(`Deleted Vault: ${v.client_name} | ${v.category}`);
                 showToast(v ? `Deleted: ${v.client_name}` : 'Credential deleted', 'warning');
                 await fetchVault();
-            } else {
-                showToast('Delete failed.', 'error');
-            }
-        } catch (err) {
-            console.error("deleteVault error:", err);
-            showToast('Delete operation failed.', 'error');
-        }
+            } else { showToast('Delete failed.', 'error'); }
+        } catch (err) { console.error("deleteVault error:", err); showToast('Delete operation failed.', 'error'); }
     }
 }
 
-// ============================================================
-// SEARCH VAULT
-// ============================================================
 function searchVault(query) {
     const q = query.toLowerCase();
     const filtered = allVault.filter(v =>
@@ -1154,12 +1002,8 @@ function searchVault(query) {
 // ============================================================
 // ACCOUNTING HUB TOGGLES
 // ============================================================
-function toggleAccountingHub() {
-    document.getElementById('accountinghubMenu').classList.toggle('hidden');
-}
-function toggleAccountingHubDesktop() {
-    document.getElementById('accountinghubDesktopMenu').classList.toggle('hidden');
-}
+function toggleAccountingHub() { document.getElementById('accountinghubMenu').classList.toggle('hidden'); }
+function toggleAccountingHubDesktop() { document.getElementById('accountinghubDesktopMenu').classList.toggle('hidden'); }
 
 // ============================================================
 // SHOW SECTION
@@ -1170,7 +1014,6 @@ function showSection(id) {
         if (!leave) return;
         clearDirtyState();
     }
-
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const globalSearch = document.getElementById('globalSearchBox');
     if (id === 'clientManagement' || id === 'vaultManagement' || id === 'dscManagement') {
@@ -1178,7 +1021,6 @@ function showSection(id) {
     } else {
         if (globalSearch) globalSearch.style.display = 'block';
     }
-
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     const section = document.getElementById(id);
     if (section) section.classList.add('active');
@@ -1188,10 +1030,9 @@ function showSection(id) {
     if (id === 'dscManagement') document.getElementById('nav-dsc')?.classList.add('active');
 
     const filterMap = {
-        'GST': 'nav-gst', 'ROC': 'nav-roc', 'IT': 'nav-it',
-        'PT': 'nav-pt', 'TDS': 'nav-tds', 'DIRECTOR KYC': 'nav-dkyc',
-        'UDIN': 'nav-udin', 'FOOD': 'nav-food', 'MSME': 'nav-msme',
-        'PAYROLL': 'nav-payroll', 'REPORTS': 'nav-reports'
+        'GST': 'nav-gst', 'ROC': 'nav-roc', 'IT': 'nav-it', 'PT': 'nav-pt', 'TDS': 'nav-tds',
+        'DIRECTOR KYC': 'nav-dkyc', 'UDIN': 'nav-udin', 'FOOD': 'nav-food',
+        'MSME': 'nav-msme', 'PAYROLL': 'nav-payroll', 'REPORTS': 'nav-reports'
     };
     if (id === 'filterView') {
         const activeVal = window._lastFilterValue;
@@ -1210,12 +1051,17 @@ function showSection(id) {
 }
 
 // ============================================================
-// FILTER BY FIELD
+// FILTER BY FIELD — FIX 5: Explicit 'all' handling
 // ============================================================
 function filterByField(field, value) {
     window._lastFilterValue = value;
     showSection('filterView');
-    const filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
+    let filtered;
+    if (field === 'all' || !value) {
+        filtered = [...allRecords];
+    } else {
+        filtered = allRecords.filter(r => r[field] === value);
+    }
     const titles = {
         "GST": "GST Compliance", "ROC": "Corporate Compliance (ROC)", "IT": "Income Tax",
         "PT": "Professional Tax", "TDS": "TDS Compliance", "DIRECTOR KYC": "Director KYC",
@@ -1258,15 +1104,12 @@ function updateStats(data) {
     const done = data.filter(r => r.status === 'Completed').length;
     const pending = data.filter(r => r.status === 'Pending').length;
     const processing = data.filter(r => r.status === 'Processing').length;
-
     document.getElementById('statTotal').innerText = total;
     document.getElementById('statDone').innerText = done;
     document.getElementById('statPending').innerText = pending;
-
     const totalSub = document.getElementById('statTotalSub');
     const doneSub = document.getElementById('statDoneSub');
     const pendingSub = document.getElementById('statPendingSub');
-
     if (totalSub) totalSub.innerText = total > 0 ? `${processing} processing` : '';
     if (doneSub) doneSub.innerText = total > 0 ? `${Math.round((done / total) * 100)}% completion rate` : '';
     if (pendingSub) pendingSub.innerText = total > 0 ? `${Math.round((pending / total) * 100)}% need attention` : '';
@@ -1289,32 +1132,12 @@ async function refreshData() {
 }
 
 // ============================================================
-// CLEAR FORM
-// ============================================================
-function clearForm() {
-    document.getElementById('editId').value = "";
-    document.getElementById('formTitle').innerText = "Management Portal";
-    document.getElementById('submitBtn').innerHTML = `<i class="fas fa-cloud-arrow-up text-xl"></i> Sync To WitcorpDB`;
-    document.getElementById('editBadge').classList.add('hidden');
-    ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline', 'status', 'remarks'].forEach(i => {
-        const el = document.getElementById(i);
-        if (!el) return;
-        if (i === 'serviceCategory') { el.value = 'Sales'; }
-        else if (i === 'status') { el.value = 'Pending'; }
-        else { el.value = ""; }
-        el.disabled = false;
-    });
-    clearDirtyState();
-}
-
-// ============================================================
 // AUTH
 // ============================================================
 async function registerUser() {
     const email = document.getElementById("email")?.value;
     const password = document.getElementById("password")?.value;
     if (!email || !password) { document.getElementById('authMsg').innerText = "Email and password required"; return; }
-
     try {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
         if (error) { document.getElementById('authMsg').innerText = error.message; return; }
@@ -1323,51 +1146,32 @@ async function registerUser() {
             await supabaseClient.from('witcorp_users').insert([{ id: user.id, email: user.email, role: 'user', approved: true }]);
             document.getElementById('authMsg').innerText = "Registered Successfully! Now login.";
         }
-    } catch (err) {
-        console.error("registerUser error:", err);
-        document.getElementById('authMsg').innerText = "Registration failed. Please try again.";
-    }
+    } catch (err) { console.error("registerUser error:", err); document.getElementById('authMsg').innerText = "Registration failed. Please try again."; }
 }
 
 async function loginUser() {
     const email = document.getElementById('email')?.value;
     const password = document.getElementById('password')?.value;
     if (!email || !password) { document.getElementById('authMsg').innerText = "Email and password required"; return; }
-
     try {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) { document.getElementById('authMsg').innerText = error.message; return; }
         if (data.user) checkApproval(data.user);
-    } catch (err) {
-        console.error("loginUser error:", err);
-        document.getElementById('authMsg').innerText = "Login failed. Please try again.";
-    }
+    } catch (err) { console.error("loginUser error:", err); document.getElementById('authMsg').innerText = "Login failed. Please try again."; }
 }
 
 async function checkApproval(user) {
     try {
         const { data } = await supabaseClient.from('witcorp_users').select('approved').eq('id', user.id).single();
-        if (!data || !data.approved) {
-            showToast('Not approved by admin yet', 'error');
-            await logout();
-            return;
-        }
+        if (!data || !data.approved) { showToast('Not approved by admin yet', 'error'); await logout(); return; }
         currentUserName = user.email;
         showApp(user);
-    } catch (err) {
-        console.error("checkApproval error:", err);
-        showToast('Approval check failed', 'error');
-    }
+    } catch (err) { console.error("checkApproval error:", err); showToast('Approval check failed', 'error'); }
 }
 
 async function logout() {
-    try {
-        await supabaseClient.auth.signOut();
-        location.reload();
-    } catch (err) {
-        console.error("logout error:", err);
-        location.reload();
-    }
+    try { await supabaseClient.auth.signOut(); location.reload(); }
+    catch (err) { console.error("logout error:", err); location.reload(); }
 }
 
 supabaseClient.auth.getSession().then(({ data }) => {
@@ -1400,17 +1204,15 @@ function searchClients(query) {
         if (aS !== bS) return aS - bS;
         return (a.client_name || '').toLowerCase().localeCompare((b.client_name || '').toLowerCase());
     });
-
     const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
     Object.values(containers).forEach(id => { document.getElementById(id).innerHTML = ""; });
-
     filtered.forEach(c => {
         const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
         const listId = containers[typeKey];
         const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
         const recordBadge = clientRecordCount > 0
-            ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
-            : '';
+            ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>` : '';
+        const safeClientJson = JSON.stringify(c).replace(/'/g, "&#39;");
         document.getElementById(listId).innerHTML += `
             <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
                 <div class="flex items-center gap-2">
@@ -1420,7 +1222,7 @@ function searchClients(query) {
                 <div class="text-xs text-slate-500 font-semibold mt-1"><i class="fas fa-phone-alt mr-1.5 text-blue-500"></i>${c.contact_number}</div>
                 <div class="text-xs text-blue-600 font-semibold break-all mt-1 opacity-70 group-hover:opacity-100"><i class="fas fa-envelope mr-1.5"></i>${c.email_id}</div>
                 <div class="mt-4 flex gap-4 border-t border-slate-200/50 pt-3">
-                    <button onclick='editClient(${JSON.stringify(c)})' class="text-xs text-blue-600 font-bold uppercase hover:scale-110 transition-transform">Modify</button>
+                    <button onclick='editClient(${safeClientJson})' class="text-xs text-blue-600 font-bold uppercase hover:scale-110 transition-transform">Modify</button>
                     <button onclick="deleteClient(${c.id})" class="text-xs text-rose-500 font-bold uppercase hover:scale-110 transition-transform">Delete</button>
                 </div>
             </div>`;
@@ -1433,40 +1235,30 @@ function searchClients(query) {
 // ============================================================
 async function fetchDSC() {
     try {
-        const { data, error } = await supabaseClient
-            .from('witcorp_dsc')
-            .select('*')
-            .order('company_name', { ascending: true });
+        const { data, error } = await supabaseClient.from('witcorp_dsc').select('*').order('company_name', { ascending: true });
         if (error) { console.error("DSC FETCH ERROR:", error); return; }
         allDSC = data || [];
         currentExportData = allDSC;
         currentExportType = "dsc";
         setupPredictions();
         renderDSC(allDSC);
-    } catch (err) {
-        console.error("fetchDSC exception:", err);
-        showToast('Error loading DSC records.', 'error');
-    }
+    } catch (err) { console.error("fetchDSC exception:", err); showToast('Error loading DSC records.', 'error'); }
 }
 
 function renderDSC(data) {
     const tbody = document.getElementById('dscTableBody');
     if (!tbody) return;
     tbody.innerHTML = "";
-
     if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8" class="p-16 text-center">
             <div class="flex flex-col items-center gap-4">
                 <i class="fas fa-key text-4xl text-slate-200"></i>
                 <p class="font-black text-slate-400 text-sm uppercase">No DSC records found</p>
-            </div>
-        </td></tr>`;
+            </div></td></tr>`;
         return;
     }
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     data.forEach(d => {
         const fullRem = d.remarks || '—';
         const shortRem = fullRem.length > 50 ? fullRem.substring(0, 48) + '\u2026' : fullRem;
@@ -1475,14 +1267,12 @@ function renderDSC(data) {
             return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
                 dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
         })() : 'N/A';
-
         const statusColors = {
             'Valid': 'bg-emerald-100 text-emerald-700 border-emerald-200',
             'Expired': 'bg-red-100 text-red-700 border-red-200',
             'No DSC': 'bg-slate-100 text-slate-600 border-slate-200'
         };
         const statusStyle = statusColors[d.status] || statusColors['No DSC'];
-
         let expiryBadge = '';
         if (d.expiry_date && d.status === 'Valid') {
             const expiry = new Date(d.expiry_date);
@@ -1494,17 +1284,13 @@ function renderDSC(data) {
                 expiryBadge = `<span class="ml-1 text-[9px] font-black text-red-600 bg-red-100 px-1.5 py-0.5 rounded">EXPIRED</span>`;
             }
         }
-
+        const safeDscJson = JSON.stringify(d).replace(/'/g, "&#39;");
         tbody.innerHTML += `
             <tr class="border-b border-slate-200 hover:bg-slate-50 transition-all">
                 <td class="p-4 font-bold text-sm text-slate-800 whitespace-nowrap">${d.company_name || ''}</td>
                 <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">${d.client_name || ''}</td>
-                <td class="p-4 whitespace-nowrap">
-                    <span class="px-3 py-1 rounded-xl text-xs font-black border ${statusStyle}">${d.status || ''}</span>
-                </td>
-                <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">
-                    ${d.expiry_date || 'N/A'}${expiryBadge}
-                </td>
+                <td class="p-4 whitespace-nowrap"><span class="px-3 py-1 rounded-xl text-xs font-black border ${statusStyle}">${d.status || ''}</span></td>
+                <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">${d.expiry_date || 'N/A'}${expiryBadge}</td>
                 <td class="p-4 text-sm text-slate-600 max-w-[200px]" title="${fullRem.replace(/"/g, '&quot;')}">
                     <span class="block">${shortRem}</span>
                 </td>
@@ -1512,7 +1298,7 @@ function renderDSC(data) {
                 <td class="p-4 text-sm font-semibold text-slate-500 whitespace-nowrap">${updatedAt}</td>
                 <td class="p-4 text-right whitespace-nowrap">
                     <div class="flex gap-2 justify-end items-center">
-                        <button onclick='editDSC(${JSON.stringify(d)})' class="px-3 py-1 bg-blue-500 text-white rounded-xl text-xs font-semibold hover:bg-blue-600 transition-all">Edit</button>
+                        <button onclick='editDSC(${safeDscJson})' class="px-3 py-1 bg-blue-500 text-white rounded-xl text-xs font-semibold hover:bg-blue-600 transition-all">Edit</button>
                         <button onclick="deleteDSC(${d.id})" class="px-3 py-1 bg-red-500 text-white rounded-xl text-xs font-semibold hover:bg-red-600 transition-all">Delete</button>
                     </div>
                 </td>
@@ -1522,19 +1308,16 @@ function renderDSC(data) {
 
 async function saveDSC() {
     const btn = document.getElementById('dscBtn');
+    const id = document.getElementById('dEditId').value; // Capture id before async
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
-
-    const id = document.getElementById('dEditId').value;
     const companyName = document.getElementById('dCompany').value?.trim();
-
     if (!companyName) {
         btn.disabled = false;
-        btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
+        btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status'; // FIX 3: Use captured id
         showToast('Company Name Required', 'error');
         return;
     }
-
     const payload = {
         company_name: companyName,
         client_name: document.getElementById('dClient').value?.trim(),
@@ -1544,18 +1327,12 @@ async function saveDSC() {
         updated_by: currentUserName,
         updated_at: new Date().toISOString()
     };
-
     try {
         const { error } = id
             ? await supabaseClient.from('witcorp_dsc').update(payload).eq('id', parseInt(id, 10))
             : await supabaseClient.from('witcorp_dsc').insert([payload]);
-
         if (!error) {
-            await createNotificationForOthers(
-                id ? "DSC Updated" : "New DSC Added",
-                `${payload.company_name} DSC updated by ${currentUserName}`,
-                "dsc"
-            );
+            await createNotificationForOthers(id ? "DSC Updated" : "New DSC Added", `${payload.company_name} DSC updated by ${currentUserName}`, "dsc");
             saveActivity(`${id ? 'Updated' : 'Added'} DSC: ${payload.company_name} | ${payload.client_name} | Status: ${payload.status}`);
             showToast(`DSC ${id ? 'updated' : 'saved'}: ${payload.company_name}`, 'success');
             await fetchDSC();
@@ -1563,14 +1340,11 @@ async function saveDSC() {
             ['dCompany', 'dClient', 'dExpiry', 'dRemarks'].forEach(i => document.getElementById(i).value = "");
             document.getElementById('dStatus').value = "Valid";
             document.getElementById('dscBtn').innerText = "Save DSC Status";
-        } else {
-            showToast('Save failed. Check connection.', 'error');
-        }
-    } catch (err) {
-        console.error("saveDSC error:", err);
-        showToast('Save operation failed.', 'error');
-    } finally {
+        } else { showToast('Save failed. Check connection.', 'error'); }
+    } catch (err) { console.error("saveDSC error:", err); showToast('Save operation failed.', 'error'); }
+    finally {
         btn.disabled = false;
+        // FIX 3: Use captured id for correct label
         btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
     }
 }
@@ -1595,13 +1369,8 @@ async function deleteDSC(id) {
                 if (d) saveActivity(`Deleted DSC: ${d.company_name} | ${d.client_name}`);
                 showToast(d ? `Deleted: ${d.company_name}` : 'DSC deleted', 'warning');
                 await fetchDSC();
-            } else {
-                showToast('Delete failed.', 'error');
-            }
-        } catch (err) {
-            console.error("deleteDSC error:", err);
-            showToast('Delete operation failed.', 'error');
-        }
+            } else { showToast('Delete failed.', 'error'); }
+        } catch (err) { console.error("deleteDSC error:", err); showToast('Delete operation failed.', 'error'); }
     }
 }
 
@@ -1623,25 +1392,13 @@ if ('serviceWorker' in navigator) {
         .then(() => console.log("SW registered"))
         .catch(err => console.error("SW registration error:", err));
 }
-// WITCORP HUB — ENTERPRISE SCRIPT (FINAL FIXED VERSION — PART 2)
 
 // ============================================================
-// PROFILE MENU
+// PROFILE MENU TOGGLE
 // ============================================================
 function toggleProfileMenu() {
     document.getElementById("profileMenu").classList.toggle("hidden");
 }
-
-document.addEventListener("click", function(event) {
-    const menu = document.getElementById("profileMenu");
-    if (menu && !event.target.closest("#profileMenu") && !event.target.closest("[onclick='toggleProfileMenu()']")) {
-        menu.classList.add("hidden");
-    }
-    const notifPanel = document.getElementById("notificationPanel");
-    if (notifPanel && !event.target.closest("#notificationPanel") && !event.target.closest("[onclick='toggleNotificationPanel()']")) {
-        notifPanel.classList.add("hidden");
-    }
-});
 
 // ============================================================
 // THEME SETTINGS
@@ -1656,27 +1413,20 @@ async function createNotificationForOthers(title, message, type = "info", refere
     try {
         await supabaseClient.from('witcorp_notifications').insert([{
             title, message, type, reference,
-            created_by: currentUserName,
-            is_read: false
+            created_by: currentUserName, is_read: false
         }]);
-    } catch (err) {
-        console.error("createNotificationForOthers error:", err);
-    }
+    } catch (err) { console.error("createNotificationForOthers error:", err); }
 }
 
 async function fetchNotifications() {
     try {
         const { data, error } = await supabaseClient
-            .from('witcorp_notifications')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(50);
+            .from('witcorp_notifications').select('*')
+            .order('created_at', { ascending: false }).limit(50);
         if (error) return;
         allNotifications = data || [];
         renderNotifications();
-    } catch (err) {
-        console.error("fetchNotifications error:", err);
-    }
+    } catch (err) { console.error("fetchNotifications error:", err); }
 }
 
 async function markAllRead() {
@@ -1687,9 +1437,7 @@ async function markAllRead() {
         allNotifications.forEach(n => n.is_read = true);
         renderNotifications();
         showToast('All notifications marked as read', 'info', 2000);
-    } catch (err) {
-        console.error("markAllRead error:", err);
-    }
+    } catch (err) { console.error("markAllRead error:", err); }
 }
 
 function renderNotifications() {
@@ -1703,59 +1451,45 @@ function renderNotifications() {
         if (unreadCount > 0) { count.classList.remove('hidden'); count.innerText = unreadCount > 99 ? '99+' : unreadCount; }
         else { count.classList.add('hidden'); }
     }
-
     if (allNotifications.length === 0) {
         list.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold text-sm">
-            <i class="fas fa-bell-slash text-3xl block mb-3 opacity-30"></i>No notifications yet
-        </div>`;
+            <i class="fas fa-bell-slash text-3xl block mb-3 opacity-30"></i>No notifications yet</div>`;
         return;
     }
-
     const typeIcon = { record: 'fa-file-alt', client: 'fa-address-card', vault: 'fa-shield-halved', dsc: 'fa-key' };
-
     allNotifications.forEach(n => {
         const notifDiv = document.createElement('div');
         notifDiv.dataset.notifId = n.id;
         notifDiv.dataset.notifType = n.type;
         notifDiv.dataset.notifRef = n.reference || '';
         notifDiv.className = `p-4 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 items-start ${!n.is_read ? 'bg-blue-50 border-l-4 border-blue-400' : 'bg-white'}`;
-
         const iconDiv = document.createElement('div');
         iconDiv.className = `w-8 h-8 rounded-full ${!n.is_read ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'} flex items-center justify-center flex-shrink-0 mt-0.5`;
         iconDiv.innerHTML = `<i class="fas ${typeIcon[n.type] || 'fa-bell'} text-xs"></i>`;
-
         const contentDiv = document.createElement('div');
         contentDiv.className = 'flex-1 min-w-0';
-
         const titleEl = document.createElement('div');
         titleEl.className = 'font-bold text-sm text-slate-800';
         titleEl.textContent = n.title;
-
         const messageEl = document.createElement('div');
         messageEl.className = 'text-xs text-slate-500 mt-0.5';
         messageEl.textContent = n.message;
-
         const timeEl = document.createElement('div');
         timeEl.className = 'text-[10px] text-blue-500 mt-1 font-semibold';
         timeEl.textContent = new Date(n.created_at).toLocaleString('en-IN');
-
         contentDiv.appendChild(titleEl);
         contentDiv.appendChild(messageEl);
         contentDiv.appendChild(timeEl);
-
         notifDiv.appendChild(iconDiv);
         notifDiv.appendChild(contentDiv);
-
         if (!n.is_read) {
             const readDot = document.createElement('span');
             readDot.className = 'w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2';
             notifDiv.appendChild(readDot);
         }
-
         notifDiv.addEventListener('click', function() {
             openNotification(parseInt(this.dataset.notifId, 10), this.dataset.notifType, this.dataset.notifRef);
         });
-
         list.appendChild(notifDiv);
     });
 }
@@ -1775,9 +1509,7 @@ async function openNotification(id, type, reference) {
         if (type === "vault") { showSection('vaultManagement'); searchVault(reference); }
         if (type === "dsc") { showSection('dscManagement'); searchDSC(reference); }
         document.getElementById('notificationPanel').classList.add('hidden');
-    } catch (err) {
-        console.error("openNotification error:", err);
-    }
+    } catch (err) { console.error("openNotification error:", err); }
 }
 
 // ============================================================
@@ -1790,7 +1522,6 @@ supabaseClient
             if (payload.new.created_by === currentUserName) return;
             allNotifications.unshift(payload.new);
             renderNotifications();
-
             const notificationEnabled = localStorage.getItem("notificationSound");
             if (notificationEnabled !== "off") {
                 try {
@@ -1805,21 +1536,16 @@ supabaseClient
                     oscillator.start(audioContext.currentTime);
                     oscillator.stop(audioContext.currentTime + 0.5);
                 } catch (e) {}
-
                 navigator.serviceWorker?.ready.then(reg => {
                     reg.showNotification(payload.new.title || "New Update", {
                         body: payload.new.message || "Database updated",
-                        icon: "./logo.png",
-                        badge: "./logo.png"
+                        icon: "./logo.png", badge: "./logo.png"
                     });
                 }).catch(() => {});
             }
-
             showToast(payload.new.title + ': ' + payload.new.message, 'info');
             await fetchRecords(true);
-        } catch (err) {
-            console.error("Realtime subscription error:", err);
-        }
+        } catch (err) { console.error("Realtime subscription error:", err); }
     })
     .subscribe((status) => { console.log("NOTIFICATION STATUS:", status); });
 
@@ -1830,23 +1556,18 @@ function setupPredictions() {
     const clientList = document.getElementById('clientSuggestions');
     const uniqueClients = [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
     if (clientList) clientList.innerHTML = uniqueClients.map(name => `<option value="${name}">`).join('');
-
     const serviceList = document.getElementById('serviceSuggestions');
     const uniqueServices = [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
     if (serviceList) serviceList.innerHTML = uniqueServices.map(name => `<option value="${name}">`).join('');
-
     const staffList = document.getElementById('staffSuggestions');
     const uniqueStaff = [...new Set(allRecords.map(r => r.assigned_staff).filter(Boolean))];
     if (staffList) staffList.innerHTML = uniqueStaff.map(name => `<option value="${name}">`).join('');
-
     const allotList = document.getElementById('allotedSuggestions');
     const uniqueAlloted = [...new Set(allRecords.map(r => r.alloted_by).filter(Boolean))];
     if (allotList) allotList.innerHTML = uniqueAlloted.map(name => `<option value="${name}">`).join('');
-
     const companyList = document.getElementById('companySuggestions');
     const uniqueCompany = [...new Set(allDSC.map(d => d.company_name).filter(Boolean))];
     if (companyList) companyList.innerHTML = uniqueCompany.map(name => `<option value="${name}">`).join('');
-
     const vaultList = document.getElementById('vaultCategorySuggestions');
     const uniqueVault = [...new Set(allVault.map(v => v.category).filter(Boolean))];
     if (vaultList) vaultList.innerHTML = uniqueVault.map(name => `<option value="${name}">`).join('');
@@ -1862,15 +1583,9 @@ async function forgotPassword() {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
             redirectTo: window.location.origin + window.location.pathname + "?reset=true"
         });
-        if (error) {
-            document.getElementById('authMsg').innerText = error.message;
-        } else {
-            document.getElementById('authMsg').innerText = "Password reset link sent to your email.";
-        }
-    } catch (err) {
-        console.error("forgotPassword error:", err);
-        document.getElementById('authMsg').innerText = "Reset failed. Please try again.";
-    }
+        if (error) { document.getElementById('authMsg').innerText = error.message; }
+        else { document.getElementById('authMsg').innerText = "Password reset link sent to your email."; }
+    } catch (err) { console.error("forgotPassword error:", err); document.getElementById('authMsg').innerText = "Reset failed. Please try again."; }
 }
 
 // ============================================================
@@ -1912,30 +1627,21 @@ async function loadMyActivity() {
     const list = document.getElementById("activityList");
     if (!list) return;
     list.innerHTML = `<div class="text-center text-slate-400 py-6">Loading...</div>`;
-
     try {
         const { data } = await supabaseClient
-            .from('witcorp_activity_log')
-            .select('*')
+            .from('witcorp_activity_log').select('*')
             .eq('user_email', currentUserEmail)
-            .order('created_at', { ascending: false })
-            .limit(50);
-
+            .order('created_at', { ascending: false }).limit(50);
         const iconMap = {
-            'Added': 'fa-circle-plus text-emerald-500',
-            'Updated': 'fa-pen-to-square text-blue-500',
-            'Deleted': 'fa-trash-can text-rose-500',
-            'Exported': 'fa-file-export text-purple-500',
-            'Bulk': 'fa-layer-group text-cyan-500',
-            'Login': 'fa-right-to-bracket text-amber-500',
+            'Added': 'fa-circle-plus text-emerald-500', 'Updated': 'fa-pen-to-square text-blue-500',
+            'Deleted': 'fa-trash-can text-rose-500', 'Exported': 'fa-file-export text-purple-500',
+            'Bulk': 'fa-layer-group text-cyan-500', 'Login': 'fa-right-to-bracket text-amber-500',
             'Other': 'fa-clock-rotate-left text-slate-400'
         };
-
         if (!data || data.length === 0) {
             list.innerHTML = `<div class="text-center text-slate-400 py-10 font-semibold">No activity recorded yet.</div>`;
             return;
         }
-
         list.innerHTML = data.map(item => {
             const icon = iconMap[item.action_type] || iconMap['Other'];
             const parts = item.action_text.split('|').map(p => p.trim());
@@ -1949,9 +1655,7 @@ async function loadMyActivity() {
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-sm text-slate-800">${mainText}</div>
                         ${details.length ? `<div class="text-sm text-slate-500 mt-0.5">${details.join(' · ')}</div>` : ''}
-                        <div class="text-xs text-blue-500 font-semibold mt-1">
-                            ${new Date(item.created_at).toLocaleString('en-IN')}
-                        </div>
+                        <div class="text-xs text-blue-500 font-semibold mt-1">${new Date(item.created_at).toLocaleString('en-IN')}</div>
                     </div>
                 </div>`;
         }).join('');
@@ -2063,7 +1767,6 @@ function applyGreenHeaders() {
 // KEYBOARD SHORTCUTS — SINGLE UNIFIED HANDLER
 // ============================================================
 document.addEventListener('keydown', function(e) {
-    // Ctrl+K — Global Search
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         const searchBox = document.getElementById('globalSearch');
@@ -2074,28 +1777,15 @@ document.addEventListener('keydown', function(e) {
             searchBox.select();
         }
     }
-
-    // Ctrl+N — Quick Add
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
         openQuickAdd();
     }
-
-    // Escape — Close modals
     if (e.key === 'Escape') {
-        document.getElementById('notificationPanel')?.classList.add('hidden');
-        document.getElementById('profileMenu')?.classList.add('hidden');
-        document.getElementById('themeModal')?.classList.add('hidden');
-        document.getElementById('activityModal')?.classList.add('hidden');
-        document.getElementById('exportModal')?.classList.add('hidden');
-        document.getElementById('auditModal')?.classList.add('hidden');
-        document.getElementById('commentsModal')?.classList.add('hidden');
-        document.getElementById('subtasksModal')?.classList.add('hidden');
-        document.getElementById('quickAddModal')?.classList.add('hidden');
-        document.getElementById('profileModal')?.classList.add('hidden');
+        ['notificationPanel', 'profileMenu', 'themeModal', 'activityModal', 'exportModal',
+         'auditModal', 'commentsModal', 'subtasksModal', 'quickAddModal', 'profileModal']
+            .forEach(id => document.getElementById(id)?.classList.add('hidden'));
     }
-
-    // Enter in comment input
     if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.id === 'commentInput') {
         e.preventDefault();
         postComment();
@@ -2110,21 +1800,12 @@ let currentUserProfile = null;
 async function loadUserProfile(email) {
     try {
         const { data, error } = await supabaseClient
-            .from('witcorp_user_profiles')
-            .select('*')
-            .eq('email', email)
-            .single();
-
-        if (error || !data) {
-            await createUserProfile(email);
-            return;
-        }
+            .from('witcorp_user_profiles').select('*').eq('email', email).single();
+        if (error || !data) { await createUserProfile(email); return; }
         currentUserProfile = data;
         applyUserPreferences(data);
         updateProfileUI(data);
-    } catch (err) {
-        console.error('loadUserProfile error:', err);
-    }
+    } catch (err) { console.error('loadUserProfile error:', err); }
 }
 
 async function createUserProfile(email) {
@@ -2132,33 +1813,18 @@ async function createUserProfile(email) {
         const { data: { user } } = await supabaseClient.auth.getUser();
         const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
         const payload = {
-            id: user.id,
-            email: email,
-            full_name: '',
-            designation: '',
-            role: 'staff',
+            id: user.id, email,
+            full_name: '', designation: '', role: 'staff',
             bg_theme: localStorage.getItem('bgTheme') || 'theme-light',
             sidebar_theme: localStorage.getItem('sidebarTheme') || 'sidebar-theme-original',
             notification_sound: localStorage.getItem('notificationSound') || 'on',
             avatar_color: randomColor
         };
-
         const { data, error } = await supabaseClient
-            .from('witcorp_user_profiles')
-            .insert([payload])
-            .select()
-            .single();
-
-        if (!error && data) {
-            currentUserProfile = data;
-            applyUserPreferences(data);
-            updateProfileUI(data);
-        }
-    } catch (err) {
-        console.error('createUserProfile error:', err);
-    }
+            .from('witcorp_user_profiles').insert([payload]).select().single();
+        if (!error && data) { currentUserProfile = data; applyUserPreferences(data); updateProfileUI(data); }
+    } catch (err) { console.error('createUserProfile error:', err); }
 }
 
 async function updateUserProfile(updates) {
@@ -2166,48 +1832,33 @@ async function updateUserProfile(updates) {
     try {
         updates.updated_at = new Date().toISOString();
         const { error } = await supabaseClient
-            .from('witcorp_user_profiles')
-            .update(updates)
-            .eq('email', currentUserProfile.email);
-
+            .from('witcorp_user_profiles').update(updates).eq('email', currentUserProfile.email);
         if (!error) {
             currentUserProfile = { ...currentUserProfile, ...updates };
             showToast('Profile updated successfully', 'success', 2000);
             updateProfileUI(currentUserProfile);
         }
-    } catch (err) {
-        console.error('updateUserProfile error:', err);
-    }
+    } catch (err) { console.error('updateUserProfile error:', err); }
 }
 
 function applyUserPreferences(profile) {
     if (profile.bg_theme) changeTheme(profile.bg_theme);
     if (profile.sidebar_theme) changeSidebarTheme(profile.sidebar_theme);
-    if (profile.default_category_filter) {
-        const el = document.getElementById('filterCategory');
-        if (el) el.value = profile.default_category_filter;
-    }
-    if (profile.default_status_filter) {
-        const el = document.getElementById('filterStatus');
-        if (el) el.value = profile.default_status_filter;
-    }
+    if (profile.default_category_filter) { const el = document.getElementById('filterCategory'); if (el) el.value = profile.default_category_filter; }
+    if (profile.default_status_filter) { const el = document.getElementById('filterStatus'); if (el) el.value = profile.default_status_filter; }
 }
 
 function updateProfileUI(profile) {
     const name = profile.full_name || profile.email;
     const initial = name.charAt(0).toUpperCase();
-
     const p1 = document.getElementById('profileInitial');
     const p2 = document.getElementById('profileInitial2');
     if (p1) { p1.innerText = initial; p1.style.background = profile.avatar_color || '#3b82f6'; }
     if (p2) { p2.innerText = initial; p2.style.background = profile.avatar_color || '#3b82f6'; }
-
     const nameEl = document.getElementById('profileDisplayName');
     if (nameEl) nameEl.innerText = profile.full_name || profile.email.split('@')[0];
-
     const desigEl = document.getElementById('profileDesignation');
     if (desigEl) desigEl.innerText = profile.designation || 'Team Member';
-
     const roleEl = document.getElementById('profileRoleBadge');
     if (roleEl) {
         const roleColors = { admin: 'bg-red-100 text-red-700', manager: 'bg-purple-100 text-purple-700', staff: 'bg-blue-100 text-blue-700', viewer: 'bg-slate-100 text-slate-600' };
@@ -2219,7 +1870,6 @@ function updateProfileUI(profile) {
 function openProfileModal() {
     const modal = document.getElementById('profileModal');
     if (!modal) return;
-
     if (currentUserProfile) {
         document.getElementById('pFullName').value = currentUserProfile.full_name || '';
         document.getElementById('pDesignation').value = currentUserProfile.designation || '';
@@ -2227,7 +1877,6 @@ function openProfileModal() {
         document.getElementById('pDepartment').value = currentUserProfile.department || '';
         document.getElementById('pDefaultCategory').value = currentUserProfile.default_category_filter || '';
         document.getElementById('pDefaultStatus').value = currentUserProfile.default_status_filter || '';
-
         const statsAdded = document.getElementById('pStatsAdded');
         const statsUpdated = document.getElementById('pStatsUpdated');
         const statsDeleted = document.getElementById('pStatsDeleted');
@@ -2235,14 +1884,11 @@ function openProfileModal() {
         if (statsUpdated) statsUpdated.innerText = currentUserProfile.total_updated || 0;
         if (statsDeleted) statsDeleted.innerText = currentUserProfile.total_deleted || 0;
     }
-
     loadActivityInProfile();
     modal.classList.remove('hidden');
 }
 
-function closeProfileModal() {
-    document.getElementById('profileModal')?.classList.add('hidden');
-}
+function closeProfileModal() { document.getElementById('profileModal')?.classList.add('hidden'); }
 
 async function saveProfileChanges() {
     const updates = {
@@ -2261,27 +1907,21 @@ async function saveProfileChanges() {
 async function loadActivityInProfile() {
     try {
         const { data } = await supabaseClient
-            .from('witcorp_activity_log')
-            .select('*')
+            .from('witcorp_activity_log').select('*')
             .eq('user_email', currentUserEmail)
-            .order('created_at', { ascending: false })
-            .limit(30);
-
+            .order('created_at', { ascending: false }).limit(30);
         const list = document.getElementById('profileActivityList');
         if (!list) return;
-
         if (!data || data.length === 0) {
             list.innerHTML = `<div class="text-center text-slate-400 py-6 text-sm font-semibold">No activity yet</div>`;
             return;
         }
-
         const iconMap = {
             Added: 'fa-circle-plus text-emerald-500', Updated: 'fa-pen-to-square text-blue-500',
             Deleted: 'fa-trash-can text-rose-500', Exported: 'fa-file-export text-purple-500',
             Bulk: 'fa-layer-group text-cyan-500', Login: 'fa-right-to-bracket text-amber-500',
             Other: 'fa-clock-rotate-left text-slate-400'
         };
-
         list.innerHTML = data.map(item => `
             <div class="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
                 <div class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0">
@@ -2289,14 +1929,10 @@ async function loadActivityInProfile() {
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="text-sm font-bold text-slate-700">${item.action_text}</div>
-                    <div class="text-xs text-blue-500 font-semibold mt-0.5">
-                        ${new Date(item.created_at).toLocaleString('en-IN')}
-                    </div>
+                    <div class="text-xs text-blue-500 font-semibold mt-0.5">${new Date(item.created_at).toLocaleString('en-IN')}</div>
                 </div>
             </div>`).join('');
-    } catch (err) {
-        console.error('loadActivityInProfile error:', err);
-    }
+    } catch (err) { console.error('loadActivityInProfile error:', err); }
 }
 
 // ============================================================
@@ -2306,23 +1942,16 @@ async function saveActivity(text) {
     try {
         const actionType = ['Added', 'Updated', 'Deleted', 'Exported', 'Bulk', 'Login']
             .find(t => text.startsWith(t)) || 'Other';
-
         await supabaseClient.from('witcorp_activity_log').insert([{
             user_email: currentUserEmail,
             action_type: actionType,
             action_text: text,
-            module: text.includes('Client') ? 'clients' :
-                    text.includes('Vault') ? 'vault' :
-                    text.includes('DSC') ? 'dsc' : 'records'
+            module: text.includes('Client') ? 'clients' : text.includes('Vault') ? 'vault' : text.includes('DSC') ? 'dsc' : 'records'
         }]);
-
         if (currentUserProfile) {
-            const field = actionType === 'Added' ? 'total_added' :
-                         actionType === 'Updated' ? 'total_updated' :
-                         actionType === 'Deleted' ? 'total_deleted' : null;
+            const field = actionType === 'Added' ? 'total_added' : actionType === 'Updated' ? 'total_updated' : actionType === 'Deleted' ? 'total_deleted' : null;
             if (field) {
-                await supabaseClient
-                    .from('witcorp_user_profiles')
+                await supabaseClient.from('witcorp_user_profiles')
                     .update({ [field]: (currentUserProfile[field] || 0) + 1 })
                     .eq('email', currentUserEmail);
                 currentUserProfile[field] = (currentUserProfile[field] || 0) + 1;
@@ -2372,39 +2001,30 @@ async function saveAuditTrail(tableName, recordId, action, oldData, newData) {
     try {
         const changedFields = [];
         if (action === 'UPDATE' && oldData && newData) {
-            Object.keys(newData).forEach(key => {
-                if (oldData[key] !== newData[key]) changedFields.push(key);
-            });
+            Object.keys(newData).forEach(key => { if (oldData[key] !== newData[key]) changedFields.push(key); });
         }
         await supabaseClient.from('witcorp_audit_trail').insert([{
             table_name: tableName,
             record_id: String(recordId),
-            action: action,
-            changed_by: currentUserEmail,
+            action, changed_by: currentUserEmail,
             old_data: oldData || null,
             new_data: newData || null,
             changed_fields: changedFields
         }]);
-    } catch (err) {
-        console.error('saveAuditTrail error:', err);
-    }
+    } catch (err) { console.error('saveAuditTrail error:', err); }
 }
 
 async function openAuditModal(recordId) {
     try {
         const { data } = await supabaseClient
-            .from('witcorp_audit_trail')
-            .select('*')
+            .from('witcorp_audit_trail').select('*')
             .eq('record_id', String(recordId))
-            .order('created_at', { ascending: false })
-            .limit(20);
-
+            .order('created_at', { ascending: false }).limit(20);
         const modal = document.getElementById('auditModal');
         const list = document.getElementById('auditList');
         const title = document.getElementById('auditModalTitle');
         if (!modal || !list) return;
         if (title) title.innerText = `Change History — Record #${recordId}`;
-
         if (!data || data.length === 0) {
             list.innerHTML = `<div class="text-center text-slate-400 py-10 font-semibold text-sm">No history found</div>`;
         } else {
@@ -2412,8 +2032,7 @@ async function openAuditModal(recordId) {
                 const actionColors = { INSERT: 'text-emerald-600 bg-emerald-50', UPDATE: 'text-blue-600 bg-blue-50', DELETE: 'text-red-600 bg-red-50' };
                 const color = actionColors[entry.action] || 'text-slate-600 bg-slate-50';
                 const fields = entry.changed_fields?.length > 0
-                    ? `<div class="text-xs text-slate-500 mt-1">Changed: <span class="font-bold text-slate-700">${entry.changed_fields.join(', ')}</span></div>`
-                    : '';
+                    ? `<div class="text-xs text-slate-500 mt-1">Changed: <span class="font-bold text-slate-700">${entry.changed_fields.join(', ')}</span></div>` : '';
                 return `
                     <div class="p-4 border-b border-slate-100 last:border-0">
                         <div class="flex items-center gap-3">
@@ -2426,14 +2045,10 @@ async function openAuditModal(recordId) {
             }).join('');
         }
         modal.classList.remove('hidden');
-    } catch (err) {
-        console.error('openAuditModal error:', err);
-    }
+    } catch (err) { console.error('openAuditModal error:', err); }
 }
 
-function closeAuditModal() {
-    document.getElementById('auditModal')?.classList.add('hidden');
-}
+function closeAuditModal() { document.getElementById('auditModal')?.classList.add('hidden'); }
 
 // ============================================================
 // RECORD COMMENTS
@@ -2450,27 +2065,19 @@ async function openCommentsModal(recordId, clientName) {
     await loadComments(recordId);
 }
 
-function closeCommentsModal() {
-    document.getElementById('commentsModal')?.classList.add('hidden');
-    activeCommentRecordId = null;
-}
+function closeCommentsModal() { document.getElementById('commentsModal')?.classList.add('hidden'); activeCommentRecordId = null; }
 
 async function loadComments(recordId) {
     try {
         const { data } = await supabaseClient
-            .from('witcorp_comments')
-            .select('*')
-            .eq('record_id', recordId)
-            .order('created_at', { ascending: true });
-
+            .from('witcorp_comments').select('*')
+            .eq('record_id', recordId).order('created_at', { ascending: true });
         const list = document.getElementById('commentsList');
         if (!list) return;
-
         if (!data || data.length === 0) {
             list.innerHTML = `<div class="text-center text-slate-400 py-8 text-sm font-semibold"><i class="fas fa-comments text-3xl block mb-2 opacity-30"></i>No comments yet</div>`;
             return;
         }
-
         list.innerHTML = data.map(c => {
             const isMe = c.commented_by === currentUserEmail;
             return `
@@ -2480,9 +2087,7 @@ async function loadComments(recordId) {
                         ${c.commented_by.charAt(0).toUpperCase()}
                     </div>
                     <div class="max-w-[75%]">
-                        <div class="text-xs font-bold text-slate-500 mb-1 ${isMe ? 'text-right' : ''}">
-                            ${isMe ? 'You' : c.commented_by.split('@')[0]}
-                        </div>
+                        <div class="text-xs font-bold text-slate-500 mb-1 ${isMe ? 'text-right' : ''}">${isMe ? 'You' : c.commented_by.split('@')[0]}</div>
                         <div class="px-4 py-2.5 rounded-2xl text-sm font-medium ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-100 text-slate-800 rounded-tl-sm'}">
                             ${c.comment_text}
                         </div>
@@ -2493,11 +2098,8 @@ async function loadComments(recordId) {
                     </div>
                 </div>`;
         }).join('');
-
         list.scrollTop = list.scrollHeight;
-    } catch (err) {
-        console.error('loadComments error:', err);
-    }
+    } catch (err) { console.error('loadComments error:', err); }
 }
 
 async function postComment() {
@@ -2505,27 +2107,18 @@ async function postComment() {
     const input = document.getElementById('commentInput');
     const text = input?.value.trim();
     if (!text) return;
-
     const btn = document.getElementById('postCommentBtn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
-
     try {
         const { error } = await supabaseClient.from('witcorp_comments').insert([{
             record_id: activeCommentRecordId,
             comment_text: text,
             commented_by: currentUserEmail
         }]);
-        if (!error) {
-            input.value = '';
-            await loadComments(activeCommentRecordId);
-        } else {
-            showToast('Comment post failed', 'error');
-        }
-    } catch (err) {
-        console.error('postComment error:', err);
-    } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
-    }
+        if (!error) { input.value = ''; await loadComments(activeCommentRecordId); }
+        else { showToast('Comment post failed', 'error'); }
+    } catch (err) { console.error('postComment error:', err); }
+    finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i>'; } }
 }
 
 // ============================================================
@@ -2543,35 +2136,25 @@ async function openSubtasksModal(recordId, clientName) {
     await loadSubtasks(recordId);
 }
 
-function closeSubtasksModal() {
-    document.getElementById('subtasksModal')?.classList.add('hidden');
-    activeSubtaskRecordId = null;
-}
+function closeSubtasksModal() { document.getElementById('subtasksModal')?.classList.add('hidden'); activeSubtaskRecordId = null; }
 
 async function loadSubtasks(recordId) {
     try {
         const { data } = await supabaseClient
-            .from('witcorp_subtasks')
-            .select('*')
-            .eq('record_id', recordId)
-            .order('sort_order', { ascending: true });
-
+            .from('witcorp_subtasks').select('*')
+            .eq('record_id', recordId).order('sort_order', { ascending: true });
         const list = document.getElementById('subtasksList');
         if (!list) return;
-
         if (!data || data.length === 0) {
             list.innerHTML = `<div class="text-center text-slate-400 py-6 text-sm font-semibold"><i class="fas fa-list-check text-3xl block mb-2 opacity-30"></i>No tasks added yet</div>`;
             return;
         }
-
         const done = data.filter(t => t.is_done).length;
         const pct = Math.round((done / data.length) * 100);
-
         list.innerHTML = `
             <div class="mb-4">
                 <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
-                    <span>${done}/${data.length} completed</span>
-                    <span>${pct}%</span>
+                    <span>${done}/${data.length} completed</span><span>${pct}%</span>
                 </div>
                 <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div class="h-full bg-emerald-500 rounded-full transition-all" style="width:${pct}%"></div>
@@ -2580,20 +2163,14 @@ async function loadSubtasks(recordId) {
             ${data.map(task => `
                 <div class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 group transition-all" id="task_${task.id}">
                     <input type="checkbox" class="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
-                        ${task.is_done ? 'checked' : ''}
-                        onchange="toggleSubtask(${task.id}, this.checked)">
-                    <span class="flex-1 text-sm font-medium ${task.is_done ? 'line-through text-slate-400' : 'text-slate-700'}">
-                        ${task.task_text}
-                    </span>
+                        ${task.is_done ? 'checked' : ''} onchange="toggleSubtask(${task.id}, this.checked)">
+                    <span class="flex-1 text-sm font-medium ${task.is_done ? 'line-through text-slate-400' : 'text-slate-700'}">${task.task_text}</span>
                     ${task.is_done ? `<span class="text-[10px] text-emerald-600 font-bold">${task.done_by?.split('@')[0] || ''}</span>` : ''}
-                    <button onclick="deleteSubtask(${task.id})"
-                        class="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-600 transition-all text-xs">
+                    <button onclick="deleteSubtask(${task.id})" class="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-600 transition-all text-xs">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>`).join('')}`;
-    } catch (err) {
-        console.error('loadSubtasks error:', err);
-    }
+    } catch (err) { console.error('loadSubtasks error:', err); }
 }
 
 async function addSubtask() {
@@ -2603,41 +2180,26 @@ async function addSubtask() {
     if (!text) return;
     try {
         const { error } = await supabaseClient.from('witcorp_subtasks').insert([{
-            record_id: activeSubtaskRecordId,
-            task_text: text,
-            created_by: currentUserEmail
+            record_id: activeSubtaskRecordId, task_text: text, created_by: currentUserEmail
         }]);
-        if (!error) {
-            input.value = '';
-            await loadSubtasks(activeSubtaskRecordId);
-        }
-    } catch (err) {
-        console.error('addSubtask error:', err);
-    }
+        if (!error) { input.value = ''; await loadSubtasks(activeSubtaskRecordId); }
+    } catch (err) { console.error('addSubtask error:', err); }
 }
 
 async function toggleSubtask(id, isDone) {
     try {
         await supabaseClient.from('witcorp_subtasks')
-            .update({
-                is_done: isDone,
-                done_by: isDone ? currentUserEmail : '',
-                done_at: isDone ? new Date().toISOString() : null
-            })
+            .update({ is_done: isDone, done_by: isDone ? currentUserEmail : '', done_at: isDone ? new Date().toISOString() : null })
             .eq('id', id);
         await loadSubtasks(activeSubtaskRecordId);
-    } catch (err) {
-        console.error('toggleSubtask error:', err);
-    }
+    } catch (err) { console.error('toggleSubtask error:', err); }
 }
 
 async function deleteSubtask(id) {
     try {
         await supabaseClient.from('witcorp_subtasks').delete().eq('id', id);
         await loadSubtasks(activeSubtaskRecordId);
-    } catch (err) {
-        console.error('deleteSubtask error:', err);
-    }
+    } catch (err) { console.error('deleteSubtask error:', err); }
 }
 
 // ============================================================
@@ -2647,23 +2209,19 @@ async function togglePin(recordId) {
     try {
         const isPinned = await checkIfPinned(recordId);
         if (isPinned) {
-            await supabaseClient.from('witcorp_pins').delete()
-                .eq('record_id', recordId).eq('pinned_by', currentUserEmail);
+            await supabaseClient.from('witcorp_pins').delete().eq('record_id', recordId).eq('pinned_by', currentUserEmail);
             showToast('Record unpinned', 'info', 2000);
         } else {
             await supabaseClient.from('witcorp_pins').insert([{ record_id: recordId, pinned_by: currentUserEmail }]);
             showToast('Record pinned!', 'success', 2000);
         }
         updatePinButton(recordId, !isPinned);
-    } catch (err) {
-        console.error('togglePin error:', err);
-    }
+    } catch (err) { console.error('togglePin error:', err); }
 }
 
 async function checkIfPinned(recordId) {
     try {
-        const { data } = await supabaseClient
-            .from('witcorp_pins').select('id')
+        const { data } = await supabaseClient.from('witcorp_pins').select('id')
             .eq('record_id', recordId).eq('pinned_by', currentUserEmail).single();
         return !!data;
     } catch { return false; }
@@ -2679,19 +2237,14 @@ function updatePinButton(recordId, isPinned) {
 
 async function showPinnedRecords() {
     try {
-        const { data: pins } = await supabaseClient
-            .from('witcorp_pins').select('record_id').eq('pinned_by', currentUserEmail);
-
+        const { data: pins } = await supabaseClient.from('witcorp_pins').select('record_id').eq('pinned_by', currentUserEmail);
         if (!pins || pins.length === 0) { showToast('No pinned records yet', 'info'); return; }
-
         const pinnedIds = pins.map(p => p.record_id);
         const pinned = allRecords.filter(r => pinnedIds.includes(r.id));
         showSection('filterView');
         document.getElementById('filterTitle').innerText = `⭐ Pinned Records (${pinned.length})`;
         renderTable(pinned, 'filterTableBody');
-    } catch (err) {
-        console.error('showPinnedRecords error:', err);
-    }
+    } catch (err) { console.error('showPinnedRecords error:', err); }
 }
 
 // ============================================================
@@ -2708,38 +2261,27 @@ async function updatePresence(section = 'dashboard') {
             current_section: section,
             is_online: true
         }, { onConflict: 'user_email' });
-    } catch (err) {
-        console.error('updatePresence error:', err);
-    }
+    } catch (err) { console.error('updatePresence error:', err); }
 }
 
 async function loadOnlineUsers() {
     try {
         const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-        const { data } = await supabaseClient
-            .from('witcorp_presence').select('*').gte('last_seen', fiveMinAgo);
-
+        const { data } = await supabaseClient.from('witcorp_presence').select('*').gte('last_seen', fiveMinAgo);
         const container = document.getElementById('onlineUsersBar');
         if (!container || !data) return;
-
         container.innerHTML = data.map(u => `
             <div class="relative group cursor-default">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black ring-2 ring-white"
-                    style="background: ${u.avatar_color}">
-                    ${u.user_initial}
-                </div>
+                    style="background: ${u.avatar_color}">${u.user_initial}</div>
                 <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full"></span>
                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
                     ${u.user_email.split('@')[0]}
                     <div class="text-[9px] opacity-60">${u.current_section}</div>
                 </div>
             </div>`).join('');
-    } catch (err) {
-        console.error('loadOnlineUsers error:', err);
-    }
+    } catch (err) { console.error('loadOnlineUsers error:', err); }
 }
-
-setInterval(() => updatePresence(), 60000);
 
 // ============================================================
 // SESSION TIMEOUT (15 min inactivity)
@@ -2772,44 +2314,19 @@ async function loadAnnouncements() {
     try {
         const now = new Date().toISOString();
         const { data } = await supabaseClient
-            .from('witcorp_announcements')
-            .select('*')
+            .from('witcorp_announcements').select('*')
             .eq('is_active', true)
             .or(`expires_at.is.null,expires_at.gte.${now}`)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
+            .order('created_at', { ascending: false }).limit(1);
         const banner = document.getElementById('announcementBanner');
         const text = document.getElementById('announcementText');
         if (!banner || !text || !data || data.length === 0) return;
-
         const a = data[0];
         const bgColors = { info: 'bg-blue-600', warning: 'bg-amber-500', success: 'bg-emerald-600', urgent: 'bg-red-600' };
         banner.className = `${bgColors[a.type] || bgColors.info} text-white px-4 py-2 flex items-center justify-between text-sm font-semibold`;
         text.innerText = `📢 ${a.title}: ${a.message}`;
         banner.classList.remove('hidden');
-    } catch (err) {
-        console.error('loadAnnouncements error:', err);
-    }
-}
-
-async function postAnnouncement() {
-    if (currentUserProfile?.role !== 'admin') { showToast('Only admins can post announcements', 'error'); return; }
-    const title = prompt('Announcement Title:');
-    if (!title) return;
-    const message = prompt('Announcement Message:');
-    if (!message) return;
-    try {
-        await supabaseClient.from('witcorp_announcements').insert([{
-            title, message, type: 'info',
-            created_by: currentUserEmail,
-            is_active: true
-        }]);
-        showToast('Announcement posted!', 'success');
-        loadAnnouncements();
-    } catch (err) {
-        console.error('postAnnouncement error:', err);
-    }
+    } catch (err) { console.error('loadAnnouncements error:', err); }
 }
 
 // ============================================================
@@ -2820,17 +2337,13 @@ function openQuickAdd() {
     document.getElementById('qaClientName')?.focus();
 }
 
-function closeQuickAdd() {
-    document.getElementById('quickAddModal')?.classList.add('hidden');
-}
+function closeQuickAdd() { document.getElementById('quickAddModal')?.classList.add('hidden'); }
 
 async function submitQuickAdd() {
     const clientName = document.getElementById('qaClientName')?.value.trim();
     const category = document.getElementById('qaCategory')?.value;
     const status = document.getElementById('qaStatus')?.value;
-
     if (!clientName || !category) { showToast('Client name & category required', 'error'); return; }
-
     try {
         const { error } = await supabaseClient.from('witcorp_records').insert([{
             client_name: clientName,
@@ -2842,7 +2355,6 @@ async function submitQuickAdd() {
             updated_at: new Date().toISOString(),
             updated_by: currentUserName
         }]);
-
         if (!error) {
             saveActivity(`Added Record: ${clientName} | ${category}`);
             showToast(`Quick added: ${clientName}`, 'success');
@@ -2852,12 +2364,8 @@ async function submitQuickAdd() {
                 if (el) el.value = '';
             });
             await fetchRecords(true);
-        } else {
-            showToast('Quick add failed', 'error');
-        }
-    } catch (err) {
-        console.error('submitQuickAdd error:', err);
-    }
+        } else { showToast('Quick add failed', 'error'); }
+    } catch (err) { console.error('submitQuickAdd error:', err); }
 }
 
 // ============================================================
@@ -2904,12 +2412,16 @@ function resetColumns() {
 }
 
 // ============================================================
-// SHOWAPP
+// SHOWAPP — FIX 2 & FIX 8
 // ============================================================
 function showApp(user) {
     document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('appScreen').classList.remove('hidden');
-    document.getElementById('appScreen').classList.add('flex');
+    const appScreen = document.getElementById('appScreen');
+    appScreen.classList.remove('hidden');
+    // FIX 2: Use flex-col class explicitly — matches HTML structure
+    appScreen.style.display = 'flex';
+    appScreen.style.flexDirection = 'column';
+
     currentUserEmail = user.email;
     currentUserName = user.email;
     const gmailEl = document.getElementById('userGmail');
@@ -2927,46 +2439,37 @@ function showApp(user) {
     loadColumnPrefs();
     showSection('dashboard');
 
-    setInterval(loadOnlineUsers, 30000);
+    // FIX 8: Clear existing intervals before creating new ones
+    if (_onlineUsersInterval) clearInterval(_onlineUsersInterval);
+    if (_presenceInterval) clearInterval(_presenceInterval);
+    _onlineUsersInterval = setInterval(loadOnlineUsers, 30000);
+    _presenceInterval = setInterval(() => updatePresence(), 60000);
+
     saveActivity('Login: ' + user.email);
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
 
 // ============================================================
-// SINGLE window.addEventListener('load') — consolidated
+// SINGLE window.addEventListener('load')
 // ============================================================
 window.addEventListener('load', async () => {
-    // Theme preferences (fallback for before login)
     const savedBg = localStorage.getItem('bgTheme');
     if (savedBg) changeTheme(savedBg);
     const savedSidebar = localStorage.getItem('sidebarTheme');
     if (savedSidebar) changeSidebarTheme(savedSidebar);
-
-    // Notification sound indicator
     loadNotificationSetting();
-
-    // Green headers init
     setTimeout(applyGreenHeaders, 400);
-
-    // Fetch notifications after DOM ready
     fetchNotifications();
 
-    // Password reset flow (hash-based)
+    // Password reset flow
     const hash = window.location.hash;
     if (hash.includes("access_token") && hash.includes("type=recovery")) {
         const newPassword = prompt("Enter New Password");
         if (!newPassword) return;
         try {
             const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-            if (error) {
-                showToast(error.message, 'error');
-            } else {
-                showToast("Password updated successfully!", 'success');
-                window.location.href = window.location.pathname;
-            }
-        } catch (err) {
-            console.error("Password update error:", err);
-            showToast("Password update failed. Please try again.", 'error');
-        }
+            if (error) { showToast(error.message, 'error'); }
+            else { showToast("Password updated successfully!", 'success'); window.location.href = window.location.pathname; }
+        } catch (err) { console.error("Password update error:", err); showToast("Password update failed. Please try again.", 'error'); }
     }
 });
