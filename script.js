@@ -763,7 +763,7 @@ async function fetchClients() {
             if (el) el.innerHTML = `<div class="text-center py-8 text-slate-300 font-bold text-sm"><i class="fas fa-users text-3xl block mb-2"></i>No clients yet</div>`;
         });
     }
-
+     data.sort((a, b) => (a.client_name || '').toLowerCase().localeCompare((b.client_name || '').toLowerCase()));
     data.forEach(c => {
         const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
         counts[typeKey]++;
@@ -1258,7 +1258,8 @@ function searchClients(query) {
     filtered.sort((a, b) => {
         const aS = a.client_name?.toLowerCase().startsWith(q) ? 0 : 1;
         const bS = b.client_name?.toLowerCase().startsWith(q) ? 0 : 1;
-        return aS - bS;
+        if (aS !== bS) return aS - bS;
+        return (a.client_name || '').toLowerCase().localeCompare((b.client_name || '').toLowerCase());
     });
 
     const containers = { 'Pvt Ltd': 'pvtLtdList', 'LLP': 'llpList', 'Others': 'othersList' };
