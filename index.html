@@ -11,6 +11,145 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- FIX 3: Stunning "Developed By" font -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+      /* =====================================================
+         FIX 3 — DEVELOPED BY KAMLESH YADAV — ULTRA STUNNING
+         ===================================================== */
+      .dev-signature-wrap {
+        position: relative;
+        padding: 18px 10px 14px;
+        text-align: center;
+        overflow: hidden;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        background: transparent;
+      }
+
+      /* Animated shimmer orb behind the text */
+      .dev-signature-wrap::before {
+        content: '';
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 180px;
+        height: 60px;
+        background: radial-gradient(ellipse, rgba(250,204,21,0.18) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: devOrb 3s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+
+      @keyframes devOrb {
+        0%   { opacity: 0.4; transform: translateX(-50%) scale(0.85); }
+        100% { opacity: 1;   transform: translateX(-50%) scale(1.15); }
+      }
+
+      .dev-label {
+        font-family: 'Outfit', sans-serif;
+        font-size: 8.5px;
+        font-weight: 600;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: rgba(147,197,253,0.55);
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .dev-name {
+        font-family: 'Cinzel Decorative', serif;
+        font-size: 13.5px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        line-height: 1;
+        display: inline-block;
+        position: relative;
+
+        /* Multi-stop gold shimmer gradient */
+        background: linear-gradient(
+          110deg,
+          #b8860b 0%,
+          #ffd700 18%,
+          #fffacd 34%,
+          #ffd700 50%,
+          #daa520 66%,
+          #ffd700 82%,
+          #b8860b 100%
+        );
+        background-size: 250% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: devShimmer 3.5s linear infinite;
+        filter: drop-shadow(0 0 8px rgba(250,204,21,0.45));
+      }
+
+      @keyframes devShimmer {
+        0%   { background-position: 200% center; }
+        100% { background-position: -200% center; }
+      }
+
+      /* Decorative line flanking the name */
+      .dev-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 7px;
+      }
+
+      .dev-divider-line {
+        flex: 1;
+        max-width: 38px;
+        height: 1px;
+        background: linear-gradient(to right, transparent, rgba(250,204,21,0.4), transparent);
+        border-radius: 1px;
+      }
+
+      .dev-divider-dot {
+        width: 4px;
+        height: 4px;
+        background: #fbbf24;
+        border-radius: 50%;
+        box-shadow: 0 0 6px 2px rgba(251,191,36,0.55);
+        animation: devDotPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes devDotPulse {
+        0%, 100% { box-shadow: 0 0 4px 1px rgba(251,191,36,0.4); }
+        50%       { box-shadow: 0 0 10px 4px rgba(251,191,36,0.8); }
+      }
+
+      /* =====================================================
+         FIX 1 — WORKSPACE OVERVIEW SINGLE LINE
+         ===================================================== */
+      .workspace-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 2.5rem;
+      }
+      .workspace-header-row h2 {
+        white-space: nowrap;
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: #1e293b;
+        letter-spacing: -0.02em;
+        margin: 0;
+        flex-shrink: 0;
+      }
+      .workspace-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+    </style>
 </head>
 <body id="appBody" class="min-h-screen overflow-x-hidden bg-slate-100">
 
@@ -95,9 +234,15 @@
           <button onclick="filterByField('service_category','REPORTS');toggleMenu()" class="block w-full text-left p-2 hover:bg-white/10">Reports</button>
         </div>
 
-        <div class="mt-6 pt-4 border-t border-white/20 text-center">
-          <p class="text-[10px] text-blue-200">Developed By</p>
-          <p class="text-sm font-bold text-yellow-400">Kamlesh Yadav</p>
+        <!-- FIX 3: Mobile sidebar footer -->
+        <div class="dev-signature-wrap mt-6">
+          <span class="dev-label">Developed By</span>
+          <span class="dev-name">Kamlesh Yadav</span>
+          <div class="dev-divider">
+            <div class="dev-divider-line"></div>
+            <div class="dev-divider-dot"></div>
+            <div class="dev-divider-line"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -149,7 +294,7 @@
           </div>
         </div>
 
-       <button id="nav-gst" onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
+        <button id="nav-gst" onclick="filterByField('service_category', 'GST')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
           <i class="fas fa-file-invoice-dollar w-5 text-emerald-400"></i> GST Compliance
         </button>
         <button id="nav-roc" onclick="filterByField('service_category', 'ROC')" class="nav-btn w-full p-4 rounded-xl text-left flex items-center gap-3 transition-all">
@@ -184,9 +329,15 @@
         </button>
       </nav>
 
-      <div class="p-6 bg-black/20 text-center border-t border-white/10">
-        <p class="text-[10px] uppercase text-blue-300 mb-1 tracking-widest">Developed By</p>
-        <p class="font-bold text-sm text-yellow-400">Kamlesh Yadav</p>
+      <!-- FIX 3: Desktop sidebar footer — ULTRA STUNNING -->
+      <div class="dev-signature-wrap">
+        <span class="dev-label">Developed By</span>
+        <span class="dev-name">Kamlesh Yadav</span>
+        <div class="dev-divider">
+          <div class="dev-divider-line"></div>
+          <div class="dev-divider-dot"></div>
+          <div class="dev-divider-line"></div>
+        </div>
       </div>
     </aside>
 
@@ -259,7 +410,7 @@
         </div>
       </div>
 
-      <!-- NOTIFICATION PANEL (moved outside relative parent, fixed position) -->
+      <!-- NOTIFICATION PANEL -->
       <div id="notificationPanel" class="hidden fixed top-20 right-6 w-[95vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
         <div class="p-4 border-b flex items-center justify-between">
           <span class="font-black text-slate-700">Notifications</span>
@@ -288,10 +439,10 @@
       <div id="dashboard" class="section active">
         <div id="topAnchor"></div>
 
-        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-10">
-          <h2 class="text-3xl font-black text-slate-800 tracking-tight">Workspace Overview</h2>
-          <div class="flex items-center gap-3 flex-wrap">
-            <!-- MULTI FILTER ROW -->
+        <!-- FIX 1: WORKSPACE OVERVIEW — single line with all controls -->
+        <div class="workspace-header-row">
+          <h2>Workspace Overview</h2>
+          <div class="workspace-controls">
             <select id="filterStatus" onchange="applyMultiFilter()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 outline-none">
               <option value="">All Status</option>
               <option value="Pending">Pending</option>
@@ -328,7 +479,7 @@
             <button onclick="refreshData()" id="refreshBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow">
               <i class="fas fa-rotate-right mr-1"></i> Refresh
             </button>
-            <div class="flex items-center gap-2 px-5 py-2.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black border border-emerald-200 shadow-sm">
+            <div class="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black border border-emerald-200 shadow-sm">
               <span class="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> SYSTEM LIVE SYNC
             </div>
           </div>
