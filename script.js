@@ -606,11 +606,33 @@ function renderTable(data, targetId) {
                 <td class="p-4">${remarksCell}</td>
                 <td class="p-4 whitespace-nowrap">${updatedByCell}</td>
                 <td class="p-4 text-right whitespace-nowrap">
-                    <div class="flex justify-end gap-2">
-                        <button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm">
+                    <div class="flex justify-end gap-2 flex-wrap">
+                        <button onclick="togglePin(${row.id})" id="pin_${row.id}"
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-amber-50 hover:text-amber-500 transition-all shadow-sm hover:scale-110 text-sm"
+                            title="Pin Record">
+                            <i class="fas fa-thumbtack"></i>
+                        </button>
+                        <button onclick="openCommentsModal(${row.id}, '${row.client_name.replace(/'/g, "\\'")}')"
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-purple-50 hover:text-purple-600 transition-all shadow-sm hover:scale-110 text-sm"
+                            title="Comments">
+                            <i class="fas fa-comments"></i>
+                        </button>
+                        <button onclick="openSubtasksModal(${row.id}, '${row.client_name.replace(/'/g, "\\'")}')"
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all shadow-sm hover:scale-110 text-sm"
+                            title="Checklist">
+                            <i class="fas fa-list-check"></i>
+                        </button>
+                        <button onclick="openAuditModal(${row.id})"
+                            class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all shadow-sm hover:scale-110 text-sm"
+                            title="Change History">
+                            <i class="fas fa-clock-rotate-left"></i>
+                        </button>
+                        <button onclick='editRecord(${JSON.stringify(row)})' class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"
+                            title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm">
+                        <button onclick="deleteRecord(${row.id})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm hover:scale-110 text-sm"
+                            title="Delete">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -682,6 +704,15 @@ async function handleSubmit() {
         btn.disabled = false;
 
         if (!error) {
+            // AUDIT TRAIL — YE NAYA ADD HUA
+            if (id) {
+                const oldRecord = allRecords.find(r => r.id === parseInt(id));
+                await saveAuditTrail('witcorp_records', id, 'UPDATE', oldRecord, payload);
+            } else {
+                await saveAuditTrail('witcorp_records', 'new', 'INSERT', null, payload);
+            }
+            // AUDIT TRAIL END
+
             const actionText = id
                 ? `Updated Record: ${payload.client_name} | ${payload.service_category} | Status: ${payload.status}`
                 : `Added Record: ${payload.client_name} | ${payload.service_category} | ${payload.service_detail || 'N/A'}`;
