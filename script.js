@@ -1,4 +1,4 @@
-// WITCORP HUB — ENTERPRISE SCRIPT (FIXED VERSION)
+// WITCORP HUB — ENTERPRISE SCRIPT (FINAL FIXED VERSION — PART 1)
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -24,7 +24,7 @@ let isFormDirty = false;
 let selectedRowIds = new Set();
 
 // ============================================================
-// TOAST NOTIFICATION SYSTEM — replaces all alert()
+// TOAST NOTIFICATION SYSTEM
 // ============================================================
 function showToast(message, type = 'success', duration = 3500) {
     const container = document.getElementById('toastContainer');
@@ -113,8 +113,6 @@ function clearDirtyState() {
 function checkDeadlineAlerts(data) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
     const dayAfter = new Date(today);
     dayAfter.setDate(dayAfter.getDate() + 2);
 
@@ -171,13 +169,13 @@ async function fetchRecords(reset = true) {
             .select('*')
             .order('updated_at', { ascending: false })
             .range(from, to);
-        
+
         if (error) {
             console.error("fetchRecords error:", error);
             showToast('Failed to fetch records. Check connection.', 'error');
             return;
         }
-        
+
         if (data) {
             const uniqueData = data.filter(n => !allRecords.some(o => o.id === n.id));
             allRecords = [...allRecords, ...uniqueData];
@@ -353,7 +351,6 @@ async function applyBulkStatus() {
         saveActivity(`Bulk Update: ${ids.length} records → ${newStatus}`);
         clearBulkSelection();
         await fetchRecords(true);
-
         showUndoToast(
             `${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`,
             previousStatuses,
@@ -404,10 +401,9 @@ function showUndoToast(message, previousStatuses, duration = 120000) {
     container.appendChild(toast);
     requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.remove('translate-x-full')));
 
-    // Live countdown
     const ticker = setInterval(() => {
         secondsLeft--;
-        const el = document.getElementById('undoSecs');
+        const el = toast.querySelector('#undoSecs');
         if (el) {
             if (secondsLeft >= 60) {
                 const m = Math.floor(secondsLeft / 60);
@@ -425,7 +421,6 @@ function showUndoToast(message, previousStatuses, duration = 120000) {
 
 async function undoBulkStatus(previousStatuses) {
     let anyError = false;
-
     for (const { id, status, updated_at, updated_by } of previousStatuses) {
         const { error } = await supabaseClient
             .from('witcorp_records')
@@ -444,7 +439,7 @@ async function undoBulkStatus(previousStatuses) {
 }
 
 // ============================================================
-// RENDER TABLE — with checkbox, row color coding, skeleton
+// RENDER TABLE
 // ============================================================
 let _rmkCounter = 0;
 
@@ -490,7 +485,7 @@ function renderTable(data, targetId) {
             'Processing': 'fa-spinner fa-spin'
         }[row.status] || 'fa-info-circle';
 
-        let rowBg = '';
+        let rowBg = 'hover:bg-slate-50/80';
         if (row.deadline && row.status !== 'Completed') {
             const dl = new Date(row.deadline);
             dl.setHours(0, 0, 0, 0);
@@ -498,11 +493,7 @@ function renderTable(data, targetId) {
                 rowBg = 'bg-red-50 hover:bg-red-100/60';
             } else if (dl.getTime() === today.getTime() || dl.getTime() === tomorrow.getTime()) {
                 rowBg = 'bg-amber-50 hover:bg-amber-100/60';
-            } else {
-                rowBg = 'hover:bg-slate-50/80';
             }
-        } else {
-            rowBg = 'hover:bg-slate-50/80';
         }
 
         let datePart = '', timePart = '';
@@ -667,15 +658,8 @@ async function handleSubmit() {
     const serviceCategory = document.getElementById('serviceCategory').value?.trim();
     const deadline = document.getElementById('deadline').value?.trim();
 
-    if (!clientName) {
-        showToast('Client Name is mandatory.', 'error');
-        return;
-    }
-
-    if (!serviceCategory) {
-        showToast('Service Category is mandatory.', 'error');
-        return;
-    }
+    if (!clientName) { showToast('Client Name is mandatory.', 'error'); return; }
+    if (!serviceCategory) { showToast('Service Category is mandatory.', 'error'); return; }
 
     const payload = {
         status: document.getElementById('status').value,
@@ -704,14 +688,12 @@ async function handleSubmit() {
         btn.disabled = false;
 
         if (!error) {
-            // AUDIT TRAIL — YE NAYA ADD HUA
             if (id) {
                 const oldRecord = allRecords.find(r => r.id === parseInt(id));
                 await saveAuditTrail('witcorp_records', id, 'UPDATE', oldRecord, payload);
             } else {
                 await saveAuditTrail('witcorp_records', 'new', 'INSERT', null, payload);
             }
-            // AUDIT TRAIL END
 
             const actionText = id
                 ? `Updated Record: ${payload.client_name} | ${payload.service_category} | Status: ${payload.status}`
@@ -786,7 +768,7 @@ async function deleteRecord(id) {
 }
 
 // ============================================================
-// FETCH CLIENTS — with record count badges
+// FETCH CLIENTS
 // ============================================================
 async function fetchClients() {
     try {
@@ -795,10 +777,7 @@ async function fetchClients() {
             .select('*')
             .order('client_name', { ascending: true })
             .limit(300);
-        if (error) {
-            console.error("fetchClients error:", error);
-            return;
-        }
+        if (error) { console.error("fetchClients error:", error); return; }
         allClients = data || [];
         currentExportData = data;
         currentExportType = "clients";
@@ -817,13 +796,14 @@ async function fetchClients() {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = `<div class="text-center py-8 text-slate-300 font-bold text-sm"><i class="fas fa-users text-3xl block mb-2"></i>No clients yet</div>`;
             });
+            return;
         }
+
         data.sort((a, b) => (a.client_name || '').toLowerCase().localeCompare((b.client_name || '').toLowerCase()));
         data.forEach(c => {
             const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
             counts[typeKey]++;
             const listId = containers[typeKey];
-
             const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
             const recordBadge = clientRecordCount > 0
                 ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>`
@@ -874,10 +854,7 @@ async function saveClient() {
     const email = document.getElementById('cEmail').value?.trim();
     const type = document.getElementById('cType').value;
 
-    if (!clientName) {
-        showToast('Entity Name Required', 'error');
-        return;
-    }
+    if (!clientName) { showToast('Entity Name Required', 'error'); return; }
 
     const payload = {
         client_name: clientName,
@@ -891,7 +868,7 @@ async function saveClient() {
         const { error } = id
             ? await supabaseClient.from('witcorp_clients').update(payload).eq('id', parseInt(id, 10))
             : await supabaseClient.from('witcorp_clients').insert([payload]);
-        
+
         if (!error) {
             await createNotificationForOthers(
                 id ? "Client Updated" : "New Client Added",
@@ -933,7 +910,7 @@ async function deleteClient(id) {
 }
 
 // ============================================================
-// FETCH VAULT — with password show/hide & copy button (FIXED)
+// FETCH VAULT
 // ============================================================
 async function fetchVault() {
     try {
@@ -942,10 +919,7 @@ async function fetchVault() {
             .select('*')
             .order('client_name', { ascending: true })
             .limit(300);
-        if (error) {
-            console.error("fetchVault error:", error);
-            return;
-        }
+        if (error) { console.error("fetchVault error:", error); return; }
         allVault = data || [];
         currentExportData = data;
         currentExportType = "vault";
@@ -976,7 +950,7 @@ function renderVaultTable(data) {
         const fullPass = v.password || '';
         const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
         const vId = `vault_${v.id}`;
-        const encodedPass = btoa(fullPass); // FIX: Encode password
+        const encodedPass = btoa(unescape(encodeURIComponent(fullPass))); // FIX: Safe base64 for unicode passwords
 
         tbody.innerHTML += `
             <tr class="group hover:bg-slate-50" id="${vId}_row">
@@ -985,7 +959,7 @@ function renderVaultTable(data) {
                 <td class="p-4 font-semibold text-blue-600 text-sm whitespace-nowrap">
                     <div class="flex items-center gap-2">
                         <span>${v.username}</span>
-                        <button onclick="copyToClipboard('${v.username.replace(/'/g,"\\'")}', 'Username')"
+                        <button onclick="copyToClipboard('${v.username.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}', 'Username')"
                             class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-blue-600 transition-all text-xs" title="Copy Username">
                             <i class="fas fa-copy"></i>
                         </button>
@@ -1019,14 +993,14 @@ function toggleVaultPassword(vId) {
     const passEl = document.getElementById(vId + '_pass');
     const eyeEl = document.getElementById(vId + '_eye');
     if (!passEl || !eyeEl) return;
-    
+
     const encodedPass = passEl.getAttribute('data-pwd');
     if (!encodedPass) return;
-    
+
     const isHidden = passEl.textContent.includes('•');
     if (isHidden) {
         try {
-            const fullPass = atob(encodedPass); // FIX: Decode password
+            const fullPass = decodeURIComponent(escape(atob(encodedPass))); // FIX: Reverse of safe encode
             passEl.textContent = fullPass;
             eyeEl.className = 'fas fa-eye-slash';
         } catch (err) {
@@ -1044,39 +1018,51 @@ function toggleVaultPassword(vId) {
 function copyPasswordSafe(vId) {
     const passEl = document.getElementById(vId + '_pass');
     if (!passEl) return;
-    
-    let password;
+
     const encodedPass = passEl.getAttribute('data-pwd');
-    
+    let password;
+
     if (encodedPass && passEl.textContent.includes('•')) {
-        // Password is hidden, decode from data attribute
         try {
-            password = atob(encodedPass);
+            password = decodeURIComponent(escape(atob(encodedPass))); // FIX: Consistent decode
         } catch (err) {
             console.error("Password decode error:", err);
             showToast('Error decoding password', 'error');
             return;
         }
     } else {
-        // Password is visible, use textContent
         password = passEl.textContent;
     }
-    
+
     copyToClipboard(password, 'Password');
 }
 
 function copyToClipboard(text, label) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast(`${label} copied to clipboard`, 'info', 2000);
-    }).catch(() => {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast(`${label} copied to clipboard`, 'info', 2000);
+        }).catch(() => {
+            fallbackCopy(text, label);
+        });
+    } else {
+        fallbackCopy(text, label);
+    }
+}
+
+function fallbackCopy(text, label) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
         document.execCommand('copy');
-        document.body.removeChild(ta);
         showToast(`${label} copied`, 'info', 2000);
-    });
+    } catch (err) {
+        showToast(`Copy failed. Please copy manually.`, 'error', 2000);
+    }
+    document.body.removeChild(ta);
 }
 
 function editVault(v) {
@@ -1096,10 +1082,7 @@ async function saveVault() {
     const username = document.getElementById('vUser').value?.trim();
     const password = document.getElementById('vPass').value?.trim();
 
-    if (!category || !clientName) {
-        showToast('Required fields missing.', 'error');
-        return;
-    }
+    if (!category || !clientName) { showToast('Required fields missing.', 'error'); return; }
 
     const payload = {
         client_name: clientName,
@@ -1113,7 +1096,7 @@ async function saveVault() {
         const { error } = id
             ? await supabaseClient.from('witcorp_credentials').update(payload).eq('id', parseInt(id, 10))
             : await supabaseClient.from('witcorp_credentials').insert([payload]);
-        
+
         if (!error) {
             await createNotificationForOthers(
                 id ? "Vault Updated" : "Credentials Added",
@@ -1179,7 +1162,7 @@ function toggleAccountingHubDesktop() {
 }
 
 // ============================================================
-// SHOW SECTION — with breadcrumb + unsaved changes guard
+// SHOW SECTION
 // ============================================================
 function showSection(id) {
     if (isFormDirty && id !== 'dashboard') {
@@ -1191,10 +1174,11 @@ function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     const globalSearch = document.getElementById('globalSearchBox');
     if (id === 'clientManagement' || id === 'vaultManagement' || id === 'dscManagement') {
-        globalSearch.style.display = 'none';
+        if (globalSearch) globalSearch.style.display = 'none';
     } else {
-        globalSearch.style.display = 'block';
+        if (globalSearch) globalSearch.style.display = 'block';
     }
+
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     const section = document.getElementById(id);
     if (section) section.classList.add('active');
@@ -1202,7 +1186,7 @@ function showSection(id) {
     if (id === 'clientManagement') document.getElementById('nav-client')?.classList.add('active');
     if (id === 'vaultManagement') document.getElementById('nav-vault')?.classList.add('active');
     if (id === 'dscManagement') document.getElementById('nav-dsc')?.classList.add('active');
-    
+
     const filterMap = {
         'GST': 'nav-gst', 'ROC': 'nav-roc', 'IT': 'nav-it',
         'PT': 'nav-pt', 'TDS': 'nav-tds', 'DIRECTOR KYC': 'nav-dkyc',
@@ -1214,12 +1198,14 @@ function showSection(id) {
         const navId = filterMap[activeVal];
         if (navId) document.getElementById(navId)?.classList.add('active');
     }
+
     if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
     if (id === 'clientManagement') fetchClients();
     if (id === 'vaultManagement') fetchVault();
     if (id === 'dscManagement') fetchDSC();
 
     updateBreadcrumb(id);
+    updatePresence(id);
     setTimeout(applyGreenHeaders, 80);
 }
 
@@ -1229,17 +1215,13 @@ function showSection(id) {
 function filterByField(field, value) {
     window._lastFilterValue = value;
     showSection('filterView');
-    let filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
+    const filtered = field === 'all' ? [...allRecords] : allRecords.filter(r => r[field] === value);
     const titles = {
-        "Sales": "Sales", "Purchases": "Purchases", "Sundry Debtors": "Sundry Debtors",
-        "Sundry Creditors": "Sundry Creditors", "Payroll Entries": "Payroll Entries",
-        "Bank Statement": "Bank Statement", "GST Transfer Entries": "GST Transfer Entries",
-        "Depreciation Entries": "Depreciation Entries", "TDS Entries": "TDS Entries",
-        "Miscellaneous Ledgers": "Miscellaneous Ledgers", "GST": "GST Compliance",
-        "ROC": "Corporate Compliance (ROC)", "IT": "Income Tax", "PT": "Professional Tax",
-        "TDS": "TDS Compliance", "DIRECTOR KYC": "Director KYC", "UDIN": "UDIN/Certification",
-        "FOOD": "Food License", "MSME": "MSME Certification", "PAYROLL": "Payroll",
-        "REPORTS": "Reports", "Completed": "Completed Records", "Pending": "Pending Records"
+        "GST": "GST Compliance", "ROC": "Corporate Compliance (ROC)", "IT": "Income Tax",
+        "PT": "Professional Tax", "TDS": "TDS Compliance", "DIRECTOR KYC": "Director KYC",
+        "UDIN": "UDIN/Certification", "FOOD": "Food License", "MSME": "MSME Certification",
+        "PAYROLL": "Payroll", "REPORTS": "Reports",
+        "Completed": "Completed Records", "Pending": "Pending Records"
     };
     document.getElementById('filterTitle').innerText = `${titles[value] || value || 'All'} Portal View`;
     renderTable(filtered, 'filterTableBody');
@@ -1269,7 +1251,7 @@ function handleSearch(query) {
 }
 
 // ============================================================
-// UPDATE STATS — with percentage sub text
+// UPDATE STATS
 // ============================================================
 function updateStats(data) {
     const total = data.length;
@@ -1295,6 +1277,7 @@ function updateStats(data) {
 // ============================================================
 async function refreshData() {
     const btn = document.getElementById("refreshBtn");
+    if (!btn) return;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
     btn.disabled = true;
     await fetchRecords(true);
@@ -1315,6 +1298,7 @@ function clearForm() {
     document.getElementById('editBadge').classList.add('hidden');
     ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline', 'status', 'remarks'].forEach(i => {
         const el = document.getElementById(i);
+        if (!el) return;
         if (i === 'serviceCategory') { el.value = 'Sales'; }
         else if (i === 'status') { el.value = 'Pending'; }
         else { el.value = ""; }
@@ -1329,18 +1313,11 @@ function clearForm() {
 async function registerUser() {
     const email = document.getElementById("email")?.value;
     const password = document.getElementById("password")?.value;
-    
-    if (!email || !password) {
-        document.getElementById('authMsg').innerText = "Email and password required";
-        return;
-    }
+    if (!email || !password) { document.getElementById('authMsg').innerText = "Email and password required"; return; }
 
     try {
         const { data, error } = await supabaseClient.auth.signUp({ email, password });
-        if (error) { 
-            document.getElementById('authMsg').innerText = error.message; 
-            return; 
-        }
+        if (error) { document.getElementById('authMsg').innerText = error.message; return; }
         const user = data.user;
         if (user) {
             await supabaseClient.from('witcorp_users').insert([{ id: user.id, email: user.email, role: 'user', approved: true }]);
@@ -1355,21 +1332,12 @@ async function registerUser() {
 async function loginUser() {
     const email = document.getElementById('email')?.value;
     const password = document.getElementById('password')?.value;
-    
-    if (!email || !password) {
-        document.getElementById('authMsg').innerText = "Email and password required";
-        return;
-    }
+    if (!email || !password) { document.getElementById('authMsg').innerText = "Email and password required"; return; }
 
     try {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) { 
-            document.getElementById('authMsg').innerText = error.message; 
-            return; 
-        }
-        if (data.user) {
-            checkApproval(data.user);
-        }
+        if (error) { document.getElementById('authMsg').innerText = error.message; return; }
+        if (data.user) checkApproval(data.user);
     } catch (err) {
         console.error("loginUser error:", err);
         document.getElementById('authMsg').innerText = "Login failed. Please try again.";
@@ -1469,10 +1437,7 @@ async function fetchDSC() {
             .from('witcorp_dsc')
             .select('*')
             .order('company_name', { ascending: true });
-        if (error) { 
-            console.error("DSC FETCH ERROR:", error); 
-            return; 
-        }
+        if (error) { console.error("DSC FETCH ERROR:", error); return; }
         allDSC = data || [];
         currentExportData = allDSC;
         currentExportType = "dsc";
@@ -1507,8 +1472,8 @@ function renderDSC(data) {
         const shortRem = fullRem.length > 50 ? fullRem.substring(0, 48) + '\u2026' : fullRem;
         const updatedAt = d.updated_at ? (() => {
             const dt = new Date(d.updated_at);
-            return dt.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ', ' +
-                dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+            return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
+                dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
         })() : 'N/A';
 
         const statusColors = {
@@ -1540,7 +1505,7 @@ function renderDSC(data) {
                 <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">
                     ${d.expiry_date || 'N/A'}${expiryBadge}
                 </td>
-                <td class="p-4 text-sm text-slate-600 max-w-[200px]" title="${fullRem.replace(/"/g,'&quot;')}">
+                <td class="p-4 text-sm text-slate-600 max-w-[200px]" title="${fullRem.replace(/"/g, '&quot;')}">
                     <span class="block">${shortRem}</span>
                 </td>
                 <td class="p-4 text-sm font-semibold text-blue-700 whitespace-nowrap">${d.updated_by || 'N/A'}</td>
@@ -1559,10 +1524,10 @@ async function saveDSC() {
     const btn = document.getElementById('dscBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
-    
+
     const id = document.getElementById('dEditId').value;
     const companyName = document.getElementById('dCompany').value?.trim();
-    
+
     if (!companyName) {
         btn.disabled = false;
         btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
@@ -1581,13 +1546,10 @@ async function saveDSC() {
     };
 
     try {
-        let error;
-        if (id) { 
-            ({ error } = await supabaseClient.from('witcorp_dsc').update(payload).eq('id', parseInt(id, 10))); 
-        } else { 
-            ({ error } = await supabaseClient.from('witcorp_dsc').insert([payload])); 
-        }
-        
+        const { error } = id
+            ? await supabaseClient.from('witcorp_dsc').update(payload).eq('id', parseInt(id, 10))
+            : await supabaseClient.from('witcorp_dsc').insert([payload]);
+
         if (!error) {
             await createNotificationForOthers(
                 id ? "DSC Updated" : "New DSC Added",
@@ -1596,7 +1558,6 @@ async function saveDSC() {
             );
             saveActivity(`${id ? 'Updated' : 'Added'} DSC: ${payload.company_name} | ${payload.client_name} | Status: ${payload.status}`);
             showToast(`DSC ${id ? 'updated' : 'saved'}: ${payload.company_name}`, 'success');
-            await new Promise(r => setTimeout(r, 300));
             await fetchDSC();
             document.getElementById('dEditId').value = "";
             ['dCompany', 'dClient', 'dExpiry', 'dRemarks'].forEach(i => document.getElementById(i).value = "");
@@ -1618,7 +1579,7 @@ function editDSC(d) {
     document.getElementById('dEditId').value = d.id;
     document.getElementById('dCompany').value = d.company_name;
     document.getElementById('dClient').value = d.client_name;
-    document.getElementById('dStatus').value = (d.status === "Valid" || d.status === "Expired" || d.status === "No DSC") ? d.status : "Valid";
+    document.getElementById('dStatus').value = (['Valid', 'Expired', 'No DSC'].includes(d.status)) ? d.status : 'Valid';
     document.getElementById('dExpiry').value = d.expiry_date ? d.expiry_date.substring(0, 10) : "";
     document.getElementById('dRemarks').value = d.remarks || '';
     document.getElementById('dscBtn').innerText = "Update DSC Status";
@@ -1658,8 +1619,11 @@ function searchDSC(query) {
 // SERVICE WORKER
 // ============================================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(() => console.log("SW registered")).catch(err => console.error("SW registration error:", err));
+    navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log("SW registered"))
+        .catch(err => console.error("SW registration error:", err));
 }
+// WITCORP HUB — ENTERPRISE SCRIPT (FINAL FIXED VERSION — PART 2)
 
 // ============================================================
 // PROFILE MENU
@@ -1668,7 +1632,7 @@ function toggleProfileMenu() {
     document.getElementById("profileMenu").classList.toggle("hidden");
 }
 
-document.addEventListener("click", function (event) {
+document.addEventListener("click", function(event) {
     const menu = document.getElementById("profileMenu");
     if (menu && !event.target.closest("#profileMenu") && !event.target.closest("[onclick='toggleProfileMenu()']")) {
         menu.classList.add("hidden");
@@ -1686,20 +1650,8 @@ function openThemeSettings() { document.getElementById("themeModal").classList.r
 function closeThemeSettings() { document.getElementById("themeModal").classList.add("hidden"); }
 
 // ============================================================
-// NOTIFICATIONS (FIXED - XSS PREVENTION)
+// NOTIFICATIONS
 // ============================================================
-async function createNotification(title, message, type = "info", reference = "") {
-    try {
-        await supabaseClient.from('witcorp_notifications').insert([{
-            title, message, type, reference,
-            created_by: currentUserName,
-            is_read: false
-        }]);
-    } catch (err) {
-        console.error("createNotification error:", err);
-    }
-}
-
 async function createNotificationForOthers(title, message, type = "info", reference = "") {
     try {
         await supabaseClient.from('witcorp_notifications').insert([{
@@ -1759,52 +1711,51 @@ function renderNotifications() {
         return;
     }
 
+    const typeIcon = { record: 'fa-file-alt', client: 'fa-address-card', vault: 'fa-shield-halved', dsc: 'fa-key' };
+
     allNotifications.forEach(n => {
-        const typeIcon = { record: 'fa-file-alt', client: 'fa-address-card', vault: 'fa-shield-halved', dsc: 'fa-key' };
-        
-        // FIX: Use textContent instead of innerHTML to prevent XSS
         const notifDiv = document.createElement('div');
         notifDiv.dataset.notifId = n.id;
         notifDiv.dataset.notifType = n.type;
         notifDiv.dataset.notifRef = n.reference || '';
         notifDiv.className = `p-4 cursor-pointer transition-all hover:bg-slate-50 flex gap-3 items-start ${!n.is_read ? 'bg-blue-50 border-l-4 border-blue-400' : 'bg-white'}`;
-        
+
         const iconDiv = document.createElement('div');
         iconDiv.className = `w-8 h-8 rounded-full ${!n.is_read ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'} flex items-center justify-center flex-shrink-0 mt-0.5`;
         iconDiv.innerHTML = `<i class="fas ${typeIcon[n.type] || 'fa-bell'} text-xs"></i>`;
-        
+
         const contentDiv = document.createElement('div');
         contentDiv.className = 'flex-1 min-w-0';
-        
+
         const titleEl = document.createElement('div');
         titleEl.className = 'font-bold text-sm text-slate-800';
-        titleEl.textContent = n.title; // FIX: Safe text content
-        
+        titleEl.textContent = n.title;
+
         const messageEl = document.createElement('div');
         messageEl.className = 'text-xs text-slate-500 mt-0.5';
-        messageEl.textContent = n.message; // FIX: Safe text content
-        
+        messageEl.textContent = n.message;
+
         const timeEl = document.createElement('div');
         timeEl.className = 'text-[10px] text-blue-500 mt-1 font-semibold';
         timeEl.textContent = new Date(n.created_at).toLocaleString('en-IN');
-        
+
         contentDiv.appendChild(titleEl);
         contentDiv.appendChild(messageEl);
         contentDiv.appendChild(timeEl);
-        
+
         notifDiv.appendChild(iconDiv);
         notifDiv.appendChild(contentDiv);
-        
+
         if (!n.is_read) {
             const readDot = document.createElement('span');
             readDot.className = 'w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2';
             notifDiv.appendChild(readDot);
         }
-        
-        notifDiv.addEventListener('click', function () {
+
+        notifDiv.addEventListener('click', function() {
             openNotification(parseInt(this.dataset.notifId, 10), this.dataset.notifType, this.dataset.notifRef);
         });
-        
+
         list.appendChild(notifDiv);
     });
 }
@@ -1842,20 +1793,19 @@ supabaseClient
 
             const notificationEnabled = localStorage.getItem("notificationSound");
             if (notificationEnabled !== "off") {
-                // Browser ke built-in sound use karo (temporary):
-try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.frequency.value = 800;
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
-} catch(e) {}
-        
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (e) {}
+
                 navigator.serviceWorker?.ready.then(reg => {
                     reg.showNotification(payload.new.title || "New Update", {
                         body: payload.new.message || "Database updated",
@@ -1872,20 +1822,6 @@ try {
         }
     })
     .subscribe((status) => { console.log("NOTIFICATION STATUS:", status); });
-
-window.addEventListener('DOMContentLoaded', () => { fetchNotifications(); });
-
-// ============================================================
-// THEMES
-// ============================================================
-
-window.addEventListener('load', () => {
-    const savedBg = localStorage.getItem('bgTheme');
-    if (savedBg) changeTheme(savedBg);
-    const savedSidebar = localStorage.getItem('sidebarTheme');
-    if (savedSidebar) changeSidebarTheme(savedSidebar);
-    loadNotificationSetting();
-});
 
 // ============================================================
 // AUTOCOMPLETE / PREDICTIONS
@@ -1921,44 +1857,21 @@ function setupPredictions() {
 // ============================================================
 async function forgotPassword() {
     const email = document.getElementById("email")?.value;
-    if (!email) {
-        document.getElementById('authMsg').innerText = "Please enter your email first";
-        return;
-    }
+    if (!email) { document.getElementById('authMsg').innerText = "Please enter your email first"; return; }
     try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
             redirectTo: window.location.origin + window.location.pathname + "?reset=true"
         });
-        if (error) { 
-            document.getElementById('authMsg').innerText = error.message; 
-        } else { 
-            document.getElementById('authMsg').innerText = "Password reset link sent to your email."; 
+        if (error) {
+            document.getElementById('authMsg').innerText = error.message;
+        } else {
+            document.getElementById('authMsg').innerText = "Password reset link sent to your email.";
         }
     } catch (err) {
         console.error("forgotPassword error:", err);
         document.getElementById('authMsg').innerText = "Reset failed. Please try again.";
     }
 }
-
-window.addEventListener('load', async () => {
-    const hash = window.location.hash;
-    if (hash.includes("access_token") && hash.includes("type=recovery")) {
-        const newPassword = prompt("Enter New Password");
-        if (!newPassword) return;
-        try {
-            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-            if (error) { 
-                showToast(error.message, 'error'); 
-            } else {
-                showToast("Password updated successfully!", 'success');
-                window.location.href = window.location.pathname;
-            }
-        } catch (err) {
-            console.error("Password update error:", err);
-            showToast("Password update failed. Please try again.", 'error');
-        }
-    }
-});
 
 // ============================================================
 // NOTIFICATION SOUND SETTING
@@ -1993,7 +1906,7 @@ function openMyActivity() { document.getElementById("activityModal").classList.r
 function closeActivityModal() { document.getElementById("activityModal").classList.add("hidden"); }
 
 // ============================================================
-// ACTIVITY LOG (FIX: Limit entries to prevent localStorage overflow)
+// ACTIVITY LOG
 // ============================================================
 async function loadMyActivity() {
     const list = document.getElementById("activityList");
@@ -2047,25 +1960,26 @@ async function loadMyActivity() {
         list.innerHTML = `<div class="text-center text-red-500 py-10 font-semibold">Error loading activity</div>`;
     }
 }
+
 // ============================================================
 // EXPORT FUNCTIONS
 // ============================================================
 function exportCSV() {
-    let rows = currentExportData || [];
+    const rows = currentExportData || [];
     if (rows.length === 0) { showToast('No records found to export', 'warning'); return; }
     let csv = "";
     if (currentExportType === "records") {
         csv = "Client,Category,Service,Staff,Status,Deadline\n";
-        rows.forEach(r => { csv += `"${r.client_name||""}","${r.service_category||""}","${r.service_detail||""}","${r.assigned_staff||""}","${r.status||""}","${r.deadline||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.status || ""}","${r.deadline || ""}"\n`; });
     } else if (currentExportType === "clients") {
         csv = "Client Name,Phone,Email,Type\n";
-        rows.forEach(r => { csv += `"${r.client_name||""}","${r.contact_number||""}","${r.email_id||""}","${r.entity_type||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.client_name || ""}","${r.contact_number || ""}","${r.email_id || ""}","${r.entity_type || ""}"\n`; });
     } else if (currentExportType === "vault") {
         csv = "Client,Category,Username,Password,Updated By\n";
-        rows.forEach(r => { csv += `"${r.client_name||""}","${r.category||""}","${r.username||""}","${r.password||""}","${r.updated_by||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.client_name || ""}","${r.category || ""}","${r.username || ""}","${r.password || ""}","${r.updated_by || ""}"\n`; });
     } else if (currentExportType === "dsc") {
         csv = "Company,Client,Status,Expiry Date,Remarks\n";
-        rows.forEach(r => { csv += `"${r.company_name||""}","${r.client_name||""}","${r.status||""}","${r.expiry_date||""}","${r.remarks||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.company_name || ""}","${r.client_name || ""}","${r.status || ""}","${r.expiry_date || ""}","${r.remarks || ""}"\n`; });
     }
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a");
@@ -2077,21 +1991,21 @@ function exportCSV() {
 }
 
 function exportExcel() {
-    let rows = currentExportData || [];
+    const rows = currentExportData || [];
     if (rows.length === 0) { showToast('No records found to export', 'warning'); return; }
     let csv = "";
     if (currentExportType === "records") {
         csv = "Client,Category,Service,Staff,Alloted By,Status,Deadline,Remarks,Updated By\n";
-        rows.forEach(r => { csv += `"${r.client_name||""}","${r.service_category||""}","${r.service_detail||""}","${r.assigned_staff||""}","${r.alloted_by||""}","${r.status||""}","${r.deadline||""}","${r.remarks||""}","${r.updated_by||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.client_name || ""}","${r.service_category || ""}","${r.service_detail || ""}","${r.assigned_staff || ""}","${r.alloted_by || ""}","${r.status || ""}","${r.deadline || ""}","${r.remarks || ""}","${r.updated_by || ""}"\n`; });
     } else if (currentExportType === "clients") {
         csv = "Client Name,Phone,Email,Type,Updated By\n";
-        rows.forEach(r => { csv += `"${r.client_name||""}","${r.contact_number||""}","${r.email_id||""}","${r.entity_type||""}","${r.updated_by||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.client_name || ""}","${r.contact_number || ""}","${r.email_id || ""}","${r.entity_type || ""}","${r.updated_by || ""}"\n`; });
     } else if (currentExportType === "vault") {
         csv = "Client,Category,Username,Password,Updated By\n";
-        rows.forEach(r => { csv += `"${r.client_name||""}","${r.category||""}","${r.username||""}","${r.password||""}","${r.updated_by||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.client_name || ""}","${r.category || ""}","${r.username || ""}","${r.password || ""}","${r.updated_by || ""}"\n`; });
     } else if (currentExportType === "dsc") {
         csv = "Company,Client,Status,Expiry Date,Remarks,Updated By\n";
-        rows.forEach(r => { csv += `"${r.company_name||""}","${r.client_name||""}","${r.status||""}","${r.expiry_date||""}","${r.remarks||""}","${r.updated_by||""}"\n`; });
+        rows.forEach(r => { csv += `"${r.company_name || ""}","${r.client_name || ""}","${r.status || ""}","${r.expiry_date || ""}","${r.remarks || ""}","${r.updated_by || ""}"\n`; });
     }
     const bom = "\uFEFF";
     const blob = new Blob([bom + csv], { type: "application/vnd.ms-excel;charset=utf-8;" });
@@ -2106,27 +2020,27 @@ function exportExcel() {
 function exportPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF("landscape");
-    let rows = currentExportData || [];
+    const rows = currentExportData || [];
     if (rows.length === 0) { showToast('No records found to export', 'warning'); return; }
     let tableHead = [], tableData = [];
     if (currentExportType === "vault") {
         tableHead = [["Client", "Category", "Username", "Password", "Updated By"]];
-        tableData = rows.map(r => [r.client_name||"", r.category||"", r.username||"", r.password||"", r.updated_by||""]);
+        tableData = rows.map(r => [r.client_name || "", r.category || "", r.username || "", r.password || "", r.updated_by || ""]);
     } else if (currentExportType === "clients") {
         tableHead = [["Client", "Phone", "Email", "Type"]];
-        tableData = rows.map(r => [r.client_name||"", r.contact_number||"", r.email_id||"", r.entity_type||""]);
+        tableData = rows.map(r => [r.client_name || "", r.contact_number || "", r.email_id || "", r.entity_type || ""]);
     } else if (currentExportType === "dsc") {
         tableHead = [["Company", "Client", "Status", "Expiry Date", "Remarks"]];
-        tableData = rows.map(r => [r.company_name||"", r.client_name||"", r.status||"", r.expiry_date||"", r.remarks||""]);
+        tableData = rows.map(r => [r.company_name || "", r.client_name || "", r.status || "", r.expiry_date || "", r.remarks || ""]);
     } else {
         tableHead = [["Client", "Category", "Service", "Staff", "Alloted By", "Status", "Deadline", "Remarks", "Updated By"]];
-        tableData = rows.map(r => [r.client_name||"", r.service_category||"", r.service_detail||"", r.assigned_staff||"", r.alloted_by||"", r.status||"", r.deadline||"", r.remarks||"", r.updated_by||""]);
+        tableData = rows.map(r => [r.client_name || "", r.service_category || "", r.service_detail || "", r.assigned_staff || "", r.alloted_by || "", r.status || "", r.deadline || "", r.remarks || "", r.updated_by || ""]);
     }
     doc.setFontSize(16);
     doc.text("Witcorp Hub Report", 14, 15);
     doc.autoTable({
         head: tableHead, body: tableData, startY: 25,
-        didDrawPage: function () { doc.setFontSize(10); doc.text("Generated: " + new Date().toLocaleString(), 14, 10); }
+        didDrawPage: function() { doc.setFontSize(10); doc.text("Generated: " + new Date().toLocaleString(), 14, 10); }
     });
     doc.save("Witcorp_Report.pdf");
     saveActivity("Exported PDF Report: " + currentExportType);
@@ -2144,37 +2058,52 @@ function applyGreenHeaders() {
         th.style.letterSpacing = '0.06em';
     });
 }
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(applyGreenHeaders, 400);
-});
 
 // ============================================================
-// KEYBOARD SHORTCUTS — Ctrl+K for search, Escape to close
+// KEYBOARD SHORTCUTS — SINGLE UNIFIED HANDLER
 // ============================================================
 document.addEventListener('keydown', function(e) {
+    // Ctrl+K — Global Search
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         const searchBox = document.getElementById('globalSearch');
         if (searchBox) {
+            const globalSearchBox = document.getElementById('globalSearchBox');
+            if (globalSearchBox) globalSearchBox.style.display = 'block';
             searchBox.focus();
             searchBox.select();
-            const dashSection = document.getElementById('dashboard');
-            if (dashSection && !dashSection.classList.contains('active')) {
-                document.getElementById('globalSearchBox').style.display = 'block';
-                searchBox.focus();
-            }
         }
     }
+
+    // Ctrl+N — Quick Add
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        openQuickAdd();
+    }
+
+    // Escape — Close modals
     if (e.key === 'Escape') {
         document.getElementById('notificationPanel')?.classList.add('hidden');
         document.getElementById('profileMenu')?.classList.add('hidden');
         document.getElementById('themeModal')?.classList.add('hidden');
         document.getElementById('activityModal')?.classList.add('hidden');
         document.getElementById('exportModal')?.classList.add('hidden');
+        document.getElementById('auditModal')?.classList.add('hidden');
+        document.getElementById('commentsModal')?.classList.add('hidden');
+        document.getElementById('subtasksModal')?.classList.add('hidden');
+        document.getElementById('quickAddModal')?.classList.add('hidden');
+        document.getElementById('profileModal')?.classList.add('hidden');
+    }
+
+    // Enter in comment input
+    if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.id === 'commentInput') {
+        e.preventDefault();
+        postComment();
     }
 });
+
 // ============================================================
-// USER PROFILE SYSTEM — DB Based
+// USER PROFILE SYSTEM
 // ============================================================
 let currentUserProfile = null;
 
@@ -2187,11 +2116,9 @@ async function loadUserProfile(email) {
             .single();
 
         if (error || !data) {
-            // Pehli baar login — profile create karo
             await createUserProfile(email);
             return;
         }
-
         currentUserProfile = data;
         applyUserPreferences(data);
         updateProfileUI(data);
@@ -2203,7 +2130,7 @@ async function loadUserProfile(email) {
 async function createUserProfile(email) {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        const colors = ['#3b82f6','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444','#06b6d4'];
+        const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
         const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
         const payload = {
@@ -2272,14 +2199,8 @@ function updateProfileUI(profile) {
 
     const p1 = document.getElementById('profileInitial');
     const p2 = document.getElementById('profileInitial2');
-    if (p1) {
-        p1.innerText = initial;
-        p1.style.background = profile.avatar_color || '#3b82f6';
-    }
-    if (p2) {
-        p2.innerText = initial;
-        p2.style.background = profile.avatar_color || '#3b82f6';
-    }
+    if (p1) { p1.innerText = initial; p1.style.background = profile.avatar_color || '#3b82f6'; }
+    if (p2) { p2.innerText = initial; p2.style.background = profile.avatar_color || '#3b82f6'; }
 
     const nameEl = document.getElementById('profileDisplayName');
     if (nameEl) nameEl.innerText = profile.full_name || profile.email.split('@')[0];
@@ -2332,7 +2253,6 @@ async function saveProfileChanges() {
         default_category_filter: document.getElementById('pDefaultCategory').value,
         default_status_filter: document.getElementById('pDefaultStatus').value
     };
-
     await updateUserProfile(updates);
     currentUserName = updates.full_name || currentUserProfile.email;
     closeProfileModal();
@@ -2356,12 +2276,9 @@ async function loadActivityInProfile() {
         }
 
         const iconMap = {
-            Added: 'fa-circle-plus text-emerald-500',
-            Updated: 'fa-pen-to-square text-blue-500',
-            Deleted: 'fa-trash-can text-rose-500',
-            Exported: 'fa-file-export text-purple-500',
-            Bulk: 'fa-layer-group text-cyan-500',
-            Login: 'fa-right-to-bracket text-amber-500',
+            Added: 'fa-circle-plus text-emerald-500', Updated: 'fa-pen-to-square text-blue-500',
+            Deleted: 'fa-trash-can text-rose-500', Exported: 'fa-file-export text-purple-500',
+            Bulk: 'fa-layer-group text-cyan-500', Login: 'fa-right-to-bracket text-amber-500',
             Other: 'fa-clock-rotate-left text-slate-400'
         };
 
@@ -2383,12 +2300,11 @@ async function loadActivityInProfile() {
 }
 
 // ============================================================
-// ACTIVITY LOG — DB Based (localStorage replace)
+// ACTIVITY LOG — DB Based
 // ============================================================
 async function saveActivity(text) {
-    // DB mein save karo
     try {
-        const actionType = ['Added','Updated','Deleted','Exported','Bulk','Login']
+        const actionType = ['Added', 'Updated', 'Deleted', 'Exported', 'Bulk', 'Login']
             .find(t => text.startsWith(t)) || 'Other';
 
         await supabaseClient.from('witcorp_activity_log').insert([{
@@ -2400,7 +2316,6 @@ async function saveActivity(text) {
                     text.includes('DSC') ? 'dsc' : 'records'
         }]);
 
-        // Stats update karo profile mein
         if (currentUserProfile) {
             const field = actionType === 'Added' ? 'total_added' :
                          actionType === 'Updated' ? 'total_updated' :
@@ -2410,18 +2325,17 @@ async function saveActivity(text) {
                     .from('witcorp_user_profiles')
                     .update({ [field]: (currentUserProfile[field] || 0) + 1 })
                     .eq('email', currentUserEmail);
-                if (currentUserProfile) currentUserProfile[field] = (currentUserProfile[field] || 0) + 1;
+                currentUserProfile[field] = (currentUserProfile[field] || 0) + 1;
             }
         }
     } catch (err) {
-        // Fallback to localStorage if DB fails
         console.error('saveActivity DB error, falling back:', err);
         try {
             let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
             activity.unshift({ text, time: new Date().toLocaleString('en-IN') });
             if (activity.length > 50) activity = activity.slice(0, 50);
             localStorage.setItem("myActivity", JSON.stringify(activity));
-        } catch(e) {}
+        } catch (e) {}
     }
 }
 
@@ -2430,9 +2344,9 @@ async function saveActivity(text) {
 // ============================================================
 function changeTheme(theme) {
     const body = document.body;
-    ['theme-ocean','theme-dark','theme-green','theme-purple','theme-light'].forEach(t => body.classList.remove(t));
+    ['theme-ocean', 'theme-dark', 'theme-green', 'theme-purple', 'theme-light'].forEach(t => body.classList.remove(t));
     body.classList.add(theme);
-    localStorage.setItem('bgTheme', theme); // fallback
+    localStorage.setItem('bgTheme', theme);
     if (currentUserProfile) updateUserProfile({ bg_theme: theme });
 }
 
@@ -2440,14 +2354,14 @@ function changeSidebarTheme(theme) {
     const sidebar = document.getElementById('sidebar');
     const mobileSidebar = document.getElementById('mobileSidebar');
     const sidebarThemes = [
-        'sidebar-theme-raspberry','sidebar-theme-mint','sidebar-theme-chill',
-        'sidebar-theme-forest','sidebar-theme-damini','sidebar-theme-seaglass',
-        'sidebar-theme-lemon','sidebar-theme-dark','sidebar-theme-navypro','sidebar-theme-original'
+        'sidebar-theme-raspberry', 'sidebar-theme-mint', 'sidebar-theme-chill',
+        'sidebar-theme-forest', 'sidebar-theme-damini', 'sidebar-theme-seaglass',
+        'sidebar-theme-lemon', 'sidebar-theme-dark', 'sidebar-theme-navypro', 'sidebar-theme-original'
     ];
     sidebarThemes.forEach(t => { sidebar?.classList.remove(t); mobileSidebar?.classList.remove(t); });
     sidebar?.classList.add(theme);
     mobileSidebar?.classList.add(theme);
-    localStorage.setItem('sidebarTheme', theme); // fallback
+    localStorage.setItem('sidebarTheme', theme);
     if (currentUserProfile) updateUserProfile({ sidebar_theme: theme });
 }
 
@@ -2462,7 +2376,6 @@ async function saveAuditTrail(tableName, recordId, action, oldData, newData) {
                 if (oldData[key] !== newData[key]) changedFields.push(key);
             });
         }
-
         await supabaseClient.from('witcorp_audit_trail').insert([{
             table_name: tableName,
             record_id: String(recordId),
@@ -2489,7 +2402,6 @@ async function openAuditModal(recordId) {
         const modal = document.getElementById('auditModal');
         const list = document.getElementById('auditList');
         const title = document.getElementById('auditModalTitle');
-
         if (!modal || !list) return;
         if (title) title.innerText = `Change History — Record #${recordId}`;
 
@@ -2513,7 +2425,6 @@ async function openAuditModal(recordId) {
                     </div>`;
             }).join('');
         }
-
         modal.classList.remove('hidden');
     } catch (err) {
         console.error('openAuditModal error:', err);
@@ -2576,7 +2487,7 @@ async function loadComments(recordId) {
                             ${c.comment_text}
                         </div>
                         <div class="text-[10px] text-slate-400 mt-1 ${isMe ? 'text-right' : ''}">
-                            ${new Date(c.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true })}
+                            ${new Date(c.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
                             ${c.is_edited ? ' · edited' : ''}
                         </div>
                     </div>
@@ -2604,7 +2515,6 @@ async function postComment() {
             comment_text: text,
             commented_by: currentUserEmail
         }]);
-
         if (!error) {
             input.value = '';
             await loadComments(activeCommentRecordId);
@@ -2617,14 +2527,6 @@ async function postComment() {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
     }
 }
-
-// Enter key se comment post karo
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.id === 'commentInput') {
-        e.preventDefault();
-        postComment();
-    }
-});
 
 // ============================================================
 // SUB-TASKS / CHECKLIST
@@ -2699,14 +2601,12 @@ async function addSubtask() {
     const input = document.getElementById('subtaskInput');
     const text = input?.value.trim();
     if (!text) return;
-
     try {
         const { error } = await supabaseClient.from('witcorp_subtasks').insert([{
             record_id: activeSubtaskRecordId,
             task_text: text,
             created_by: currentUserEmail
         }]);
-
         if (!error) {
             input.value = '';
             await loadSubtasks(activeSubtaskRecordId);
@@ -2747,14 +2647,11 @@ async function togglePin(recordId) {
     try {
         const isPinned = await checkIfPinned(recordId);
         if (isPinned) {
-            await supabaseClient.from('witcorp_pins')
-                .delete()
-                .eq('record_id', recordId)
-                .eq('pinned_by', currentUserEmail);
+            await supabaseClient.from('witcorp_pins').delete()
+                .eq('record_id', recordId).eq('pinned_by', currentUserEmail);
             showToast('Record unpinned', 'info', 2000);
         } else {
-            await supabaseClient.from('witcorp_pins')
-                .insert([{ record_id: recordId, pinned_by: currentUserEmail }]);
+            await supabaseClient.from('witcorp_pins').insert([{ record_id: recordId, pinned_by: currentUserEmail }]);
             showToast('Record pinned!', 'success', 2000);
         }
         updatePinButton(recordId, !isPinned);
@@ -2766,11 +2663,8 @@ async function togglePin(recordId) {
 async function checkIfPinned(recordId) {
     try {
         const { data } = await supabaseClient
-            .from('witcorp_pins')
-            .select('id')
-            .eq('record_id', recordId)
-            .eq('pinned_by', currentUserEmail)
-            .single();
+            .from('witcorp_pins').select('id')
+            .eq('record_id', recordId).eq('pinned_by', currentUserEmail).single();
         return !!data;
     } catch { return false; }
 }
@@ -2786,14 +2680,9 @@ function updatePinButton(recordId, isPinned) {
 async function showPinnedRecords() {
     try {
         const { data: pins } = await supabaseClient
-            .from('witcorp_pins')
-            .select('record_id')
-            .eq('pinned_by', currentUserEmail);
+            .from('witcorp_pins').select('record_id').eq('pinned_by', currentUserEmail);
 
-        if (!pins || pins.length === 0) {
-            showToast('No pinned records yet', 'info');
-            return;
-        }
+        if (!pins || pins.length === 0) { showToast('No pinned records yet', 'info'); return; }
 
         const pinnedIds = pins.map(p => p.record_id);
         const pinned = allRecords.filter(r => pinnedIds.includes(r.id));
@@ -2828,9 +2717,7 @@ async function loadOnlineUsers() {
     try {
         const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
         const { data } = await supabaseClient
-            .from('witcorp_presence')
-            .select('*')
-            .gte('last_seen', fiveMinAgo);
+            .from('witcorp_presence').select('*').gte('last_seen', fiveMinAgo);
 
         const container = document.getElementById('onlineUsersBar');
         if (!container || !data) return;
@@ -2852,7 +2739,6 @@ async function loadOnlineUsers() {
     }
 }
 
-// Presence update karte raho
 setInterval(() => updatePresence(), 60000);
 
 // ============================================================
@@ -2866,11 +2752,9 @@ const WARNING_TIME = 2 * 60 * 1000;
 function resetSessionTimer() {
     clearTimeout(sessionTimer);
     clearTimeout(warningTimer);
-
     warningTimer = setTimeout(() => {
         showToast('Session expiring in 2 minutes due to inactivity', 'warning', 8000);
     }, SESSION_TIMEOUT - WARNING_TIME);
-
     sessionTimer = setTimeout(() => {
         showToast('Session expired. Logging out...', 'warning');
         setTimeout(logout, 2000);
@@ -2910,19 +2794,14 @@ async function loadAnnouncements() {
 }
 
 async function postAnnouncement() {
-    if (currentUserProfile?.role !== 'admin') {
-        showToast('Only admins can post announcements', 'error');
-        return;
-    }
+    if (currentUserProfile?.role !== 'admin') { showToast('Only admins can post announcements', 'error'); return; }
     const title = prompt('Announcement Title:');
     if (!title) return;
     const message = prompt('Announcement Message:');
     if (!message) return;
-
     try {
         await supabaseClient.from('witcorp_announcements').insert([{
-            title, message,
-            type: 'info',
+            title, message, type: 'info',
             created_by: currentUserEmail,
             is_active: true
         }]);
@@ -2950,10 +2829,7 @@ async function submitQuickAdd() {
     const category = document.getElementById('qaCategory')?.value;
     const status = document.getElementById('qaStatus')?.value;
 
-    if (!clientName || !category) {
-        showToast('Client name & category required', 'error');
-        return;
-    }
+    if (!clientName || !category) { showToast('Client name & category required', 'error'); return; }
 
     try {
         const { error } = await supabaseClient.from('witcorp_records').insert([{
@@ -2971,7 +2847,7 @@ async function submitQuickAdd() {
             saveActivity(`Added Record: ${clientName} | ${category}`);
             showToast(`Quick added: ${clientName}`, 'success');
             closeQuickAdd();
-            ['qaClientName','qaServiceDetail','qaStaff','qaDeadline'].forEach(id => {
+            ['qaClientName', 'qaServiceDetail', 'qaStaff', 'qaDeadline'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
@@ -2983,14 +2859,6 @@ async function submitQuickAdd() {
         console.error('submitQuickAdd error:', err);
     }
 }
-
-// Keyboard shortcut update karo
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        openQuickAdd();
-    }
-});
 
 // ============================================================
 // COLUMN VISIBILITY
@@ -3036,7 +2904,7 @@ function resetColumns() {
 }
 
 // ============================================================
-// SHOWAPP — update karo (profile load add karo)
+// SHOWAPP
 // ============================================================
 function showApp(user) {
     document.getElementById('authScreen').style.display = 'none';
@@ -3050,18 +2918,55 @@ function showApp(user) {
     const p2 = document.getElementById("profileInitial2");
     if (p1) p1.innerText = user.email.charAt(0).toUpperCase();
     if (p2) p2.innerText = user.email.charAt(0).toUpperCase();
-    showSection('dashboard');
 
-    // Naye functions call karo
     loadUserProfile(user.email);
     loadAnnouncements();
     loadOnlineUsers();
     resetSessionTimer();
     updatePresence('dashboard');
     loadColumnPrefs();
+    showSection('dashboard');
 
     setInterval(loadOnlineUsers, 30000);
-
     saveActivity('Login: ' + user.email);
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
+
+// ============================================================
+// SINGLE window.addEventListener('load') — consolidated
+// ============================================================
+window.addEventListener('load', async () => {
+    // Theme preferences (fallback for before login)
+    const savedBg = localStorage.getItem('bgTheme');
+    if (savedBg) changeTheme(savedBg);
+    const savedSidebar = localStorage.getItem('sidebarTheme');
+    if (savedSidebar) changeSidebarTheme(savedSidebar);
+
+    // Notification sound indicator
+    loadNotificationSetting();
+
+    // Green headers init
+    setTimeout(applyGreenHeaders, 400);
+
+    // Fetch notifications after DOM ready
+    fetchNotifications();
+
+    // Password reset flow (hash-based)
+    const hash = window.location.hash;
+    if (hash.includes("access_token") && hash.includes("type=recovery")) {
+        const newPassword = prompt("Enter New Password");
+        if (!newPassword) return;
+        try {
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+            if (error) {
+                showToast(error.message, 'error');
+            } else {
+                showToast("Password updated successfully!", 'success');
+                window.location.href = window.location.pathname;
+            }
+        } catch (err) {
+            console.error("Password update error:", err);
+            showToast("Password update failed. Please try again.", 'error');
+        }
+    }
+});
