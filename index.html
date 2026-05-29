@@ -176,6 +176,18 @@
   </div>
 
   <div id="appScreen" class="hidden flex-col lg:flex-row w-full min-h-screen">
+      <!-- ANNOUNCEMENT BANNER — YE PEHLI LINE HOGI appScreen ke andar -->
+  <div id="announcementBanner" class="hidden w-full bg-blue-600 text-white px-4 py-2.5 flex items-center justify-between text-sm font-semibold z-40">
+    <div class="flex items-center gap-2">
+      <i class="fas fa-bullhorn text-yellow-300"></i>
+      <span id="announcementText"></span>
+    </div>
+    <button onclick="this.parentElement.classList.add('hidden')"
+      class="ml-4 opacity-70 hover:opacity-100 font-black text-lg leading-none">✕</button>
+  </div>
+
+  <!-- MOBILE TOPBAR — YE ALREADY HAI TERA -->
+  <div class="lg:hidden flex items-center...
 
     <!-- MOBILE TOPBAR -->
     <div class="lg:hidden flex items-center justify-between p-3 bg-[#1A2E5A] text-white">
@@ -354,6 +366,10 @@
         </div>
 
         <div class="flex items-center gap-3 ml-auto">
+            <!-- ONLINE USERS BAR — YE PEHLE DAALO -->
+  <div id="onlineUsersBar" class="hidden lg:flex items-center gap-1.5 mr-2">
+    <!-- Users dynamically load honge -->
+  </div>
           <!-- LAST SYNC -->
           <div id="lastSyncBadge" class="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold border">
             <i class="fas fa-clock text-blue-400"></i>
@@ -388,6 +404,15 @@
                 </div>
               </div>
               <div class="p-3">
+                  <!-- YE DO NAYE BUTTONS SABSE UPAR DAALO -->
+  <button onclick="openProfileModal(); toggleProfileMenu();"
+    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold transition-all mb-2">
+    <i class="fas fa-user-circle text-blue-500"></i> My Profile
+  </button>
+  <button onclick="showPinnedRecords(); toggleProfileMenu();"
+    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold transition-all mb-2">
+    <i class="fas fa-thumbtack text-amber-500"></i> Pinned Records
+  </button>
                 <button onclick="openThemeSettings()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
                   <i class="fas fa-palette"></i> Theme Settings
                 </button>
@@ -806,6 +831,12 @@
           </div>
         </div>
       </div>
+         <!-- QUICK ADD FLOATING BUTTON -->
+    <button onclick="openQuickAdd()"
+      class="fixed bottom-24 right-6 z-[9999] w-14 h-14 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all lg:bottom-8"
+      title="Quick Add (Ctrl+N)">
+      <i class="fas fa-plus text-xl"></i>
+    </button>
 
     </main>
   </div>
@@ -921,6 +952,230 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- ============================================================ -->
+<!-- ANNOUNCEMENT BANNER — appScreen ke andar sabse upar -->
+<!-- ============================================================ -->
+<!-- YE WALA appScreen div ke andar, MOBILE TOPBAR se pehle daalo -->
+<!-- <div id="appScreen" ...> ke turant baad -->
+
+<!-- ============================================================ -->
+<!-- PROFILE MODAL -->
+<!-- ============================================================ -->
+<div id="profileModal" class="hidden fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <h2 class="text-xl font-black text-slate-800">My Profile</h2>
+      <button onclick="closeProfileModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+    </div>
+    <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center gap-4">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg" style="background:#3b82f6">
+        <span id="profileInitialModal">U</span>
+      </div>
+      <div>
+        <div id="profileDisplayName" class="text-lg font-black text-slate-800">Loading...</div>
+        <div id="profileDesignation" class="text-sm text-slate-500 font-semibold">Team Member</div>
+        <span id="profileRoleBadge" class="px-2 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-700 mt-1 inline-block">STAFF</span>
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-4 p-6 border-b border-slate-100">
+      <div class="text-center p-3 bg-emerald-50 rounded-2xl">
+        <div id="pStatsAdded" class="text-2xl font-black text-emerald-600">0</div>
+        <div class="text-xs font-bold text-slate-500 mt-1">Added</div>
+      </div>
+      <div class="text-center p-3 bg-blue-50 rounded-2xl">
+        <div id="pStatsUpdated" class="text-2xl font-black text-blue-600">0</div>
+        <div class="text-xs font-bold text-slate-500 mt-1">Updated</div>
+      </div>
+      <div class="text-center p-3 bg-rose-50 rounded-2xl">
+        <div id="pStatsDeleted" class="text-2xl font-black text-rose-600">0</div>
+        <div class="text-xs font-bold text-slate-500 mt-1">Deleted</div>
+      </div>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Full Name</label>
+        <input id="pFullName" type="text" placeholder="Your full name"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      </div>
+      <div>
+        <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Designation</label>
+        <input id="pDesignation" type="text" placeholder="e.g. Senior Accountant"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      </div>
+      <div>
+        <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Phone</label>
+        <input id="pPhone" type="text" placeholder="Phone number"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      </div>
+      <div>
+        <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Department</label>
+        <input id="pDepartment" type="text" placeholder="e.g. GST Team"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      </div>
+      <div>
+        <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Default Category Filter</label>
+        <select id="pDefaultCategory" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+          <option value="">None</option>
+          <option value="GST">GST</option>
+          <option value="ROC">ROC</option>
+          <option value="IT">Income Tax</option>
+          <option value="TDS">TDS</option>
+          <option value="PT">Professional Tax</option>
+          <option value="PAYROLL">Payroll</option>
+          <option value="REPORTS">Reports</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Default Status Filter</label>
+        <select id="pDefaultStatus" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+          <option value="">None</option>
+          <option value="Pending">Pending</option>
+          <option value="Processing">Processing</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div class="px-6 pb-2">
+      <div class="text-xs font-black text-slate-500 uppercase mb-3">Recent Activity</div>
+      <div id="profileActivityList" class="max-h-48 overflow-y-auto divide-y divide-slate-100">
+        <div class="text-center text-slate-400 py-4 text-sm">Loading...</div>
+      </div>
+    </div>
+    <div class="p-6 flex gap-3 border-t border-slate-100 mt-2">
+      <button onclick="saveProfileChanges()"
+        class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all">
+        <i class="fas fa-save mr-2"></i>Save Changes
+      </button>
+      <button onclick="closeProfileModal()"
+        class="px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- AUDIT TRAIL MODAL -->
+<!-- ============================================================ -->
+<div id="auditModal" class="hidden fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+      <h2 id="auditModalTitle" class="text-xl font-black text-slate-800">Change History</h2>
+      <button onclick="closeAuditModal()"
+        class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+    </div>
+    <div id="auditList" class="divide-y divide-slate-100">
+      <div class="p-10 text-center text-slate-400 font-semibold">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- COMMENTS MODAL -->
+<!-- ============================================================ -->
+<div id="commentsModal" class="hidden fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col" style="max-height:85vh">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+      <h2 id="commentsModalTitle" class="text-lg font-black text-slate-800">Comments</h2>
+      <button onclick="closeCommentsModal()"
+        class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+    </div>
+    <div id="commentsList" class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
+      <div class="text-center text-slate-400 py-8 font-semibold">Loading...</div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
+      <input id="commentInput" type="text" placeholder="Type a comment... (Enter to send)"
+        class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      <button id="postCommentBtn" onclick="postComment()"
+        class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-all flex-shrink-0">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SUBTASKS / CHECKLIST MODAL -->
+<!-- ============================================================ -->
+<div id="subtasksModal" class="hidden fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      <h2 id="subtasksModalTitle" class="text-lg font-black text-slate-800">Checklist</h2>
+      <button onclick="closeSubtasksModal()"
+        class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+    </div>
+    <div id="subtasksList" class="p-4">
+      <div class="text-center text-slate-400 py-6 font-semibold">Loading...</div>
+    </div>
+    <div class="p-4 border-t border-slate-100 flex gap-3">
+      <input id="subtaskInput" type="text" placeholder="Add new task..."
+        class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      <button onclick="addSubtask()"
+        class="px-5 py-3 rounded-2xl bg-emerald-500 text-white font-black text-sm hover:bg-emerald-600 transition-all">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUICK ADD MODAL (Ctrl+N) -->
+<!-- ============================================================ -->
+<div id="quickAddModal" class="hidden fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-lg font-black text-slate-800">Quick Add Record</h2>
+        <p class="text-xs text-slate-400 font-semibold mt-0.5"><kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-black">Ctrl+N</kbd></p>
+      </div>
+      <button onclick="closeQuickAdd()"
+        class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+    </div>
+    <div class="p-5 space-y-4">
+      <input id="qaClientName" list="clientSuggestions" type="text" placeholder="Client Name *"
+        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      <select id="qaCategory"
+        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+        <option value="GST">GST</option>
+        <option value="ROC">ROC</option>
+        <option value="IT">Income Tax</option>
+        <option value="TDS">TDS</option>
+        <option value="PT">Professional Tax</option>
+        <option value="PAYROLL">Payroll</option>
+        <option value="REPORTS">Reports</option>
+        <option value="Sales">Sales</option>
+        <option value="Purchases">Purchases</option>
+      </select>
+      <input id="qaServiceDetail" list="serviceSuggestions" type="text" placeholder="Service Detail"
+        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      <input id="qaStaff" list="staffSuggestions" type="text" placeholder="Assigned Staff"
+        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      <input id="qaDeadline" type="date"
+        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+      <select id="qaStatus"
+        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+        <option value="Pending">Pending</option>
+        <option value="Processing">Processing</option>
+        <option value="Completed">Completed</option>
+      </select>
+    </div>
+    <div class="p-5 flex gap-3 border-t border-slate-100">
+      <button onclick="submitQuickAdd()"
+        class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all">
+        <i class="fas fa-bolt mr-2"></i>Add Record
+      </button>
+      <button onclick="closeQuickAdd()"
+        class="px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ONLINE USERS + ANNOUNCEMENT — appScreen ke andar add karna -->
+<!-- YE WALA script se pehle hai, alag se handle hoga -->
+<!-- ============================================================ -->
   <script src="script.js"></script>
 </body>
 </html>
