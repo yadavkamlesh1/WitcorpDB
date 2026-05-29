@@ -51,6 +51,8 @@ async function fetchRecords(reset = true) {
 // 2. Remarks: working inline more/less toggle (style.display)
 // 3. Updated By: professional blue chip, full email on hover
 // ============================================================
+let _rmkCounter = 0;
+
 function renderTable(data, targetId) {
     currentExportData = data;
     currentExportType = "records";
@@ -97,23 +99,35 @@ function renderTable(data, targetId) {
             `<span style="display:block;font-size:13px;font-weight:600;color:#334155;line-height:1.6;">${line}</span>`
         ).join('');
 
-        // Remarks — inline expand/collapse using style.display (reliable)
-        const uid = `rmk_${row.id}`;
-        const safeRemarks = (row.remarks || '—').replace(/`/g, '&#96;');
-        const CUTOFF = 55;
-        const needsExpand = (row.remarks || '').length > CUTOFF;
-        const shortRemarks = needsExpand
-            ? (row.remarks || '').substring(0, CUTOFF - 1) + '\u2026'
-            : (row.remarks || '—');
+        // Remarks — bulletproof inline toggle with unique counter ID
+        _rmkCounter++;
+        const uid = `rmk_${_rmkCounter}`;
+        const fullRemarksRaw = row.remarks || '—';
+        const safeShort = fullRemarksRaw.length > 55
+            ? fullRemarksRaw.substring(0, 54) + '\u2026'
+            : fullRemarksRaw;
+        const needsExpand = fullRemarksRaw.length > 55;
+        // Escape for safe HTML attribute and innerHTML use
+        const safeFull = fullRemarksRaw
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        const safeShortHtml = safeShort
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
 
         const remarksCell = needsExpand ? `
             <div style="min-width:180px;max-width:260px;">
-                <span id="${uid}_s" style="font-size:13px;color:#475569;font-weight:400;">${shortRemarks}</span>
-                <span id="${uid}_f" style="font-size:13px;color:#475569;font-weight:400;display:none;">${safeRemarks}</span>
-                <button onclick="toggleRemark('${uid}')" id="${uid}_btn"
+                <span id="${uid}_s" style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>
+                <span id="${uid}_f" style="font-size:13px;color:#475569;font-weight:400;display:none;">${safeFull}</span>
+                <button id="${uid}_btn"
+                    onclick="(function(){var s=document.getElementById('${uid}_s'),f=document.getElementById('${uid}_f'),b=document.getElementById('${uid}_btn');if(!s||!f||!b)return;var exp=f.style.display!=='none';f.style.display=exp?'none':'inline';s.style.display=exp?'inline':'none';b.innerText=exp?'more':'less';})()"
                     style="margin-left:4px;font-size:11px;font-weight:700;color:#3b82f6;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;vertical-align:middle;">more</button>
             </div>`
-            : `<span style="font-size:13px;color:#475569;font-weight:400;">${shortRemarks}</span>`;
+            : `<span style="font-size:13px;color:#475569;font-weight:400;">${safeShortHtml}</span>`;
 
         // Updated By — clean blue chip, full email on hover
         const updatedBy = row.updated_by || 'N/A';
