@@ -1878,27 +1878,6 @@ window.addEventListener('DOMContentLoaded', () => { fetchNotifications(); });
 // ============================================================
 // THEMES
 // ============================================================
-function changeTheme(theme) {
-    const body = document.body;
-    ['theme-ocean', 'theme-dark', 'theme-green', 'theme-purple', 'theme-light'].forEach(t => body.classList.remove(t));
-    body.classList.add(theme);
-    localStorage.setItem('bgTheme', theme);
-}
-
-function changeSidebarTheme(theme) {
-    const sidebar = document.getElementById('sidebar');
-    const mobileSidebar = document.getElementById('mobileSidebar');
-    const sidebarThemes = [
-        'sidebar-theme-raspberry', 'sidebar-theme-mint', 'sidebar-theme-chill',
-        'sidebar-theme-forest', 'sidebar-theme-damini', 'sidebar-theme-seaglass',
-        'sidebar-theme-lemon', 'sidebar-theme-dark', 'sidebar-theme-navypro',
-        'sidebar-theme-original'
-    ];
-    sidebarThemes.forEach(t => { sidebar.classList.remove(t); mobileSidebar.classList.remove(t); });
-    sidebar.classList.add(theme);
-    mobileSidebar.classList.add(theme);
-    localStorage.setItem('sidebarTheme', theme);
-}
 
 window.addEventListener('load', () => {
     const savedBg = localStorage.getItem('bgTheme');
@@ -2016,61 +1995,58 @@ function closeActivityModal() { document.getElementById("activityModal").classLi
 // ============================================================
 // ACTIVITY LOG (FIX: Limit entries to prevent localStorage overflow)
 // ============================================================
-function saveActivity(text) {
-    try {
-        let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
-        activity.unshift({ text, time: new Date().toLocaleString('en-IN') });
-        if (activity.length > 50) activity = activity.slice(0, 50); // FIX: Reduced from 100 to 50
-        localStorage.setItem("myActivity", JSON.stringify(activity));
-    } catch (err) {
-        console.error("saveActivity error:", err);
-        localStorage.removeItem("myActivity"); // Clear if too large
-    }
-}
+async function loadMyActivity() {
+    const list = document.getElementById("activityList");
+    if (!list) return;
+    list.innerHTML = `<div class="text-center text-slate-400 py-6">Loading...</div>`;
 
-function loadMyActivity() {
     try {
-        let activity = JSON.parse(localStorage.getItem("myActivity") || "[]");
+        const { data } = await supabaseClient
+            .from('witcorp_activity_log')
+            .select('*')
+            .eq('user_email', currentUserEmail)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
         const iconMap = {
             'Added': 'fa-circle-plus text-emerald-500',
             'Updated': 'fa-pen-to-square text-blue-500',
             'Deleted': 'fa-trash-can text-rose-500',
             'Exported': 'fa-file-export text-purple-500',
             'Bulk': 'fa-layer-group text-cyan-500',
-            'Default': 'fa-clock-rotate-left text-slate-400'
+            'Login': 'fa-right-to-bracket text-amber-500',
+            'Other': 'fa-clock-rotate-left text-slate-400'
         };
 
-        let html = "";
-        if (activity.length === 0) {
-            html = `<div class="text-center text-slate-400 py-10 font-semibold">No activity recorded yet.</div>`;
-        } else {
-            activity.forEach(item => {
-                const verb = Object.keys(iconMap).find(k => item.text.startsWith(k)) || 'Default';
-                const icon = iconMap[verb];
-                const parts = item.text.split('|').map(p => p.trim());
-                const mainText = parts[0] || item.text;
-                const details = parts.slice(1);
-
-                html += `
-                    <div class="flex items-start gap-3 border-b border-slate-100 py-4 last:border-0">
-                        <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i class="fas ${icon} text-sm"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-bold text-sm text-slate-800">${mainText}</div>
-                            ${details.length ? `<div class="text-sm text-slate-500 mt-0.5">${details.join(' · ')}</div>` : ''}
-                            <div class="text-xs text-blue-500 font-semibold mt-1">${item.time}</div>
-                        </div>
-                    </div>`;
-            });
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="text-center text-slate-400 py-10 font-semibold">No activity recorded yet.</div>`;
+            return;
         }
-        document.getElementById("activityList").innerHTML = html;
+
+        list.innerHTML = data.map(item => {
+            const icon = iconMap[item.action_type] || iconMap['Other'];
+            const parts = item.action_text.split('|').map(p => p.trim());
+            const mainText = parts[0] || item.action_text;
+            const details = parts.slice(1);
+            return `
+                <div class="flex items-start gap-3 border-b border-slate-100 py-4 last:border-0">
+                    <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i class="fas ${icon} text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-sm text-slate-800">${mainText}</div>
+                        ${details.length ? `<div class="text-sm text-slate-500 mt-0.5">${details.join(' · ')}</div>` : ''}
+                        <div class="text-xs text-blue-500 font-semibold mt-1">
+                            ${new Date(item.created_at).toLocaleString('en-IN')}
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
     } catch (err) {
         console.error("loadMyActivity error:", err);
-        document.getElementById("activityList").innerHTML = `<div class="text-center text-red-500 py-10 font-semibold">Error loading activity</div>`;
+        list.innerHTML = `<div class="text-center text-red-500 py-10 font-semibold">Error loading activity</div>`;
     }
 }
-
 // ============================================================
 // EXPORT FUNCTIONS
 // ============================================================
