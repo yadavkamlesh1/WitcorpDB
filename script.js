@@ -1778,9 +1778,10 @@ document.addEventListener('keydown', function(e) {
         }
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        openQuickAdd();
-    }
+    e.preventDefault();
+    if (!currentUserEmail) return;
+    openQuickAdd();
+}
     if (e.key === 'Escape') {
         ['notificationPanel', 'profileMenu', 'themeModal', 'activityModal', 'exportModal',
          'auditModal', 'commentsModal', 'subtasksModal', 'quickAddModal', 'profileModal']
@@ -1827,7 +1828,7 @@ async function createUserProfile(email) {
     } catch (err) { console.error('createUserProfile error:', err); }
 }
 
-async function updateUserProfile(updates) {
+async function updateUserProfile(updates, showMessage = true) {
     if (!currentUserProfile) return;
     try {
         updates.updated_at = new Date().toISOString();
@@ -1835,7 +1836,7 @@ async function updateUserProfile(updates) {
             .from('witcorp_user_profiles').update(updates).eq('email', currentUserProfile.email);
         if (!error) {
             currentUserProfile = { ...currentUserProfile, ...updates };
-            showToast('Profile updated successfully', 'success', 2000);
+            if (showMessage) showToast('Profile updated successfully', 'success', 2000);
             updateProfileUI(currentUserProfile);
         }
     } catch (err) { console.error('updateUserProfile error:', err); }
@@ -1853,8 +1854,32 @@ function updateProfileUI(profile) {
     const initial = name.charAt(0).toUpperCase();
     const p1 = document.getElementById('profileInitial');
     const p2 = document.getElementById('profileInitial2');
-    if (p1) { p1.innerText = initial; p1.style.background = profile.avatar_color || '#3b82f6'; }
-    if (p2) { p2.innerText = initial; p2.style.background = profile.avatar_color || '#3b82f6'; }
+    if (p1) {
+        p1.innerText = initial;
+        p1.style.background = profile.avatar_color || '#3b82f6';
+        p1.style.color = '#ffffff';
+        p1.style.fontWeight = '800';
+        p1.style.fontSize = '15px';
+        p1.style.display = 'flex';
+        p1.style.alignItems = 'center';
+        p1.style.justifyContent = 'center';
+        p1.style.borderRadius = '50%';
+        p1.style.boxShadow = '0 2px 8px rgba(0,0,0,0.22)';
+        p1.style.textShadow = '0 1px 2px rgba(0,0,0,0.18)';
+    }
+    if (p2) {
+        p2.innerText = initial;
+        p2.style.background = profile.avatar_color || '#3b82f6';
+        p2.style.color = '#ffffff';
+        p2.style.fontWeight = '800';
+        p2.style.fontSize = '15px';
+        p2.style.display = 'flex';
+        p2.style.alignItems = 'center';
+        p2.style.justifyContent = 'center';
+        p2.style.borderRadius = '50%';
+        p2.style.boxShadow = '0 2px 8px rgba(0,0,0,0.22)';
+        p2.style.textShadow = '0 1px 2px rgba(0,0,0,0.18)';
+    }
     const nameEl = document.getElementById('profileDisplayName');
     if (nameEl) nameEl.innerText = profile.full_name || profile.email.split('@')[0];
     const desigEl = document.getElementById('profileDesignation');
@@ -1884,7 +1909,6 @@ function openProfileModal() {
         if (statsUpdated) statsUpdated.innerText = currentUserProfile.total_updated || 0;
         if (statsDeleted) statsDeleted.innerText = currentUserProfile.total_deleted || 0;
     }
-    loadActivityInProfile();
     modal.classList.remove('hidden');
 }
 
@@ -1976,7 +2000,7 @@ function changeTheme(theme) {
     ['theme-ocean', 'theme-dark', 'theme-green', 'theme-purple', 'theme-light'].forEach(t => body.classList.remove(t));
     body.classList.add(theme);
     localStorage.setItem('bgTheme', theme);
-    if (currentUserProfile) updateUserProfile({ bg_theme: theme });
+    if (currentUserProfile) updateUserProfile({ bg_theme: theme }, false);
 }
 
 function changeSidebarTheme(theme) {
@@ -1991,7 +2015,7 @@ function changeSidebarTheme(theme) {
     sidebar?.classList.add(theme);
     mobileSidebar?.classList.add(theme);
     localStorage.setItem('sidebarTheme', theme);
-    if (currentUserProfile) updateUserProfile({ sidebar_theme: theme });
+    if (currentUserProfile) updateUserProfile({ sidebar_theme: theme }, false);
 }
 
 // ============================================================
@@ -2333,6 +2357,7 @@ async function loadAnnouncements() {
 // QUICK ADD MODAL (Ctrl+N)
 // ============================================================
 function openQuickAdd() {
+    if (!currentUserEmail) return;
     document.getElementById('quickAddModal')?.classList.remove('hidden');
     document.getElementById('qaClientName')?.focus();
 }
