@@ -1778,12 +1778,12 @@ document.addEventListener('keydown', function(e) {
             searchBox.focus();
             searchBox.select();
         }
-    }
+   }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-    e.preventDefault();
-    if (!currentUserEmail) return;
-    openQuickAdd();
-}
+        e.preventDefault();
+        if (!currentUserEmail) return;
+        openQuickAdd();
+    }
     if (e.key === 'Escape') {
         ['notificationPanel', 'profileMenu', 'themeModal', 'activityModal', 'exportModal',
          'auditModal', 'commentsModal', 'subtasksModal', 'quickAddModal', 'profileModal']
