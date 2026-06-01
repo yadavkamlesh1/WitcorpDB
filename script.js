@@ -382,7 +382,7 @@ function renderTable(data, targetId) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tbody.innerHTML = '';
-    const rows = [];
+
     data.forEach(row => {
         const statusClass = { 'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing' }[row.status] || 'bg-slate-100';
         const statusIcon = { 'Completed': 'fa-circle-check', 'Pending': 'fa-circle-exclamation', 'Processing': 'fa-spinner fa-spin' }[row.status] || 'fa-info-circle';
@@ -458,7 +458,7 @@ function renderTable(data, targetId) {
         // FIX 5: Safe client name for onclick string params
         const safeClientName = row.client_name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-        rows.push(`
+       tbody.innerHTML += `
             <tr class="group transition-all ${rowBg}" id="row_${row.id}">
                 <td class="p-4">
                     <input type="checkbox" class="row-checkbox w-4 h-4 rounded" data-id="${row.id}" ${isChecked}
@@ -520,7 +520,6 @@ function renderTable(data, targetId) {
                 </td>
             </tr>`;
     });
-    tbody.innerHTML = rows.join('');
 }
 
 
