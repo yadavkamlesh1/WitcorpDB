@@ -581,4 +581,15 @@ tbody tr:hover {
 #vaultTableBody tr td,
 #dscTableBody tr td {
     vertical-align: middle;
+    height: auto !important;
+    max-height: none !important;
+    line-height: 1.4;
+}
+
+#mainTableBody tr,
+#filterTableBody tr,
+#vaultTableBody tr,
+#dscTableBody tr {
+    height: auto !important;
+    max-height: 80px;
 }
