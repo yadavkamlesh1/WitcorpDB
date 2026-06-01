@@ -382,8 +382,9 @@ thead {
     backdrop-filter: blur(10px);
 }
 
-tbody tr {
-    transition: background var(--transition-fast);
+tbody tr td {
+    vertical-align: middle;
+    padding: 12px 16px;
 }
 
 tbody tr:hover {
