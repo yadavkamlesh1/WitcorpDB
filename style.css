@@ -572,3 +572,13 @@ tbody tr:hover {
         #2563eb 100%
     ) !important;
 }
+/* ========================= */
+/* TABLE ROW VERTICAL ALIGN FIX */
+/* ========================= */
+
+#mainTableBody tr td,
+#filterTableBody tr td,
+#vaultTableBody tr td,
+#dscTableBody tr td {
+    vertical-align: middle;
+}
