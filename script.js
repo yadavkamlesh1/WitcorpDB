@@ -1682,10 +1682,10 @@ async function forgotPassword() {
 // NOTIFICATION SOUND SETTING
 // ============================================================
 function loadNotificationSetting() {
-    const sound = localStorage.getItem("notificationSound");
+    const push = localStorage.getItem("notificationSound");
     const status = document.getElementById("notificationStatus");
     if (!status) return;
-    if (sound === "off") {
+    if (push === "off") {
         status.innerText = "OFF";
         status.classList.remove("text-green-600");
         status.classList.add("text-red-500");
@@ -1696,9 +1696,27 @@ function loadNotificationSetting() {
     }
 }
 
-function toggleNotificationSetting() {
+async function toggleNotificationSetting() {
     const current = localStorage.getItem("notificationSound");
-    localStorage.setItem("notificationSound", current === "off" ? "on" : "off");
+    if (current === "off") {
+        // ON karo — dobara subscribe
+        localStorage.setItem("notificationSound", "on");
+        await subscribeToPush();
+        showToast('Notifications enabled', 'success', 2000);
+    } else {
+        // OFF karo — unsubscribe
+        localStorage.setItem("notificationSound", "off");
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            const subscription = await reg.pushManager.getSubscription();
+            if (subscription) await subscription.unsubscribe();
+            await supabaseClient.from('witcorp_push_subscriptions')
+                .delete().eq('user_email', currentUserEmail);
+        } catch (err) {
+            console.error('Unsubscribe error:', err);
+        }
+        showToast('Notifications disabled', 'info', 2000);
+    }
     loadNotificationSetting();
 }
 
