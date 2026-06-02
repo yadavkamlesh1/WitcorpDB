@@ -1460,7 +1460,7 @@ function searchDSC(query) {
 // SERVICE WORKER
 // ============================================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
         .then(() => console.log("SW registered"))
         .catch(err => console.error("SW registration error:", err));
 }
