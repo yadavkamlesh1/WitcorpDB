@@ -2,6 +2,61 @@
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+// ============================================================
+// SERVICE DETAIL OPTIONS BY CATEGORY
+// ============================================================
+const SERVICE_DETAILS_MAP = {
+  "GST": [
+    "GST Registration",
+    "GST Amendment",
+    "GST Monthly Filing (GSTR-1 & 3B)",
+    "GST Quarterly Filing (GSTR-1 & 3B)",
+    "LUT Filing",
+    "GST Surrender",
+    "GST Notice Reply",
+    "GST Refund Application"
+  ],
+  "ROC": [
+    "PLC/OPC Annual Filing",
+    "Company Registration",
+    "Company Amendment",
+    "First 30 Days Compliance",
+    "LLP Amendment",
+    "LLP Annual Filing",
+    "Company Closure",
+    "Director KYC",
+    "Miscellaneous ROC Work"
+  ],
+  "IT": [
+    "ITR 1",
+    "ITR 2",
+    "ITR 3",
+    "ITR 4",
+    "ITR 5",
+    "ITR 6",
+    "Income Tax Notice Reply",
+    "PAN Application"
+  ],
+  "TDS": [
+    "TDS Challan",
+    "Salary TDS Return",
+    "Non-Salary TDS Return",
+    "Non-Resident TDS Return",
+    "TDS on Property",
+    "TDS Lower Deduction Certificate",
+    "TDS Return Revision",
+    "TAN Registration",
+    "Income Tax TAN Registration",
+    "Traces TAN Registration",
+    "Form 16 / 16A"
+  ]
+};
+function updateServiceDetailOptions(categoryValue) {
+  const datalist = document.getElementById('serviceSuggestions');
+  if (!datalist) return;
+  const options = SERVICE_DETAILS_MAP[categoryValue] || [];
+  datalist.innerHTML = options.map(opt => `<option value="${opt}">`).join('');
+}
 let allRecords = [];
 let allClients = [];
 let allVault = [];
@@ -1565,8 +1620,11 @@ function setupPredictions() {
     const uniqueClients = [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
     if (clientList) clientList.innerHTML = uniqueClients.map(name => `<option value="${name}">`).join('');
     const serviceList = document.getElementById('serviceSuggestions');
-    const uniqueServices = [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
-    if (serviceList) serviceList.innerHTML = uniqueServices.map(name => `<option value="${name}">`).join('');
+const currentCat = document.getElementById('serviceCategory')?.value || '';
+const categoryOptions = SERVICE_DETAILS_MAP[currentCat] || [];
+const dbOptions = [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
+const mergedOptions = [...new Set([...categoryOptions, ...dbOptions])];
+if (serviceList) serviceList.innerHTML = mergedOptions.map(name => `<option value="${name}">`).join('');
     const staffList = document.getElementById('staffSuggestions');
     const uniqueStaff = [...new Set(allRecords.map(r => r.assigned_staff).filter(Boolean))];
     if (staffList) staffList.innerHTML = uniqueStaff.map(name => `<option value="${name}">`).join('');
