@@ -1458,9 +1458,9 @@ function searchDSC(query) {
 
 // ============================================================
 // SERVICE WORKER
-// ============================================================
+// ===========================================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js', { scope: './' })
+    navigator.serviceWorker.register('/WitcorpDB/sw.js', { scope: '/WitcorpDB/' })
         .then(() => console.log("SW registered"))
         .catch(err => console.error("SW registration error:", err));
 }
