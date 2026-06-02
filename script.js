@@ -459,7 +459,10 @@ function renderTable(data, targetId) {
         const safeClientName = row.client_name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
        tbody.innerHTML += `
-            <tr class="group transition-all ${rowBg}" id="row_${row.id}">
+            const tr = document.createElement('tr');
+tr.className = `group transition-all ${rowBg}`;
+tr.id = `row_${row.id}`;
+tr.innerHTML = `
                 <td class="p-4">
                     <input type="checkbox" class="row-checkbox w-4 h-4 rounded" data-id="${row.id}" ${isChecked}
                         onchange="toggleRowSelect(${row.id}, this.checked)">
@@ -520,6 +523,7 @@ function renderTable(data, targetId) {
                 </td>
             </tr>`;
     });
+tbody.appendChild(tr);
 }
 
 
