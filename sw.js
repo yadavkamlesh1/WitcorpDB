@@ -6,7 +6,6 @@ const STATIC_ASSETS = [
   "/WitcorpDB/index.html",
   "/WitcorpDB/script.js",
   "/WitcorpDB/style.css",
-  "/WitcorpDB/default-avatar.png"
 ];
 
 // INSTALL
