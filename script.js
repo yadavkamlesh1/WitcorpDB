@@ -382,15 +382,17 @@ function renderTable(data, targetId) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tbody.innerHTML = '';
+
     data.forEach(row => {
         const statusClass = { 'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing' }[row.status] || 'bg-slate-100';
         const statusIcon = { 'Completed': 'fa-circle-check', 'Pending': 'fa-circle-exclamation', 'Processing': 'fa-spinner fa-spin' }[row.status] || 'fa-info-circle';
-        let rowBg = '';
+
+        let rowBg = 'hover:bg-slate-50/80';
         if (row.deadline && row.status !== 'Completed') {
             const dl = new Date(row.deadline);
             dl.setHours(0, 0, 0, 0);
-            if (dl < today) { rowBg = 'bg-red-50'; }
-            else if (dl.getTime() === today.getTime() || dl.getTime() === tomorrow.getTime()) { rowBg = 'bg-amber-50'; }
+            if (dl < today) { rowBg = 'bg-red-50 hover:bg-red-100/60'; }
+            else if (dl.getTime() === today.getTime() || dl.getTime() === tomorrow.getTime()) { rowBg = 'bg-amber-50 hover:bg-amber-100/60'; }
         }
 
         let datePart = '', timePart = '';
