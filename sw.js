@@ -58,19 +58,18 @@ self.addEventListener('push', function(event) {
   const title = data.title || 'Witcorp Hub';
   const options = {
     body: data.message || data.body || 'New update available',
-    icon: '/default-avatar.png',
-    badge: '/default-avatar.png',
+    icon: '/WitcorpDB/logo.png',
+    badge: '/WitcorpDB/logo.png',
     tag: data.tag || 'witcorp-notif',
     renotify: true,
-    data: { url: data.url || '/' }
+    data: { url: '/WitcorpDB/' }
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Notification click
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data?.url || '/'));
+  event.waitUntil(clients.openWindow(event.notification.data?.url || '/WitcorpDB/'));
 });
 
 // Background sync (future-ready)
