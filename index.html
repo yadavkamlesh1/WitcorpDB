@@ -526,7 +526,7 @@
               </div>
               <div class="space-y-3">
                 <label class="text-[11px] font-black text-slate-400 uppercase ml-2 tracking-wider">Category</label>
-                <select id="serviceCategory" onchange="markFormDirty()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
+                <select id="serviceCategory" onchange="markFormDirty(); updateServiceDetailOptions(this.value); document.getElementById('serviceDetail').value='';" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold">
                   <option value="Sales">Sales</option>
                   <option value="Purchases">Purchases</option>
                   <option value="Sundry Debtors">Sundry Debtors</option>
@@ -1079,8 +1079,8 @@
       <div class="p-5 space-y-4">
         <input id="qaClientName" list="clientSuggestions" type="text" placeholder="Client Name *"
           class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
-        <select id="qaCategory"
-          class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+        <select id="qaCategory" onchange="updateQAServiceOptions(this.value); document.getElementById('qaServiceDetail').value='';"
+  class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
           <option value="GST">GST</option>
           <option value="ROC">ROC</option>
           <option value="IT">Income Tax</option>
