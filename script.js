@@ -1,4 +1,51 @@
 // WITCORP HUB — ENTERPRISE SCRIPT (FIXED VERSION)
+const SERVICE_DETAILS_MAP = {
+  "GST": [
+    "GST Registration",
+    "GST Amendment",
+    "GST Monthly Filing (GSTR-1 & 3B)",
+    "GST Quarterly Filing (QRMP)",
+    "LUT Filing",
+    "GST Surrender",
+    "GST Notice Reply",
+    "GST Refund"
+  ],
+  "ROC": [
+    "PLC Annual Filing",
+    "OPC Annual Filing",
+    "Company Registration",
+    "Company Amendment",
+    "First 30 Days Compliance",
+    "LLP Amendment",
+    "LLP Annual Filing",
+    "Company Closure",
+    "Director KYC",
+    "Miscellaneous ROC Work"
+  ],
+  "IT": [
+    "ITR 1",
+    "ITR 2",
+    "ITR 3",
+    "ITR 4",
+    "ITR 5",
+    "ITR 6",
+    "Income Tax Notice Reply",
+    "PAN Application"
+  ],
+  "TDS": [
+    "TDS Challan Payment",
+    "Salary TDS Return (24Q)",
+    "Non-Salary TDS Return (26Q)",
+    "Non-Resident TDS Return (27Q)",
+    "TDS on Property (26QB)",
+    "TDS Lower Deduction Certificate",
+    "TDS Return Revision",
+    "TAN Registration",
+    "Income Tax TAN Registration",
+    "Traces TAN Registration",
+    "Form 16 / 16A"
+  ],
+};
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
