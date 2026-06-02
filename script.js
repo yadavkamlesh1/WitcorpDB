@@ -1041,8 +1041,11 @@ function showSection(id) {
         if (navId) document.getElementById(navId)?.classList.add('active');
     }
 
-    if (id === 'dashboard' && allRecords.length === 0) fetchRecords();
-    if (id === 'clientManagement') fetchClients();
+    if (id === 'dashboard') {
+    if (allRecords.length === 0) fetchRecords();
+    if (allClients.length === 0) fetchClients(); 
+}
+if (id === 'clientManagement') fetchClients();
     if (id === 'vaultManagement') fetchVault();
     if (id === 'dscManagement') fetchDSC();
 
