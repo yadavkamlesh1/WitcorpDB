@@ -369,7 +369,7 @@ table {
     background: white;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    border-collapse: separate;
+    border-collapse: collapse;
     border-spacing: 0;
 }
 
@@ -581,8 +581,7 @@ tbody tr:hover {
 #vaultTableBody tr td,
 #dscTableBody tr td {
     vertical-align: middle;
-    height: auto !important;
-    max-height: none !important;
+    padding: 10px 16px;
     line-height: 1.4;
 }
 
@@ -590,6 +589,5 @@ tbody tr:hover {
 #filterTableBody tr,
 #vaultTableBody tr,
 #dscTableBody tr {
-    height: auto !important;
-    max-height: 80px;
+    height: auto;
 }
