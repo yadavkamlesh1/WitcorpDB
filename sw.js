@@ -2,11 +2,11 @@ const STATIC_CACHE = "witcorp-static-v3";
 const DYNAMIC_CACHE = "witcorp-dynamic-v3";
 
 const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/script.js",
-  "/style.css",
-  "/default-avatar.png"
+  "/WitcorpDB/",
+  "/WitcorpDB/index.html",
+  "/WitcorpDB/script.js",
+  "/WitcorpDB/style.css",
+  "/WitcorpDB/default-avatar.png"
 ];
 
 // INSTALL
