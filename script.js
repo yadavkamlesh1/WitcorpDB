@@ -382,11 +382,9 @@ function renderTable(data, targetId) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tbody.innerHTML = '';
-
     data.forEach(row => {
         const statusClass = { 'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing' }[row.status] || 'bg-slate-100';
         const statusIcon = { 'Completed': 'fa-circle-check', 'Pending': 'fa-circle-exclamation', 'Processing': 'fa-spinner fa-spin' }[row.status] || 'fa-info-circle';
-
         let rowBg = 'hover:bg-slate-50/80';
         if (row.deadline && row.status !== 'Completed') {
             const dl = new Date(row.deadline);
