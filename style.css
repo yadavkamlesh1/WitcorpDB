@@ -577,17 +577,16 @@ tbody tr:hover {
 /* ========================= */
 
 #mainTableBody tr,
-#filterTableBody tr,
-#vaultTableBody tr,
-#dscTableBody tr {
-    height: auto;
+#filterTableBody tr {
+    height: auto !important;
+    max-height: none !important;
+    display: table-row !important;
 }
 
 #mainTableBody tr td,
-#filterTableBody tr td,
-#vaultTableBody tr td,
-#dscTableBody tr td {
-    vertical-align: middle;
-    padding: 10px 16px;
-    line-height: 1.4;
+#filterTableBody tr td {
+    height: auto !important;
+    max-height: none !important;
+    padding: 10px 16px !important;
+    vertical-align: middle !important;
 }
