@@ -1,6 +1,7 @@
 // WITCORP HUB — ENTERPRISE SCRIPT (FIXED VERSION)
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
+const VAPID_PUBLIC_KEY = 'BDosxz9iUmLcKRXXxkXbJBDGqGOkAXipmriqsvi33FyqjfqNxec1bTzvA5CRN6OT6ianW7uh8Vs8Yc2Cfrah0sc';
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 // ============================================================
 // SERVICE DETAIL OPTIONS BY CATEGORY
@@ -1486,9 +1487,19 @@ async function createNotificationForOthers(title, message, type = "info", refere
             title, message, type, reference,
             created_by: currentUserName, is_read: false
         }]);
-    } catch (err) { console.error("createNotificationForOthers error:", err); }
-}
+       await supabaseClient.from('witcorp_push_queue').insert([{ title, message }]);
+      fetch(`${SB_URL}/functions/v1/send-push`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    }).catch(() => {});
 
+  } catch (err) {
+    console.error("createNotificationForOthers error:", err);
+  }
+}
 async function fetchNotifications() {
     try {
         const { data, error } = await supabaseClient
@@ -2509,6 +2520,34 @@ function resetColumns() {
     document.querySelectorAll('.col-toggle-cb').forEach(cb => cb.checked = true);
     applyColumnVisibility();
 }
+// PUSH NOTIFICATION SUBSCRIBE
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeToPush() {
+  if (!('PushManager' in window)) return;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    const subscription = existing || await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    await supabaseClient.from('witcorp_push_subscriptions').upsert({
+      user_email: currentUserEmail,
+      subscription: JSON.stringify(subscription),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_email' });
+  } catch (err) {
+    console.error('Push subscribe error:', err);
+  }
+}
 
 // ============================================================
 // SHOWAPP — FIX 2 & FIX 8
@@ -2545,6 +2584,7 @@ function showApp(user) {
     _presenceInterval = setInterval(() => updatePresence(), 60000);
 
     saveActivity('Login: ' + user.email);
+    subscribeToPush(); // Push notification subscribe
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
 
