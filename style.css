@@ -591,3 +591,15 @@ tbody tr:hover {
 #dscTableBody tr {
     height: auto;
 }
+#mainTableBody tr td,
+#filterTableBody tr td {
+    height: 52px !important;
+    max-height: 52px !important;
+    overflow: hidden;
+}
+
+#mainTableBody tr,
+#filterTableBody tr {
+    height: 52px !important;
+    line-height: 52px;
+}
