@@ -157,7 +157,6 @@ async function fetchRecords(reset = true) {
             allRecords = [...allRecords, ...uniqueData];
             renderTable(allRecords, 'mainTableBody');
             updateStats(allRecords);
-            setupPredictions();
             checkDeadlineAlerts(allRecords);
             updateLastSync();
             recordPage++;
@@ -1041,9 +1040,14 @@ function showSection(id) {
         if (navId) document.getElementById(navId)?.classList.add('active');
     }
 
-    if (id === 'dashboard') {
-    if (allRecords.length === 0) fetchRecords();
-    if (allClients.length === 0) fetchClients(); 
+   // AFTER:
+if (id === 'dashboard') {
+    const fetchPromises = [];
+    if (allRecords.length === 0) fetchPromises.push(fetchRecords());
+    if (allClients.length === 0) fetchPromises.push(fetchClients());
+    if (fetchPromises.length > 0) {
+        Promise.all(fetchPromises).then(() => setupPredictions());
+    }
 }
 if (id === 'clientManagement') fetchClients();
     if (id === 'vaultManagement') fetchVault();
