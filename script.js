@@ -1627,6 +1627,92 @@ function setupPredictions() {
     const uniqueVault = [...new Set(allVault.map(v => v.category).filter(Boolean))];
     if (vaultList) vaultList.innerHTML = uniqueVault.map(name => `<option value="${name}">`).join('');
 }
+// ============================================================
+// SERVICE DETAIL DROPDOWN — Category Linked
+// ============================================================
+function populateServiceDetailDropdown(category, selectId, customId, hiddenId, currentValue = '') {
+  const select = document.getElementById(selectId);
+  const customInput = document.getElementById(customId);
+  const hiddenInput = document.getElementById(hiddenId);
+  if (!select) return;
+
+  const services = SERVICE_DETAILS_MAP[category] || [];
+  select.innerHTML = '<option value="">-- Select Service --</option>';
+  services.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    select.appendChild(opt);
+  });
+
+  // "Add New / Custom" option
+  const customOpt = document.createElement('option');
+  customOpt.value = '__custom__';
+  customOpt.textContent = '+ Add Custom Service';
+  select.appendChild(customOpt);
+
+  // If editing and value exists — check if it's in list or custom
+  if (currentValue) {
+    const isInList = services.includes(currentValue);
+    if (isInList) {
+      select.value = currentValue;
+      customInput.classList.add('hidden');
+    } else {
+      select.value = '__custom__';
+      customInput.classList.remove('hidden');
+      customInput.value = currentValue;
+    }
+    if (hiddenInput) hiddenInput.value = currentValue;
+  }
+}
+
+function onServiceDetailSelectChange() {
+  const select = document.getElementById('serviceDetailSelect');
+  const customInput = document.getElementById('serviceDetailCustom');
+  const hidden = document.getElementById('serviceDetail');
+  if (!select) return;
+
+  if (select.value === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+    if (hidden) hidden.value = '';
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+    if (hidden) hidden.value = select.value;
+  }
+  markFormDirty();
+}
+
+function onServiceDetailCustomInput() {
+  const customInput = document.getElementById('serviceDetailCustom');
+  const hidden = document.getElementById('serviceDetail');
+  if (hidden) hidden.value = customInput.value;
+}
+
+// Quick Add versions
+function onQaServiceDetailChange() {
+  const select = document.getElementById('qaServiceDetailSelect');
+  const customInput = document.getElementById('qaServiceDetailCustom');
+  const hidden = document.getElementById('qaServiceDetail');
+  if (!select) return;
+
+  if (select.value === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+    if (hidden) hidden.value = '';
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+    if (hidden) hidden.value = select.value;
+  }
+}
+
+function onQaServiceDetailCustomInput() {
+  const customInput = document.getElementById('qaServiceDetailCustom');
+  const hidden = document.getElementById('qaServiceDetail');
+  if (hidden) hidden.value = customInput.value;
+}
 
 // ============================================================
 // FORGOT PASSWORD
