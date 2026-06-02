@@ -103,3 +103,25 @@ self.addEventListener("push", event => {
     badge: "/default-avatar.png"
   });
 });
+// Push event — app band ho tab bhi ye fire hoga
+self.addEventListener('push', function(event) {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'Witcorp Hub';
+  const options = {
+    body: data.message || 'New update available',
+    icon: './logo.png',
+    badge: './logo.png',
+    tag: data.tag || 'witcorp-notif',
+    renotify: true,
+    data: { url: data.url || '/' }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Notification click — app open kare
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url || '/')
+  );
+});
