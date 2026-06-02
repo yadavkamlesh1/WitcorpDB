@@ -1482,18 +1482,23 @@ function closeThemeSettings() { document.getElementById("themeModal").classList.
 // NOTIFICATIONS
 // ============================================================
 async function createNotificationForOthers(title, message, type = "info", reference = "") {
-    try {
-        await supabaseClient.from('witcorp_notifications').insert([{
-            title, message, type, reference,
-            created_by: currentUserName, is_read: false
-        }]);
-       await supabaseClient.from('witcorp_push_queue').insert([{ title, message }]);
-      fetch(`${SB_URL}/functions/v1/send-push`, {
+  try {
+    await supabaseClient.from('witcorp_notifications').insert([{
+      title, message, type, reference,
+      created_by: currentUserName, is_read: false
+    }]);
+
+    // ✅ Insert push queue with proper data
+    await supabaseClient.from('witcorp_push_queue').insert([{ title, message }]);
+
+    // ✅ Call edge function WITH body — warna server kuch push nahi karta
+    fetch(`${SB_URL}/functions/v1/send-push`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${SB_KEY}`,
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({ title, message })  // ← YEH MISSING THA
     }).catch(() => {});
 
   } catch (err) {
