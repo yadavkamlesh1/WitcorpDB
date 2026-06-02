@@ -57,6 +57,12 @@ function updateServiceDetailOptions(categoryValue) {
   const options = SERVICE_DETAILS_MAP[categoryValue] || [];
   datalist.innerHTML = options.map(opt => `<option value="${opt}">`).join('');
 }
+function updateQAServiceOptions(categoryValue) {
+  const datalist = document.getElementById('serviceSuggestions');
+  if (!datalist) return;
+  const options = SERVICE_DETAILS_MAP[categoryValue] || [];
+  datalist.innerHTML = options.map(opt => `<option value="${opt}">`).join('');
+}
 let allRecords = [];
 let allClients = [];
 let allVault = [];
@@ -679,6 +685,7 @@ function editRecord(row) {
     document.getElementById('editId').value = row.id;
     document.getElementById('clientName').value = row.client_name;
     document.getElementById('serviceCategory').value = row.service_category;
+    updateServiceDetailOptions(row.service_category);
     document.getElementById('serviceDetail').value = row.service_detail || '';
     document.getElementById('assignedStaff').value = row.assigned_staff || '';
     document.getElementById('allotedBy').value = row.alloted_by || '';
@@ -737,6 +744,7 @@ function clearForm() {
         else if (fId === 'status') { el.value = 'Pending'; }
         else { el.value = ""; }
     });
+  updateServiceDetailOptions('GST');
     clearDirtyState();
 }
 
