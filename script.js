@@ -1492,7 +1492,7 @@ async function createNotificationForOthers(title, message, type = "info", refere
     await supabaseClient.from('witcorp_push_queue').insert([{ title, message }]);
 
     // ✅ Call edge function WITH body — warna server kuch push nahi karta
-    fetch(`${SB_URL}/functions/v1/send-push`, {
+    fetch(`${SB_URL}/functions/v1/send-push-`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${SB_KEY}`,
