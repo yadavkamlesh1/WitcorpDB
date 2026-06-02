@@ -576,6 +576,13 @@ tbody tr:hover {
 /* TABLE ROW VERTICAL ALIGN FIX */
 /* ========================= */
 
+#mainTableBody tr,
+#filterTableBody tr,
+#vaultTableBody tr,
+#dscTableBody tr {
+    height: auto;
+}
+
 #mainTableBody tr td,
 #filterTableBody tr td,
 #vaultTableBody tr td,
@@ -583,23 +590,4 @@ tbody tr:hover {
     vertical-align: middle;
     padding: 10px 16px;
     line-height: 1.4;
-}
-
-#mainTableBody tr,
-#filterTableBody tr,
-#vaultTableBody tr,
-#dscTableBody tr {
-    height: auto;
-}
-#mainTableBody tr td,
-#filterTableBody tr td {
-    height: 52px !important;
-    max-height: 52px !important;
-    overflow: hidden;
-}
-
-#mainTableBody tr,
-#filterTableBody tr {
-    height: 52px !important;
-    line-height: 52px;
 }
