@@ -2846,16 +2846,16 @@ function appendChatMessage(msg) {
                 <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
                 <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm group relative">
                     <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
-                    <div class="absolute -left-16 top-0 hidden group-hover:flex gap-1">
-                        <button onclick="editChatMsg(${msg.id}, this)" 
-                            class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-600 text-xs flex items-center justify-center">
-                            <i class="fas fa-pencil"></i>
-                        </button>
-                        <button onclick="deleteChatMsg(${msg.id})"
-                            class="w-7 h-7 rounded-lg bg-slate-100 text-rose-500 hover:bg-rose-100 text-xs flex items-center justify-center">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                   <div class="flex gap-1 justify-end mt-1.5">
+    <button onclick="editChatMsg(${msg.id}, this)" 
+        style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
+        <i class="fas fa-pencil"></i>
+    </button>
+    <button onclick="deleteChatMsg(${msg.id})"
+        style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
+        <i class="fas fa-trash"></i>
+    </button>
+</div>
                 </div>
                 <div class="text-[10px] text-slate-400 text-right mt-1" id="msgtime_${msg.id}">${time}</div>
             </div>
