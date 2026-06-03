@@ -2595,9 +2595,9 @@ function showApp(user) {
     appScreen.classList.remove('hidden');
     const chatBtn = document.getElementById('chatToggleBtn');
 if (chatBtn) chatBtn.style.display = 'flex';
-    // FIX 2: Use flex-col class explicitly — matches HTML structure
     appScreen.style.display = 'flex';
     appScreen.style.flexDirection = 'column';
+    window.dispatchEvent(new Event('resize'));
 
     currentUserEmail = user.email;
     currentUserName = user.email;
@@ -2624,6 +2624,7 @@ if (chatBtn) chatBtn.style.display = 'flex';
 
     saveActivity('Login: ' + user.email);
     subscribeToPush(); // Push notification subscribe
+    document.getElementById('chatToggleBtn').style.removeProperty('display');
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
 
