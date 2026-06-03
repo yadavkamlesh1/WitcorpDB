@@ -809,18 +809,15 @@
 
       </main>
     </div><!-- end layout row -->
+      <!-- CHAT BUTTON -->
+    <button onclick="toggleChat()"
+        id="chatToggleBtn"
+        class="fixed bottom-40 right-6 z-[9999] w-14 h-14 bg-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-purple-700 hover:scale-110 transition-all lg:bottom-24"
+        title="Team Chat">
+        <i class="fas fa-comments text-xl"></i>
+        <span id="chatUnreadBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-black">0</span>
+    </button>
   </div><!-- end appScreen -->
-
-    
-    <!-- CHAT BUTTON -->
-<button onclick="toggleChat()"
-    id="chatToggleBtn"
-    style="display:none" 
-    class="fixed bottom-40 right-6 z-[9999] w-14 h-14 bg-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-purple-700 hover:scale-110 transition-all lg:bottom-24"
-    title="Team Chat">
-    <i class="fas fa-comments text-xl"></i>
-    <span id="chatUnreadBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-black">0</span>
-</button>
 
   <!-- QUICK ADD FLOATING BUTTON (outside appScreen, always visible when logged in) -->
   <button onclick="openQuickAdd()"
