@@ -2695,8 +2695,8 @@ function renderChats(messages) {
         list.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
                 <i class="fas fa-comments text-4xl text-slate-300"></i>
-                <p class="text-sm font-bold text-slate-400">Koi message nahi abhi tak</p>
-                <p class="text-xs text-slate-300">Pehla message bhejo!</p>
+                <p class="text-sm font-bold text-slate-400">No messages yet</p>
+                <p class="text-xs text-slate-300">Send the first message!</p>
             </div>`;
         return;
     }
@@ -2828,9 +2828,31 @@ function subscribeChatRealtime() {
         }, (payload) => {
             appendChatMessage(payload.new);
         })
+        .on('postgres_changes', {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'witcorp_chats'
+        }, (payload) => {
+            const el = document.querySelector(`[data-msg-id="${payload.old.id}"]`);
+            if (el) el.remove();
+        })
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'witcorp_chats'
+        }, (payload) => {
+            const el = document.querySelector(`[data-msg-id="${payload.new.id}"]`);
+            if (el) {
+                const p = el.querySelector('p');
+                if (p) p.textContent = payload.new.message;
+                const timeEl = el.querySelector(`#msgtime_${payload.new.id}`);
+                if (timeEl && payload.new.is_edited) {
+                    timeEl.innerHTML = timeEl.innerHTML.replace(' · <span class="italic">edited</span>', '') + ' · <span class="italic">edited</span>';
+                }
+            }
+        })
         .subscribe();
 }
-
 function appendChatMessage(msg) {
     const list = document.getElementById('chatList');
     if (!list) return;
