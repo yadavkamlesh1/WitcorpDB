@@ -2623,8 +2623,15 @@ function showApp(user) {
     saveActivity('Login: ' + user.email);
     subscribeToPush(); // Push notification subscribe
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
+    // showApp() ke andar, existing chatBtn code replace karo:
+setTimeout(() => {
     const chatBtn = document.getElementById('chatToggleBtn');
-if (chatBtn) chatBtn.style.display = 'flex';
+    if (chatBtn) {
+        chatBtn.style.display = 'flex';
+        chatBtn.style.visibility = 'visible';
+        chatBtn.style.opacity = '1';
+    }
+}, 500);
 }
 
 // ============================================================
