@@ -673,8 +673,8 @@ const newStaff = document.getElementById('assignedStaff').value;
             // Feature 12 — Staff assignment notification
 if (newStaff && newStaff !== oldStaff) {
     await supabaseClient.from('witcorp_notifications').insert([{
-        title: '📋 Naya Kaam Assign Hua!',
-        message: `${currentUserName} ne tumhe assign kiya: ${payload.client_name} — ${payload.service_category}`,
+        title: '📋 New Task Assigned!',
+         message: `${currentUserName} assigned you: ${payload.client_name} — ${payload.service_category}`,
         type: 'record',
         reference: payload.client_name,
         created_by: currentUserEmail,
@@ -2736,7 +2736,7 @@ function renderChats(messages) {
             html += `
                 <div class="flex justify-end gap-2 mb-3 group">
                     <div class="max-w-[75%]">
-                        <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
+                        <div class="text-[10px] font-bold text-slate-400 text-right mb-1">You</div>
                        <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
     <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
     ${recordTag}
@@ -2874,7 +2874,7 @@ function appendChatMessage(msg) {
     if (isMe) {
         div.innerHTML = `
             <div class="max-w-[75%]">
-                <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
+                <div class="text-[10px] font-bold text-slate-400 text-right mb-1">You</div>
                 <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm group relative">
                     <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
                    <div class="flex gap-1 justify-end mt-1.5">
