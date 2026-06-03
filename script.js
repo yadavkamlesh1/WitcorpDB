@@ -2737,7 +2737,8 @@ function renderChats(messages) {
                     <div class="max-w-[75%]">
                         <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
                         <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
-                            <p class="text-sm font-medium leading-relaxed">${escapeHtml(msg.message)}</p>
+                            <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
+
                             ${recordTag}
                         </div>
                         <div class="text-[10px] text-slate-400 text-right mt-1">${time}</div>
@@ -2757,7 +2758,7 @@ function renderChats(messages) {
                     <div class="max-w-[75%]">
                         <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
                         <div class="bg-white border border-slate-200 text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
-                            <p class="text-sm font-medium leading-relaxed">${escapeHtml(msg.message)}</p>
+                            <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
                             ${recordTag}
                         </div>
                         <div class="text-[10px] text-slate-400 mt-1">${time}</div>
@@ -2795,6 +2796,7 @@ async function sendChat() {
         }]);
         if (!error) {
             input.value = '';
+          await loadChats();
         } else {
             showToast('Message send nahi hua', 'error');
         }
@@ -2824,7 +2826,6 @@ function appendChatMessage(msg) {
     const list = document.getElementById('chatList');
     if (!list) return;
 
-    // Agar empty state hai toh clear karo
     if (list.querySelector('.fa-comments')) {
         list.innerHTML = '';
     }
@@ -2836,15 +2837,26 @@ function appendChatMessage(msg) {
 
     const div = document.createElement('div');
     div.className = `flex ${isMe ? 'justify-end' : ''} gap-2 mb-3`;
+    div.dataset.msgId = msg.id;
 
     if (isMe) {
         div.innerHTML = `
             <div class="max-w-[75%]">
                 <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
-                <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
-                    <p class="text-sm font-medium">${escapeHtml(msg.message)}</p>
+                <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm group relative">
+                    <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
+                    <div class="absolute -left-16 top-0 hidden group-hover:flex gap-1">
+                        <button onclick="editChatMsg(${msg.id}, this)" 
+                            class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-600 text-xs flex items-center justify-center">
+                            <i class="fas fa-pencil"></i>
+                        </button>
+                        <button onclick="deleteChatMsg(${msg.id})"
+                            class="w-7 h-7 rounded-lg bg-slate-100 text-rose-500 hover:bg-rose-100 text-xs flex items-center justify-center">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="text-[10px] text-slate-400 text-right mt-1">${time}</div>
+                <div class="text-[10px] text-slate-400 text-right mt-1" id="msgtime_${msg.id}">${time}</div>
             </div>
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
                 style="background:${msg.avatar_color || '#3b82f6'}">
@@ -2859,17 +2871,59 @@ function appendChatMessage(msg) {
             <div class="max-w-[75%]">
                 <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
                 <div class="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
-                    <p class="text-sm font-medium text-slate-800">${escapeHtml(msg.message)}</p>
+                    <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
                 </div>
                 <div class="text-[10px] text-slate-400 mt-1">${time}</div>
             </div>`;
 
-        // Doosre ka message aaya toh sound bajao
         if (document.hidden || !chatOpen) {
-            showToast(`💬 ${msg.sent_by.split('@')[0]}: ${msg.message.substring(0, 40)}...`, 'info', 4000);
+            showToast(`💬 ${msg.sent_by.split('@')[0]}: ${msg.message.substring(0, 40)}`, 'info', 4000);
         }
     }
 
     list.appendChild(div);
     list.scrollTop = list.scrollHeight;
+}
+async function deleteChatMsg(id) {
+    if (!confirm('Message delete karna hai?')) return;
+    try {
+        const { error } = await supabaseClient
+            .from('witcorp_chats').delete().eq('id', id);
+        if (!error) {
+            const el = document.querySelector(`[data-msg-id="${id}"]`);
+            if (el) el.remove();
+            showToast('Message delete ho gaya', 'warning', 2000);
+        } else {
+            showToast('Delete fail hua', 'error');
+        }
+    } catch (err) {
+        console.error('deleteChatMsg error:', err);
+    }
+}
+
+async function editChatMsg(id, btn) {
+    const msgDiv = btn.closest('[data-msg-id]');
+    const pEl = msgDiv?.querySelector('p');
+    if (!pEl) return;
+
+    const oldText = pEl.textContent;
+    const newText = prompt('Message edit karo:', oldText);
+    if (!newText || newText.trim() === oldText.trim()) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('witcorp_chats')
+            .update({ message: newText.trim(), is_edited: true })
+            .eq('id', id);
+        if (!error) {
+            pEl.textContent = newText.trim();
+            const timeEl = document.getElementById(`msgtime_${id}`);
+            if (timeEl) timeEl.innerHTML += ' · <span class="italic">edited</span>';
+            showToast('Message update ho gaya', 'success', 2000);
+        } else {
+            showToast('Edit fail hua', 'error');
+        }
+    } catch (err) {
+        console.error('editChatMsg error:', err);
+    }
 }
