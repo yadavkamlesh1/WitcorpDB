@@ -2736,12 +2736,21 @@ function renderChats(messages) {
                 <div class="flex justify-end gap-2 mb-3 group">
                     <div class="max-w-[75%]">
                         <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
-                        <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
-                            <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
-
-                            ${recordTag}
-                        </div>
-                        <div class="text-[10px] text-slate-400 text-right mt-1">${time}</div>
+                       <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
+    <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
+    ${recordTag}
+</div>
+<div class="flex gap-1 justify-end mt-1">
+    <button onclick="editChatMsg(${msg.id}, this)" 
+        style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
+        <i class="fas fa-pencil"></i>
+    </button>
+    <button onclick="deleteChatMsg(${msg.id})"
+        style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
+        <i class="fas fa-trash"></i>
+    </button>
+</div>
+<div class="text-[10px] text-slate-400 text-right mt-1" id="msgtime_${msg.id}">${time}</div>
                     </div>
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
                         style="background:${msg.avatar_color || '#3b82f6'}">
