@@ -2623,6 +2623,7 @@ function showApp(user) {
     saveActivity('Login: ' + user.email);
     subscribeToPush(); // Push notification subscribe
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
+    document.getElementById('chatToggleBtn').style.display = 'flex';
 }
 
 // ============================================================
@@ -2805,9 +2806,8 @@ async function sendChat() {
         }]);
         if (!error) {
             input.value = '';
-          await loadChats();
         } else {
-            showToast('Message send nahi hua', 'error');
+            showToast('Message not sent. Check connection.', 'error');
         }
     } catch (err) {
         console.error('sendChat error:', err);
@@ -2943,7 +2943,7 @@ async function editChatMsg(id, btn) {
     if (!pEl) return;
 
     const oldText = pEl.textContent;
-    const newText = prompt('Message edit karo:', oldText);
+    const newText = prompt('Edit message:', oldText);
     if (!newText || newText.trim() === oldText.trim()) return;
 
     try {
