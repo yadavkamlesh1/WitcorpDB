@@ -2593,11 +2593,8 @@ function showApp(user) {
     document.getElementById('authScreen').style.display = 'none';
     const appScreen = document.getElementById('appScreen');
     appScreen.classList.remove('hidden');
-    const chatBtn = document.getElementById('chatToggleBtn');
-if (chatBtn) chatBtn.style.display = 'flex';
     appScreen.style.display = 'flex';
     appScreen.style.flexDirection = 'column';
-    window.dispatchEvent(new Event('resize'));
 
     currentUserEmail = user.email;
     currentUserName = user.email;
@@ -2616,15 +2613,17 @@ if (chatBtn) chatBtn.style.display = 'flex';
     loadColumnPrefs();
     showSection('dashboard');
 
-    // FIX 8: Clear existing intervals before creating new ones
     if (_onlineUsersInterval) clearInterval(_onlineUsersInterval);
     if (_presenceInterval) clearInterval(_presenceInterval);
     _onlineUsersInterval = setInterval(loadOnlineUsers, 30000);
     _presenceInterval = setInterval(() => updatePresence(), 60000);
 
     saveActivity('Login: ' + user.email);
-    subscribeToPush(); // Push notification subscribe
-    document.getElementById('chatToggleBtn').style.removeProperty('display');
+    subscribeToPush();
+
+    const chatBtn = document.getElementById('chatToggleBtn');
+    if (chatBtn) chatBtn.style.display = 'flex';
+
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
 
