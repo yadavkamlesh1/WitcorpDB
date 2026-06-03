@@ -2837,6 +2837,7 @@ function appendChatMessage(msg) {
 
     const div = document.createElement('div');
     div.className = `flex ${isMe ? 'justify-end' : ''} gap-2 mb-3`;
+    div.setAttribute('data-msg-id', msg.id);
     div.dataset.msgId = msg.id;
 
     if (isMe) {
