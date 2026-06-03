@@ -623,7 +623,10 @@ async function handleSubmit() {
 
     if (!clientName) { showToast('Client Name is mandatory.', 'error'); return; }
     if (!serviceCategory) { showToast('Service Category is mandatory.', 'error'); return; }
-
+    // Pehle old assigned staff yaad rakho
+const oldRecord = allRecords.find(r => r.id === parseInt(id));
+const oldStaff = oldRecord?.assigned_staff || '';
+const newStaff = document.getElementById('assignedStaff').value;
     const payload = {
         status: document.getElementById('status').value,
         remarks: document.getElementById('remarks').value,
@@ -667,6 +670,17 @@ async function handleSubmit() {
                 "record", payload.client_name
             );
             showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
+            // Feature 12 — Staff assignment notification
+if (newStaff && newStaff !== oldStaff) {
+    await supabaseClient.from('witcorp_notifications').insert([{
+        title: '📋 Naya Kaam Assign Hua!',
+        message: `${currentUserName} ne tumhe assign kiya: ${payload.client_name} — ${payload.service_category}`,
+        type: 'record',
+        reference: payload.client_name,
+        created_by: currentUserEmail,
+        is_read: false
+    }]);
+}
             clearForm();
             clearDirtyState();
             await fetchRecords(true);
@@ -2635,3 +2649,227 @@ window.addEventListener('load', async () => {
         } catch (err) { console.error("Password update error:", err); showToast("Password update failed. Please try again.", 'error'); }
     }
 });
+// ============================================================
+// TEAM CHAT SYSTEM
+// ============================================================
+let chatOpen = false;
+let chatSubscription = null;
+
+function toggleChat() {
+    const panel = document.getElementById('chatPanel');
+    if (!panel) return;
+    chatOpen = !chatOpen;
+    if (chatOpen) {
+        panel.classList.remove('hidden');
+        loadChats();
+        subscribeChatRealtime();
+        document.getElementById('chatInput')?.focus();
+    } else {
+        panel.classList.add('hidden');
+        if (chatSubscription) {
+            supabaseClient.removeChannel(chatSubscription);
+            chatSubscription = null;
+        }
+    }
+}
+
+async function loadChats() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('witcorp_chats')
+            .select('*')
+            .order('created_at', { ascending: true })
+            .limit(100);
+        if (error) return;
+        renderChats(data || []);
+    } catch (err) {
+        console.error('loadChats error:', err);
+    }
+}
+
+function renderChats(messages) {
+    const list = document.getElementById('chatList');
+    if (!list) return;
+
+    if (messages.length === 0) {
+        list.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
+                <i class="fas fa-comments text-4xl text-slate-300"></i>
+                <p class="text-sm font-bold text-slate-400">Koi message nahi abhi tak</p>
+                <p class="text-xs text-slate-300">Pehla message bhejo!</p>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    let lastDate = '';
+
+    messages.forEach(msg => {
+        const isMe = msg.sent_by === currentUserEmail;
+        const msgDate = new Date(msg.created_at).toLocaleDateString('en-IN', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+
+        // Date separator
+        if (msgDate !== lastDate) {
+            lastDate = msgDate;
+            html += `
+                <div class="flex items-center gap-3 my-4">
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                    <span class="text-[10px] font-black text-slate-400 bg-white px-3 py-1 rounded-full border">${msgDate}</span>
+                    <div class="flex-1 h-px bg-slate-200"></div>
+                </div>`;
+        }
+
+        const time = new Date(msg.created_at).toLocaleTimeString('en-IN', {
+            hour: '2-digit', minute: '2-digit', hour12: true
+        });
+
+        const recordTag = msg.record_ref
+            ? `<div class="mt-1.5 px-2 py-1 bg-white/20 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                <i class="fas fa-link text-[9px]"></i> ${msg.record_ref}
+               </div>`
+            : '';
+
+        if (isMe) {
+            html += `
+                <div class="flex justify-end gap-2 mb-3 group">
+                    <div class="max-w-[75%]">
+                        <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
+                        <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
+                            <p class="text-sm font-medium leading-relaxed">${escapeHtml(msg.message)}</p>
+                            ${recordTag}
+                        </div>
+                        <div class="text-[10px] text-slate-400 text-right mt-1">${time}</div>
+                    </div>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
+                        style="background:${msg.avatar_color || '#3b82f6'}">
+                        ${msg.sent_by_initial || '?'}
+                    </div>
+                </div>`;
+        } else {
+            html += `
+                <div class="flex gap-2 mb-3 group">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
+                        style="background:${msg.avatar_color || '#6366f1'}">
+                        ${msg.sent_by_initial || '?'}
+                    </div>
+                    <div class="max-w-[75%]">
+                        <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
+                        <div class="bg-white border border-slate-200 text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
+                            <p class="text-sm font-medium leading-relaxed">${escapeHtml(msg.message)}</p>
+                            ${recordTag}
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-1">${time}</div>
+                    </div>
+                </div>`;
+        }
+    });
+
+    list.innerHTML = html;
+    list.scrollTop = list.scrollHeight;
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const message = input?.value.trim();
+    if (!message || !currentUserEmail) return;
+
+    const btn = document.getElementById('sendChatBtn');
+    if (btn) btn.disabled = true;
+
+    try {
+        const { error } = await supabaseClient.from('witcorp_chats').insert([{
+            message,
+            sent_by: currentUserEmail,
+            sent_by_initial: currentUserEmail.charAt(0).toUpperCase(),
+            avatar_color: currentUserProfile?.avatar_color || '#3b82f6'
+        }]);
+        if (!error) {
+            input.value = '';
+        } else {
+            showToast('Message send nahi hua', 'error');
+        }
+    } catch (err) {
+        console.error('sendChat error:', err);
+    } finally {
+        if (btn) btn.disabled = false;
+        input?.focus();
+    }
+}
+
+function subscribeChatRealtime() {
+    if (chatSubscription) return;
+    chatSubscription = supabaseClient
+        .channel('team-chat')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'witcorp_chats'
+        }, (payload) => {
+            appendChatMessage(payload.new);
+        })
+        .subscribe();
+}
+
+function appendChatMessage(msg) {
+    const list = document.getElementById('chatList');
+    if (!list) return;
+
+    // Agar empty state hai toh clear karo
+    if (list.querySelector('.fa-comments')) {
+        list.innerHTML = '';
+    }
+
+    const isMe = msg.sent_by === currentUserEmail;
+    const time = new Date(msg.created_at).toLocaleTimeString('en-IN', {
+        hour: '2-digit', minute: '2-digit', hour12: true
+    });
+
+    const div = document.createElement('div');
+    div.className = `flex ${isMe ? 'justify-end' : ''} gap-2 mb-3`;
+
+    if (isMe) {
+        div.innerHTML = `
+            <div class="max-w-[75%]">
+                <div class="text-[10px] font-bold text-slate-400 text-right mb-1">Tum</div>
+                <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
+                    <p class="text-sm font-medium">${escapeHtml(msg.message)}</p>
+                </div>
+                <div class="text-[10px] text-slate-400 text-right mt-1">${time}</div>
+            </div>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
+                style="background:${msg.avatar_color || '#3b82f6'}">
+                ${msg.sent_by_initial || '?'}
+            </div>`;
+    } else {
+        div.innerHTML = `
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
+                style="background:${msg.avatar_color || '#6366f1'}">
+                ${msg.sent_by_initial || '?'}
+            </div>
+            <div class="max-w-[75%]">
+                <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
+                <div class="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
+                    <p class="text-sm font-medium text-slate-800">${escapeHtml(msg.message)}</p>
+                </div>
+                <div class="text-[10px] text-slate-400 mt-1">${time}</div>
+            </div>`;
+
+        // Doosre ka message aaya toh sound bajao
+        if (document.hidden || !chatOpen) {
+            showToast(`💬 ${msg.sent_by.split('@')[0]}: ${msg.message.substring(0, 40)}...`, 'info', 4000);
+        }
+    }
+
+    list.appendChild(div);
+    list.scrollTop = list.scrollHeight;
+}
