@@ -2593,6 +2593,8 @@ function showApp(user) {
     document.getElementById('authScreen').style.display = 'none';
     const appScreen = document.getElementById('appScreen');
     appScreen.classList.remove('hidden');
+    const chatBtn = document.getElementById('chatToggleBtn');
+if (chatBtn) chatBtn.style.display = 'flex';
     // FIX 2: Use flex-col class explicitly — matches HTML structure
     appScreen.style.display = 'flex';
     appScreen.style.flexDirection = 'column';
