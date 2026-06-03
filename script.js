@@ -2623,7 +2623,8 @@ function showApp(user) {
     saveActivity('Login: ' + user.email);
     subscribeToPush(); // Push notification subscribe
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
-    document.getElementById('chatToggleBtn').style.display = 'flex';
+    const chatBtn = document.getElementById('chatToggleBtn');
+if (chatBtn) chatBtn.style.display = 'flex';
 }
 
 // ============================================================
