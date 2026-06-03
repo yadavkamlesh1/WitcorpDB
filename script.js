@@ -2917,19 +2917,23 @@ function appendChatMessage(msg) {
     list.scrollTop = list.scrollHeight;
 }
 async function deleteChatMsg(id) {
-    if (!confirm('Message delete karna hai?')) return;
+    if (!confirm('Delete this message?')) return;
     try {
         const { error } = await supabaseClient
-            .from('witcorp_chats').delete().eq('id', id);
+            .from('witcorp_chats')
+            .delete()
+            .eq('id', id)
+            .eq('sent_by', currentUserEmail);
         if (!error) {
             const el = document.querySelector(`[data-msg-id="${id}"]`);
             if (el) el.remove();
-            showToast('Message delete ho gaya', 'warning', 2000);
+            showToast('Message deleted', 'warning', 2000);
         } else {
-            showToast('Delete fail hua', 'error');
+            showToast('Delete failed: ' + error.message, 'error');
         }
     } catch (err) {
         console.error('deleteChatMsg error:', err);
+        showToast('Delete failed', 'error');
     }
 }
 
