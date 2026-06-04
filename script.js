@@ -2622,7 +2622,10 @@ function showApp(user) {
     subscribeToPush();
 
     const chatBtn = document.getElementById('chatToggleBtn');
-    if (chatBtn) chatBtn.style.display = 'flex';
+if (chatBtn) {
+    chatBtn.classList.remove('hidden');
+    chatBtn.style.display = '';
+}
 
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
