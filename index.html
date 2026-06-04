@@ -812,7 +812,6 @@
       <!-- CHAT BUTTON -->
     <button onclick="toggleChat()"
         id="chatToggleBtn"
-        style="display:none"
         class="fixed bottom-40 right-6 z-[9999] w-14 h-14 bg-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-purple-700 hover:scale-110 transition-all lg:bottom-24"
         title="Team Chat">
         <i class="fas fa-comments text-xl"></i>
@@ -914,8 +913,12 @@
   </div>
     <!-- TEAM CHAT PANEL -->
 <div id="chatPanel"
-    class="hidden fixed bottom-24 right-24 z-[99998] w-[95vw] sm:w-[380px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
-    style="height: 520px;">
+    class="hidden fixed z-[99998] 
+       bottom-4 left-1/2 -translate-x-1/2
+       sm:bottom-24 sm:left-auto sm:translate-x-0 sm:right-28
+       w-[94vw] sm:w-[380px] 
+       bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+style="height: 520px; max-height: 85vh;">
 
     <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0">
