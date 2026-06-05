@@ -718,10 +718,6 @@ tbody tr:hover {
 /* ========================= */
 
 #chatToggleBtn {
-    display: none !important;
-}
-
-#chatToggleBtn.chat-visible {
     display: flex !important;
 }
 
