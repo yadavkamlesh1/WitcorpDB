@@ -735,6 +735,14 @@ tbody tr:hover {
     height: 420px !important;
     max-height: 70vh !important;
     z-index: 99998 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#chatPanel #chatList {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    min-height: 0 !important;
 }
 
 @media (min-width: 640px) {
