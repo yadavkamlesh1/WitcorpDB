@@ -1890,8 +1890,11 @@ function applyGreenHeaders() {
 // ============================================================
 // KEYBOARD SHORTCUTS — SINGLE UNIFIED HANDLER
 // ============================================================
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+if (e.key === 'Escape') {
+        if (editingMessageId) {
+            cancelEditMessage();
+            return;
+        }
         e.preventDefault();
         const searchBox = document.getElementById('globalSearch');
         if (searchBox) {
@@ -1900,7 +1903,6 @@ document.addEventListener('keydown', function(e) {
             searchBox.focus();
             searchBox.select();
         }
-   }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
         if (!currentUserEmail) return;
@@ -2655,6 +2657,8 @@ window.addEventListener('load', async () => {
 // ============================================================
 let chatOpen = false;
 let chatSubscription = null;
+let editingMessageId = null;
+let editingMessageText = null;
 
 function toggleChat() {
     const panel = document.getElementById('chatPanel');
@@ -2807,30 +2811,54 @@ async function sendChat() {
     const btn = document.getElementById('sendChatBtn');
     if (btn) btn.disabled = true;
 
-    // Close mention dropdown
     closeMentionDropdown();
 
     try {
-        const payload = {
-            message,
-            sent_by: currentUserEmail,
-            sent_by_initial: currentUserEmail.charAt(0).toUpperCase(),
-            avatar_color: currentUserProfile?.avatar_color || '#3b82f6'
-        };
+        // Check if editing
+        if (editingMessageId) {
+            // UPDATE MODE
+            const { error } = await supabaseClient
+                .from('witcorp_chats')
+                .update({ 
+                    message: message, 
+                    is_edited: true,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', editingMessageId)
+                .eq('sent_by', currentUserEmail);
 
-        // Reply attach karo agar set hai
-        if (window._replyToId) {
-            payload.reply_to_id = window._replyToId;
-            payload.reply_to_text = window._replyToText;
-            payload.reply_to_sender = window._replyToSender;
-        }
-
-        const { error } = await supabaseClient.from('witcorp_chats').insert([payload]);
-        if (!error) {
-            input.value = '';
-            clearReply();
+            if (!error) {
+                showToast('✏️ Message updated', 'success', 2000);
+                input.value = '';
+                cancelEditMessage();
+            } else {
+                showToast('Update failed: ' + error.message, 'error');
+            }
         } else {
-            showToast('Message not sent. Check connection.', 'error');
+            // INSERT MODE (normal message)
+            const payload = {
+                message,
+                sent_by: currentUserEmail,
+                sent_by_initial: currentUserEmail.charAt(0).toUpperCase(),
+                avatar_color: currentUserProfile?.avatar_color || '#3b82f6'
+            };
+
+            if (window._replyToId) {
+                payload.reply_to_id = window._replyToId;
+                payload.reply_to_text = window._replyToText;
+                payload.reply_to_sender = window._replyToSender;
+            }
+
+            const { error } = await supabaseClient
+                .from('witcorp_chats')
+                .insert([payload]);
+
+            if (!error) {
+                input.value = '';
+                clearReply();
+            } else {
+                showToast('Message not sent. Check connection.', 'error');
+            }
         }
     } catch (err) {
         console.error('sendChat error:', err);
@@ -2839,7 +2867,6 @@ async function sendChat() {
         input?.focus();
     }
 }
-
 // ============================================================
 // REPLY SYSTEM
 // ============================================================
@@ -3184,29 +3211,77 @@ async function deleteChatMsg(id) {
     }
 }
 
-async function editChatMsg(id, btn) {
+function editChatMsg(id, btn) {
     const msgDiv = btn.closest('[data-msg-id]');
     const pEl = msgDiv?.querySelector('p');
     if (!pEl) return;
 
     const oldText = pEl.textContent;
-    const newText = prompt('Edit message:', oldText);
-    if (!newText || newText.trim() === oldText.trim()) return;
+    const input = document.getElementById('chatInput');
+    if (!input) return;
 
-    try {
-        const { error } = await supabaseClient
-            .from('witcorp_chats')
-            .update({ message: newText.trim(), is_edited: true })
-            .eq('id', id);
-        if (!error) {
-            pEl.textContent = newText.trim();
-            const timeEl = document.getElementById(`msgtime_${id}`);
-            if (timeEl) timeEl.innerHTML += ' · <span class="italic">edited</span>';
-            showToast('Message update ho gaya', 'success', 2000);
-        } else {
-            showToast('Edit fail hua', 'error');
-        }
-    } catch (err) {
-        console.error('editChatMsg error:', err);
+    // Set edit mode
+    editingMessageId = id;
+    editingMessageText = oldText;
+
+    // Populate input box
+    input.value = oldText;
+    input.focus();
+
+    // Show editing indicator
+    showEditingIndicator(oldText);
+
+    // Highlight the message being edited
+    msgDiv.style.opacity = '0.7';
+    msgDiv.style.borderLeft = '3px solid #3b82f6';
+    msgDiv.style.paddingLeft = '12px';
+}
+
+function showEditingIndicator(text) {
+    let indicator = document.getElementById('editingIndicator');
+    
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'editingIndicator';
+        const inputArea = document.getElementById('chatInput')?.parentElement;
+        if (!inputArea) return;
+        inputArea.parentElement.insertBefore(indicator, inputArea);
     }
+
+    indicator.style.cssText = `
+        display:flex;align-items:center;gap:8px;
+        padding:8px 12px;background:#eff6ff;
+        border-top:2px solid #3b82f6;
+        font-size:12px;font-weight:600;color:#1d4ed8;
+        flex-shrink:0;
+    `;
+
+    indicator.innerHTML = `
+        <i class="fas fa-pencil" style="color:#3b82f6;"></i>
+        <span>Editing message...</span>
+        <span style="opacity:0.6;">"${text.substring(0, 40)}${text.length > 40 ? '...' : ''}"</span>
+        <button onclick="cancelEditMessage()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;padding:0;margin-left:auto;">✕</button>
+    `;
+}
+
+function cancelEditMessage() {
+    editingMessageId = null;
+    editingMessageText = null;
+    
+    // Clear input
+    const input = document.getElementById('chatInput');
+    if (input) input.value = '';
+    
+    // Remove indicator
+    const indicator = document.getElementById('editingIndicator');
+    if (indicator) indicator.remove();
+
+    // Remove highlight
+    document.querySelectorAll('[data-msg-id]').forEach(el => {
+        el.style.opacity = '1';
+        el.style.borderLeft = 'none';
+        el.style.paddingLeft = '0';
+    });
+
+    input?.focus();
 }
