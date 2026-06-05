@@ -2754,9 +2754,10 @@ function renderChats(messages) {
                                     style="background:rgba(255,255,255,0.2);border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;" title="Reply">
                                     <i class="fas fa-reply"></i>
                                 </button>
-                                <button onclick="editChatMsg(${msg.id}, this)"
-                                    style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
-                                    <i class="fas fa-pencil"></i>
+                               <button onclick="editChatMsg(${msg.id}, this)"
+                               style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;transition:0.2s;"
+                                onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'" title="Edit message">
+                                 <i class="fas fa-pencil"></i>
                                 </button>
                                 <button onclick="deleteChatMsg(${msg.id})"
                                     style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
