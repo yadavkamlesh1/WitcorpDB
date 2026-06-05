@@ -1546,19 +1546,22 @@ function renderNotifications() {
     const count = document.getElementById('notificationCount');
     if (!list) return;
     list.innerHTML = "";
-    const unread = allNotifications.filter(n => !n.is_read);
+
+    const filtered = allNotifications.filter(n => n.created_by !== currentUserEmail);
+    const unread = filtered.filter(n => !n.is_read);
     unreadCount = unread.length;
+
     if (count) {
         if (unreadCount > 0) { count.classList.remove('hidden'); count.innerText = unreadCount > 99 ? '99+' : unreadCount; }
         else { count.classList.add('hidden'); }
     }
-    if (allNotifications.length === 0) {
+    if (filtered.length === 0) {
         list.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold text-sm">
             <i class="fas fa-bell-slash text-3xl block mb-3 opacity-30"></i>No notifications yet</div>`;
         return;
     }
     const typeIcon = { record: 'fa-file-alt', client: 'fa-address-card', vault: 'fa-shield-halved', dsc: 'fa-key' };
-    allNotifications = allNotifications.filter(n => n.created_by !== currentUserEmail);
+    filtered.forEach(n => {
         const notifDiv = document.createElement('div');
         notifDiv.dataset.notifId = n.id;
         notifDiv.dataset.notifType = n.type;
@@ -1596,14 +1599,7 @@ function renderNotifications() {
 }
 
 function toggleNotificationPanel() {
-    const panel = document.getElementById('notificationPanel');
-    if (!panel) return;
-    const isHidden = panel.classList.contains('hidden');
-    panel.classList.toggle('hidden');
-    if (isHidden) {
-        // Jab pehli baar khule, notifications tab pe raho
-        switchPanelTab('notif');
-    }
+    document.getElementById('notificationPanel')?.classList.toggle('hidden');
 }
 async function openNotification(id, type, reference) {
     try {
