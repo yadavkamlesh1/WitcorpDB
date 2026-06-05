@@ -12,129 +12,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-      .dev-signature-wrap {
-        position: relative;
-        padding: 18px 10px 14px;
-        text-align: center;
-        overflow: hidden;
-        border-top: 1px solid rgba(255,255,255,0.08);
-        background: transparent;
-      }
-      .dev-signature-wrap::before {
-        content: '';
-        position: absolute;
-        bottom: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 180px;
-        height: 60px;
-        background: radial-gradient(ellipse, rgba(250,204,21,0.18) 0%, transparent 70%);
-        border-radius: 50%;
-        animation: devOrb 3s ease-in-out infinite alternate;
-        pointer-events: none;
-      }
-      @keyframes devOrb {
-        0%   { opacity: 0.4; transform: translateX(-50%) scale(0.85); }
-        100% { opacity: 1;   transform: translateX(-50%) scale(1.15); }
-      }
-      .dev-label {
-        font-family: 'Outfit', sans-serif;
-        font-size: 8.5px;
-        font-weight: 600;
-        letter-spacing: 0.35em;
-        text-transform: uppercase;
-        color: rgba(147,197,253,0.55);
-        display: block;
-        margin-bottom: 5px;
-      }
-      .dev-name {
-        font-family: 'Cinzel Decorative', serif;
-        font-size: 13.5px;
-        font-weight: 900;
-        letter-spacing: 0.04em;
-        line-height: 1;
-        display: inline-block;
-        position: relative;
-        background: linear-gradient(
-          110deg,
-          #b8860b 0%,
-          #ffd700 18%,
-          #fffacd 34%,
-          #ffd700 50%,
-          #daa520 66%,
-          #ffd700 82%,
-          #b8860b 100%
-        );
-        background-size: 250% auto;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: devShimmer 3.5s linear infinite;
-        filter: drop-shadow(0 0 8px rgba(250,204,21,0.45));
-      }
-      @keyframes devShimmer {
-        0%   { background-position: 200% center; }
-        100% { background-position: -200% center; }
-      }
-      .dev-divider {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 7px;
-      }
-      .dev-divider-line {
-        flex: 1;
-        max-width: 38px;
-        height: 1px;
-        background: linear-gradient(to right, transparent, rgba(250,204,21,0.4), transparent);
-        border-radius: 1px;
-      }
-      .dev-divider-dot {
-        width: 4px;
-        height: 4px;
-        background: #fbbf24;
-        border-radius: 50%;
-        box-shadow: 0 0 6px 2px rgba(251,191,36,0.55);
-        animation: devDotPulse 2s ease-in-out infinite;
-      }
-      @keyframes devDotPulse {
-        0%, 100% { box-shadow: 0 0 4px 1px rgba(251,191,36,0.4); }
-        50%       { box-shadow: 0 0 10px 4px rgba(251,191,36,0.8); }
-      }
-      .workspace-header-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 2.5rem;
-      }
-      .workspace-header-row h2 {
-        white-space: nowrap;
-        font-size: 1.6rem;
-        font-weight: 900;
-        color: #1e293b;
-        letter-spacing: -0.02em;
-        margin: 0;
-        flex-shrink: 0;
-      }
-      .workspace-controls {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      /* FIX: Chat button visible by default, hidden when not logged in */
-      #chatToggleBtn {
-        display: none;
-      }
-      #chatToggleBtn.chat-visible {
-        display: flex !important;
-      }
-    </style>
 </head>
 <body id="appBody" class="min-h-screen overflow-x-hidden bg-slate-100">
 
@@ -358,7 +235,7 @@
               <span id="lastSyncText">Syncing...</span>
             </div>
 
-            <!-- TEAM CHAT BUTTON — FIX: no inline display:none, controlled via CSS class -->
+            <!-- TEAM CHAT BUTTON -->
             <button onclick="toggleChat()"
               id="chatToggleBtn"
               class="items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[11px] font-black hover:bg-purple-200 transition-all border border-purple-200 relative"
@@ -436,7 +313,7 @@
         </div>
 
         <!-- TEAM CHAT PANEL -->
-        <div id="chatPanel" class="hidden fixed z-[99998] bottom-4 left-1/2 -translate-x-1/2 sm:bottom-24 sm:left-auto sm:translate-x-0 sm:right-28 w-[94vw] sm:w-[380px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex-col overflow-hidden" style="height:520px; max-height:85vh;">
+        <div id="chatPanel" class="hidden bg-white rounded-3xl shadow-2xl border border-slate-200 flex-col overflow-hidden">
           <div class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0">
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
@@ -1002,23 +879,19 @@
       <div class="p-6 space-y-4">
         <div>
           <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Full Name</label>
-          <input id="pFullName" type="text" placeholder="Your full name"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+          <input id="pFullName" type="text" placeholder="Your full name" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
         </div>
         <div>
           <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Designation</label>
-          <input id="pDesignation" type="text" placeholder="e.g. Senior Accountant"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+          <input id="pDesignation" type="text" placeholder="e.g. Senior Accountant" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
         </div>
         <div>
           <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Phone</label>
-          <input id="pPhone" type="text" placeholder="Phone number"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+          <input id="pPhone" type="text" placeholder="Phone number" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
         </div>
         <div>
           <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Department</label>
-          <input id="pDepartment" type="text" placeholder="e.g. GST Team"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+          <input id="pDepartment" type="text" placeholder="e.g. GST Team" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
         </div>
         <div>
           <label class="text-xs font-black text-slate-500 uppercase mb-1 block">Default Category Filter</label>
@@ -1044,12 +917,10 @@
         </div>
       </div>
       <div class="p-6 flex gap-3 border-t border-slate-100 mt-2">
-        <button onclick="saveProfileChanges()"
-          class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all">
+        <button onclick="saveProfileChanges()" class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all">
           <i class="fas fa-save mr-2"></i>Save Changes
         </button>
-        <button onclick="closeProfileModal()"
-          class="px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
+        <button onclick="closeProfileModal()" class="px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
           Cancel
         </button>
       </div>
@@ -1061,8 +932,7 @@
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
       <div class="p-6 border-b border-slate-100 flex items-center justify-between">
         <h2 id="auditModalTitle" class="text-xl font-black text-slate-800">Change History</h2>
-        <button onclick="closeAuditModal()"
-          class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+        <button onclick="closeAuditModal()" class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
       </div>
       <div id="auditList" class="divide-y divide-slate-100">
         <div class="p-10 text-center text-slate-400 font-semibold">Loading...</div>
@@ -1075,8 +945,7 @@
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col" style="max-height:85vh">
       <div class="p-5 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
         <h2 id="commentsModalTitle" class="text-lg font-black text-slate-800">Comments</h2>
-        <button onclick="closeCommentsModal()"
-          class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+        <button onclick="closeCommentsModal()" class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
       </div>
       <div id="commentsList" class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
         <div class="text-center text-slate-400 py-8 font-semibold">Loading...</div>
@@ -1084,8 +953,7 @@
       <div class="p-4 border-t border-slate-100 flex gap-3 flex-shrink-0">
         <input id="commentInput" type="text" placeholder="Type a comment... (Enter to send)"
           class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
-        <button id="postCommentBtn" onclick="postComment()"
-          class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-all flex-shrink-0">
+        <button id="postCommentBtn" onclick="postComment()" class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-all flex-shrink-0">
           <i class="fas fa-paper-plane"></i>
         </button>
       </div>
@@ -1097,8 +965,7 @@
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto">
       <div class="p-5 border-b border-slate-100 flex items-center justify-between">
         <h2 id="subtasksModalTitle" class="text-lg font-black text-slate-800">Checklist</h2>
-        <button onclick="closeSubtasksModal()"
-          class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+        <button onclick="closeSubtasksModal()" class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
       </div>
       <div id="subtasksList" class="p-4">
         <div class="text-center text-slate-400 py-6 font-semibold">Loading...</div>
@@ -1106,8 +973,7 @@
       <div class="p-4 border-t border-slate-100 flex gap-3">
         <input id="subtaskInput" type="text" placeholder="Add new task..."
           class="flex-1 px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
-        <button onclick="addSubtask()"
-          class="px-5 py-3 rounded-2xl bg-emerald-500 text-white font-black text-sm hover:bg-emerald-600 transition-all">
+        <button onclick="addSubtask()" class="px-5 py-3 rounded-2xl bg-emerald-500 text-white font-black text-sm hover:bg-emerald-600 transition-all">
           <i class="fas fa-plus"></i>
         </button>
       </div>
@@ -1122,8 +988,7 @@
           <h2 class="text-lg font-black text-slate-800">Quick Add Record</h2>
           <p class="text-xs text-slate-400 font-semibold mt-0.5"><kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-black">Ctrl+N</kbd></p>
         </div>
-        <button onclick="closeQuickAdd()"
-          class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
+        <button onclick="closeQuickAdd()" class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-lg">✕</button>
       </div>
       <div class="p-5 space-y-4">
         <input id="qaClientName" list="clientSuggestions" type="text" placeholder="Client Name *"
@@ -1154,12 +1019,10 @@
         </select>
       </div>
       <div class="p-5 flex gap-3 border-t border-slate-100">
-        <button onclick="submitQuickAdd()"
-          class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all">
+        <button onclick="submitQuickAdd()" class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all">
           <i class="fas fa-bolt mr-2"></i>Add Record
         </button>
-        <button onclick="closeQuickAdd()"
-          class="px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
+        <button onclick="closeQuickAdd()" class="px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
           Cancel
         </button>
       </div>
@@ -1176,6 +1039,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-  <script src="script.js?v=2.3"></script>
+  <script src="script.js?v=2.4"></script>
 </body>
 </html>
