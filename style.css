@@ -756,3 +756,6 @@ tbody tr:hover {
         max-height: 75vh !important;
     }
 }
+#chatPanel.hidden {
+    display: none !important;
+}
