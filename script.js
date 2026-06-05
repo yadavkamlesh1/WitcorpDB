@@ -1596,9 +1596,15 @@ function renderNotifications() {
 }
 
 function toggleNotificationPanel() {
-    document.getElementById('notificationPanel').classList.toggle('hidden');
+    const panel = document.getElementById('notificationPanel');
+    if (!panel) return;
+    const isHidden = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    if (isHidden) {
+        // Jab pehli baar khule, notifications tab pe raho
+        switchPanelTab('notif');
+    }
 }
-
 async function openNotification(id, type, reference) {
     try {
         await supabaseClient.from('witcorp_notifications').update({ is_read: true }).eq('id', parseInt(id, 10));
@@ -2620,13 +2626,6 @@ function showApp(user) {
 
     saveActivity('Login: ' + user.email);
     subscribeToPush();
-
-    const chatBtn = document.getElementById('chatToggleBtn');
-if (chatBtn) {
-    chatBtn.classList.remove('hidden');
-    chatBtn.style.display = '';
-}
-
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
 
@@ -2661,20 +2660,48 @@ let chatOpen = false;
 let chatSubscription = null;
 
 function toggleChat() {
-    const panel = document.getElementById('chatPanel');
+    // Ab chat notification panel ke andar hai
+    // Notification panel open karo aur chat tab pe switch karo
+    const panel = document.getElementById('notificationPanel');
     if (!panel) return;
-    chatOpen = !chatOpen;
-    if (chatOpen) {
-        panel.classList.remove('hidden');
+    panel.classList.remove('hidden');
+    switchPanelTab('chat');
+}
+// ============================================================
+// PANEL TAB SWITCHER (Notifications + Chat)
+// ============================================================
+function switchPanelTab(tab) {
+    const notifContent = document.getElementById('panelNotifContent');
+    const chatContent = document.getElementById('panelChatContent');
+    const tabNotif = document.getElementById('tabNotif');
+    const tabChat = document.getElementById('tabChat');
+
+    if (tab === 'chat') {
+        if (notifContent) notifContent.style.display = 'none';
+        if (chatContent) { chatContent.style.display = 'flex'; }
+        if (tabNotif) {
+            tabNotif.classList.remove('border-blue-600', 'text-blue-600', 'bg-blue-50');
+            tabNotif.classList.add('border-transparent', 'text-slate-500');
+        }
+        if (tabChat) {
+            tabChat.classList.remove('border-transparent', 'text-slate-500');
+            tabChat.classList.add('border-purple-600', 'text-purple-600', 'bg-purple-50');
+        }
         loadChats();
         subscribeChatRealtime();
-        document.getElementById('chatInput')?.focus();
+        setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
     } else {
-        panel.classList.add('hidden');
-        if (chatSubscription) {
-            supabaseClient.removeChannel(chatSubscription);
-            chatSubscription = null;
+        if (chatContent) chatContent.style.display = 'none';
+        if (notifContent) notifContent.style.display = 'flex';
+        if (tabChat) {
+            tabChat.classList.remove('border-purple-600', 'text-purple-600', 'bg-purple-50');
+            tabChat.classList.add('border-transparent', 'text-slate-500');
         }
+        if (tabNotif) {
+            tabNotif.classList.remove('border-transparent', 'text-slate-500');
+            tabNotif.classList.add('border-blue-600', 'text-blue-600', 'bg-blue-50');
+        }
+        fetchNotifications();
     }
 }
 
