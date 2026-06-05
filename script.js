@@ -354,6 +354,7 @@ async function applyBulkStatus() {
         clearBulkSelection();
         await fetchRecords(true);
         showUndoToast(`${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`, previousStatuses, 120000);
+        if (newStatus === 'Completed') fireConfetti();
     } else {
         showToast('Bulk update failed. Check connection.', 'error');
     }
@@ -670,6 +671,7 @@ const newStaff = document.getElementById('assignedStaff').value;
                 "record", payload.client_name
             );
             showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
+            if (payload.status === 'Completed') fireConfetti();
             // Feature 12 — Staff assignment notification
 if (newStaff && newStaff !== oldStaff) {
     await supabaseClient.from('witcorp_notifications').insert([{
@@ -3367,4 +3369,29 @@ function clearChatSearch() {
         if (p) p.innerHTML = escapeHtml(p.textContent);
         el.style.opacity = '1';
     });
+}
+// ============================================================
+// CONFETTI — CELEBRATION ON COMPLETION
+// ============================================================
+function fireConfetti() {
+    const duration = 1800;
+    const end = Date.now() + duration;
+    const colors = ['#1A2E5A', '#fbbf24', '#10b981', '#3b82f6', '#f43f5e'];
+    (function frame() {
+        confetti({
+            particleCount: 6,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: colors
+        });
+        confetti({
+            particleCount: 6,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: colors
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+    })();
 }
