@@ -2816,6 +2816,8 @@ async function sendChat() {
     if (btn) btn.disabled = true;
 
     closeMentionDropdown();
+    broadcastTyping(false);
+    clearTimeout(typingTimeout);
 
     try {
         // Check if editing
@@ -2932,6 +2934,10 @@ async function fetchOnlineUsersForMention() {
 
 function handleChatInput(e) {
     const input = e.target;
+     // Typing broadcast
+    broadcastTyping(true);
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => broadcastTyping(false), 2000);
     const val = input.value;
     const cursorPos = input.selectionStart;
     const textBeforeCursor = val.substring(0, cursorPos);
@@ -3079,6 +3085,7 @@ function toggleEmojiPicker() {
 }
 function subscribeChatRealtime() {
     if (chatSubscription) return;
+    initTypingChannel();
     chatSubscription = supabaseClient
         .channel('team-chat')
         .on('postgres_changes', {
@@ -3394,4 +3401,81 @@ function fireConfetti() {
         });
         if (Date.now() < end) requestAnimationFrame(frame);
     })();
+}
+// ============================================================
+// TYPING INDICATOR SYSTEM
+// ============================================================
+let typingTimeout = null;
+let typingChannel = null;
+let currentlyTypingUsers = {};
+
+function initTypingChannel() {
+    if (typingChannel) return;
+    typingChannel = supabaseClient.channel('typing-indicator');
+
+    typingChannel
+        .on('presence', { event: 'sync' }, () => {
+            const state = typingChannel.presenceState();
+            currentlyTypingUsers = {};
+            Object.values(state).forEach(presences => {
+                presences.forEach(p => {
+                    if (p.isTyping && p.email !== currentUserEmail) {
+                        currentlyTypingUsers[p.email] = p.name;
+                    }
+                });
+            });
+            renderTypingIndicator();
+        })
+        .on('presence', { event: 'join' }, ({ newPresences }) => {
+            newPresences.forEach(p => {
+                if (p.isTyping && p.email !== currentUserEmail) {
+                    currentlyTypingUsers[p.email] = p.name;
+                }
+            });
+            renderTypingIndicator();
+        })
+        .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+            leftPresences.forEach(p => {
+                delete currentlyTypingUsers[p.email];
+            });
+            renderTypingIndicator();
+        })
+        .subscribe();
+}
+
+function broadcastTyping(isTyping) {
+    if (!typingChannel || !currentUserEmail) return;
+    const name = (currentUserProfile?.full_name || currentUserEmail.split('@')[0]);
+    typingChannel.track({
+        email: currentUserEmail,
+        name: name,
+        isTyping: isTyping
+    });
+}
+
+function renderTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    const typingText = document.getElementById('typingText');
+    const chatList = document.getElementById('chatList');
+    if (!indicator || !typingText) return;
+
+    const typers = Object.values(currentlyTypingUsers);
+
+    if (typers.length === 0) {
+        indicator.classList.add('hidden');
+        indicator.classList.remove('flex');
+    } else {
+        let text = '';
+        if (typers.length === 1) {
+            text = `${typers[0]} is typing`;
+        } else if (typers.length === 2) {
+            text = `${typers[0]} and ${typers[1]} are typing`;
+        } else {
+            text = `${typers.length} people are typing`;
+        }
+        typingText.innerText = text;
+        indicator.classList.remove('hidden');
+        indicator.classList.add('flex');
+        if (chatList) chatList.scrollTop = chatList.scrollHeight;
+    }
 }
