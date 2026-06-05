@@ -1558,7 +1558,7 @@ function renderNotifications() {
         return;
     }
     const typeIcon = { record: 'fa-file-alt', client: 'fa-address-card', vault: 'fa-shield-halved', dsc: 'fa-key' };
-    allNotifications.forEach(n => {
+    allNotifications = allNotifications.filter(n => n.created_by !== currentUserEmail);
         const notifDiv = document.createElement('div');
         notifDiv.dataset.notifId = n.id;
         notifDiv.dataset.notifType = n.type;
@@ -2627,6 +2627,9 @@ function showApp(user) {
     saveActivity('Login: ' + user.email);
     subscribeToPush();
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
+  // Chat button show karo
+const chatBtn = document.getElementById('chatToggleBtn');
+if (chatBtn) chatBtn.style.display = 'flex';
 }
 
 // ============================================================
