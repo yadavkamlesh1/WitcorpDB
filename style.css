@@ -590,24 +590,3 @@ tbody tr:hover {
     padding: 10px 16px !important;
     vertical-align: middle !important;
 }
-/* Notification panel flex fix */
-#notificationPanel {
-    display: none;
-    flex-direction: column;
-}
-#notificationPanel:not(.hidden) {
-    display: flex !important;
-}
-#panelNotifContent {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    min-height: 0;
-}
-#panelChatContent {
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    min-height: 0;
-}
