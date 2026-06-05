@@ -5,6 +5,7 @@
 /* ========================= */
 
 :root {
+    --base-font-size:      16px;
     --color-primary:       #3b82f6;
     --color-primary-dark:  #2563eb;
     --color-primary-glow:  rgba(59, 130, 246, 0.12);
@@ -45,6 +46,7 @@ body.menu-open {
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: var(--base-font-size);
     background-color: #F4F6F9;
     scroll-behavior: smooth;
     background-attachment: fixed;
