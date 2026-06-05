@@ -2670,10 +2670,7 @@ function toggleChat() {
         panel.setAttribute('data-chat-open', 'false');
         panel.classList.add('hidden');
         chatOpen = false;
-        if (chatSubscription) {
-            supabaseClient.removeChannel(chatSubscription);
-            chatSubscription = null;
-        }
+        // Subscription mat hatao — messages live rehne chahiye
     }
 }
 async function loadChats() {
@@ -2713,7 +2710,6 @@ function renderChats(messages) {
             day: '2-digit', month: 'short', year: 'numeric'
         });
 
-        // Date separator
         if (msgDate !== lastDate) {
             lastDate = msgDate;
             html += `
@@ -2728,52 +2724,64 @@ function renderChats(messages) {
             hour: '2-digit', minute: '2-digit', hour12: true
         });
 
-        const recordTag = msg.record_ref
-            ? `<div class="mt-1.5 px-2 py-1 bg-white/20 rounded-lg text-[10px] font-bold flex items-center gap-1">
-                <i class="fas fa-link text-[9px]"></i> ${msg.record_ref}
-               </div>`
-            : '';
+        // Reply preview
+        let replyHtml = '';
+        if (msg.reply_to_text) {
+            replyHtml = `
+                <div style="background:rgba(0,0,0,0.08);border-left:3px solid rgba(255,255,255,0.5);border-radius:6px;padding:4px 8px;margin-bottom:4px;font-size:11px;opacity:0.8;">
+                    <span style="font-weight:700;">${msg.reply_to_sender || ''}</span><br>
+                    <span>${msg.reply_to_text.substring(0, 60)}${msg.reply_to_text.length > 60 ? '...' : ''}</span>
+                </div>`;
+        }
+
+        const editedTag = msg.is_edited ? `<span style="font-size:9px;opacity:0.6;margin-left:4px;">edited</span>` : '';
 
         if (isMe) {
             html += `
-                <div class="flex justify-end gap-2 mb-3 group">
+                <div class="flex justify-end gap-2 mb-3 group" data-msg-id="${msg.id}">
                     <div class="max-w-[75%]">
                         <div class="text-[10px] font-bold text-slate-400 text-right mb-1">You</div>
-                       <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
-    <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
-    ${recordTag}
-</div>
-<div class="flex gap-1 justify-end mt-1">
-    <button onclick="editChatMsg(${msg.id}, this)" 
-        style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
-        <i class="fas fa-pencil"></i>
-    </button>
-    <button onclick="deleteChatMsg(${msg.id})"
-        style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
-        <i class="fas fa-trash"></i>
-    </button>
-</div>
-<div class="text-[10px] text-slate-400 text-right mt-1" id="msgtime_${msg.id}">${time}</div>
+                        <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
+                            ${replyHtml}
+                            <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
+                            <div class="flex gap-1 justify-end mt-1.5">
+                                <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', 'You')"
+                                    style="background:rgba(255,255,255,0.2);border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;" title="Reply">
+                                    <i class="fas fa-reply"></i>
+                                </button>
+                                <button onclick="editChatMsg(${msg.id}, this)"
+                                    style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
+                                    <i class="fas fa-pencil"></i>
+                                </button>
+                                <button onclick="deleteChatMsg(${msg.id})"
+                                    style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-[10px] text-slate-400 text-right mt-1" id="msgtime_${msg.id}">${time}${editedTag}</div>
                     </div>
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
-                        style="background:${msg.avatar_color || '#3b82f6'}">
-                        ${msg.sent_by_initial || '?'}
-                    </div>
+                        style="background:${msg.avatar_color || '#3b82f6'}">${msg.sent_by_initial || '?'}</div>
                 </div>`;
         } else {
             html += `
-                <div class="flex gap-2 mb-3 group">
+                <div class="flex gap-2 mb-3 group" data-msg-id="${msg.id}">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
-                        style="background:${msg.avatar_color || '#6366f1'}">
-                        ${msg.sent_by_initial || '?'}
-                    </div>
+                        style="background:${msg.avatar_color || '#6366f1'}">${msg.sent_by_initial || '?'}</div>
                     <div class="max-w-[75%]">
                         <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
                         <div class="bg-white border border-slate-200 text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
+                            ${replyHtml}
                             <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
-                            ${recordTag}
+                            <div class="flex gap-1 mt-1.5">
+                                <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', '${msg.sent_by.split('@')[0]}')"
+                                    style="background:#eff6ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;" title="Reply">
+                                    <i class="fas fa-reply"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="text-[10px] text-slate-400 mt-1">${time}</div>
+                        <div class="text-[10px] text-slate-400 mt-1">${time}${editedTag}</div>
                     </div>
                 </div>`;
         }
@@ -2782,7 +2790,6 @@ function renderChats(messages) {
     list.innerHTML = html;
     list.scrollTop = list.scrollHeight;
 }
-
 function escapeHtml(text) {
     return text
         .replace(/&/g, '&amp;')
@@ -2799,15 +2806,28 @@ async function sendChat() {
     const btn = document.getElementById('sendChatBtn');
     if (btn) btn.disabled = true;
 
+    // Close mention dropdown
+    closeMentionDropdown();
+
     try {
-        const { error } = await supabaseClient.from('witcorp_chats').insert([{
+        const payload = {
             message,
             sent_by: currentUserEmail,
             sent_by_initial: currentUserEmail.charAt(0).toUpperCase(),
             avatar_color: currentUserProfile?.avatar_color || '#3b82f6'
-        }]);
+        };
+
+        // Reply attach karo agar set hai
+        if (window._replyToId) {
+            payload.reply_to_id = window._replyToId;
+            payload.reply_to_text = window._replyToText;
+            payload.reply_to_sender = window._replyToSender;
+        }
+
+        const { error } = await supabaseClient.from('witcorp_chats').insert([payload]);
         if (!error) {
             input.value = '';
+            clearReply();
         } else {
             showToast('Message not sent. Check connection.', 'error');
         }
@@ -2819,6 +2839,189 @@ async function sendChat() {
     }
 }
 
+// ============================================================
+// REPLY SYSTEM
+// ============================================================
+function setReply(msgId, text, sender) {
+    window._replyToId = msgId;
+    window._replyToText = text;
+    window._replyToSender = sender;
+
+    let bar = document.getElementById('replyBar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'replyBar';
+        bar.style.cssText = `
+            display:flex;align-items:center;gap:8px;
+            padding:8px 12px;background:#eff6ff;
+            border-top:2px solid #3b82f6;
+            font-size:12px;font-weight:600;color:#1d4ed8;
+            flex-shrink:0;
+        `;
+        const inputArea = document.getElementById('chatInput')?.parentElement;
+        if (inputArea) inputArea.parentElement.insertBefore(bar, inputArea);
+    }
+    bar.innerHTML = `
+        <i class="fas fa-reply" style="color:#3b82f6;"></i>
+        <div style="flex:1;min-width:0;">
+            <span style="font-weight:700;">${sender}</span>: 
+            <span style="opacity:0.7;">${text.substring(0, 50)}${text.length > 50 ? '...' : ''}</span>
+        </div>
+        <button onclick="clearReply()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:16px;padding:0;">✕</button>
+    `;
+    document.getElementById('chatInput')?.focus();
+}
+
+function clearReply() {
+    window._replyToId = null;
+    window._replyToText = null;
+    window._replyToSender = null;
+    const bar = document.getElementById('replyBar');
+    if (bar) bar.remove();
+}
+
+// ============================================================
+// @ MENTION SYSTEM
+// ============================================================
+let onlineUsersList = [];
+
+async function fetchOnlineUsersForMention() {
+    try {
+        const fiveMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        const { data } = await supabaseClient
+            .from('witcorp_presence')
+            .select('user_email, user_initial, avatar_color')
+            .gte('last_seen', fiveMinAgo);
+        onlineUsersList = data || [];
+    } catch (err) {
+        console.error('fetchOnlineUsersForMention error:', err);
+    }
+}
+
+function handleChatInput(e) {
+    const input = e.target;
+    const val = input.value;
+    const cursorPos = input.selectionStart;
+    const textBeforeCursor = val.substring(0, cursorPos);
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
+
+    if (atMatch) {
+        const query = atMatch[1].toLowerCase();
+        showMentionDropdown(query, input);
+    } else {
+        closeMentionDropdown();
+    }
+}
+
+function showMentionDropdown(query, input) {
+    let dropdown = document.getElementById('mentionDropdown');
+    if (!dropdown) {
+        dropdown = document.createElement('div');
+        dropdown.id = 'mentionDropdown';
+        dropdown.style.cssText = `
+            position:absolute;bottom:100%;left:0;right:0;
+            background:white;border:1px solid #e2e8f0;
+            border-radius:12px;box-shadow:0 -8px 24px rgba(0,0,0,0.12);
+            max-height:180px;overflow-y:auto;z-index:999999;margin-bottom:4px;
+        `;
+        input.parentElement.style.position = 'relative';
+        input.parentElement.appendChild(dropdown);
+    }
+
+    const filtered = onlineUsersList.filter(u =>
+        u.user_email.toLowerCase().includes(query) ||
+        u.user_email.split('@')[0].toLowerCase().includes(query)
+    );
+
+    if (filtered.length === 0) { closeMentionDropdown(); return; }
+
+    dropdown.innerHTML = filtered.map(u => `
+        <div onclick="insertMention('${u.user_email}', '${u.user_email.split('@')[0]}')"
+            style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background 0.15s;"
+            onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
+            <div style="width:28px;height:28px;border-radius:50%;background:${u.avatar_color || '#3b82f6'};
+                display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;">
+                ${u.user_initial || u.user_email.charAt(0).toUpperCase()}
+            </div>
+            <div>
+                <div style="font-weight:700;font-size:13px;color:#1e293b;">${u.user_email.split('@')[0]}</div>
+                <div style="font-size:10px;color:#94a3b8;">${u.user_email}</div>
+            </div>
+        </div>
+    `).join('');
+
+    dropdown.style.display = 'block';
+}
+
+function insertMention(email, name) {
+    const input = document.getElementById('chatInput');
+    if (!input) return;
+    const val = input.value;
+    const cursorPos = input.selectionStart;
+    const textBeforeCursor = val.substring(0, cursorPos);
+    const textAfterCursor = val.substring(cursorPos);
+    const newBefore = textBeforeCursor.replace(/@\w*$/, `@${name} `);
+    input.value = newBefore + textAfterCursor;
+    input.focus();
+    closeMentionDropdown();
+}
+
+function closeMentionDropdown() {
+    const dropdown = document.getElementById('mentionDropdown');
+    if (dropdown) dropdown.remove();
+}
+
+// ============================================================
+// EMOJI PICKER
+// ============================================================
+const EMOJIS = [
+    '😀','😂','😍','🤔','😎','😭','🥳','😅','🙏','👍',
+    '👎','❤️','🔥','✅','⚠️','📋','📊','💼','🏦','💰',
+    '📅','⏰','🔔','📢','✍️','📝','🔍','💡','🎯','🚀'
+];
+
+function toggleEmojiPicker() {
+    let picker = document.getElementById('emojiPicker');
+    if (picker) { picker.remove(); return; }
+
+    picker = document.createElement('div');
+    picker.id = 'emojiPicker';
+    picker.style.cssText = `
+        position:absolute;bottom:100%;right:0;
+        background:white;border:1px solid #e2e8f0;
+        border-radius:12px;box-shadow:0 -8px 24px rgba(0,0,0,0.12);
+        padding:10px;display:grid;grid-template-columns:repeat(10,1fr);
+        gap:4px;z-index:999999;margin-bottom:4px;width:280px;
+    `;
+
+    EMOJIS.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.innerText = emoji;
+        btn.style.cssText = `
+            background:none;border:none;cursor:pointer;font-size:18px;
+            padding:4px;border-radius:6px;transition:background 0.15s;
+        `;
+        btn.onmouseover = () => btn.style.background = '#f1f5f9';
+        btn.onmouseout = () => btn.style.background = 'none';
+        btn.onclick = () => {
+            const input = document.getElementById('chatInput');
+            if (input) {
+                const pos = input.selectionStart;
+                input.value = input.value.substring(0, pos) + emoji + input.value.substring(pos);
+                input.focus();
+                input.selectionStart = input.selectionEnd = pos + emoji.length;
+            }
+            picker.remove();
+        };
+        picker.appendChild(btn);
+    });
+
+    const emojiBtn = document.getElementById('emojiBtn');
+    if (emojiBtn) {
+        emojiBtn.parentElement.style.position = 'relative';
+        emojiBtn.parentElement.appendChild(picker);
+    }
+}
 function subscribeChatRealtime() {
     if (chatSubscription) return;
     chatSubscription = supabaseClient
@@ -2855,6 +3058,7 @@ function subscribeChatRealtime() {
         })
         .subscribe();
 }
+
 function appendChatMessage(msg) {
     const list = document.getElementById('chatList');
     if (!list) return;
@@ -2868,44 +3072,60 @@ function appendChatMessage(msg) {
         hour: '2-digit', minute: '2-digit', hour12: true
     });
 
+    let replyHtml = '';
+    if (msg.reply_to_text) {
+        replyHtml = `
+            <div style="background:rgba(0,0,0,0.08);border-left:3px solid rgba(255,255,255,0.5);border-radius:6px;padding:4px 8px;margin-bottom:4px;font-size:11px;opacity:0.8;">
+                <span style="font-weight:700;">${msg.reply_to_sender || ''}</span><br>
+                <span>${msg.reply_to_text.substring(0, 60)}${msg.reply_to_text.length > 60 ? '...' : ''}</span>
+            </div>`;
+    }
+
     const div = document.createElement('div');
     div.className = `flex ${isMe ? 'justify-end' : ''} gap-2 mb-3`;
     div.setAttribute('data-msg-id', msg.id);
-    div.dataset.msgId = msg.id;
 
     if (isMe) {
         div.innerHTML = `
             <div class="max-w-[75%]">
                 <div class="text-[10px] font-bold text-slate-400 text-right mb-1">You</div>
-                <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm group relative">
+                <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
+                    ${replyHtml}
                     <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
-                   <div class="flex gap-1 justify-end mt-1.5">
-    <button onclick="editChatMsg(${msg.id}, this)" 
-        style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
-        <i class="fas fa-pencil"></i>
-    </button>
-    <button onclick="deleteChatMsg(${msg.id})"
-        style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
-        <i class="fas fa-trash"></i>
-    </button>
-</div>
+                    <div class="flex gap-1 justify-end mt-1.5">
+                        <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', 'You')"
+                            style="background:rgba(255,255,255,0.2);border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                        <button onclick="editChatMsg(${msg.id}, this)"
+                            style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
+                            <i class="fas fa-pencil"></i>
+                        </button>
+                        <button onclick="deleteChatMsg(${msg.id})"
+                            style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="text-[10px] text-slate-400 text-right mt-1" id="msgtime_${msg.id}">${time}</div>
             </div>
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
-                style="background:${msg.avatar_color || '#3b82f6'}">
-                ${msg.sent_by_initial || '?'}
-            </div>`;
+                style="background:${msg.avatar_color || '#3b82f6'}">${msg.sent_by_initial || '?'}</div>`;
     } else {
         div.innerHTML = `
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
-                style="background:${msg.avatar_color || '#6366f1'}">
-                ${msg.sent_by_initial || '?'}
-            </div>
+                style="background:${msg.avatar_color || '#6366f1'}">${msg.sent_by_initial || '?'}</div>
             <div class="max-w-[75%]">
                 <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
                 <div class="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
+                    ${replyHtml}
                     <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
+                    <div class="flex gap-1 mt-1.5">
+                        <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', '${msg.sent_by.split('@')[0]}')"
+                            style="background:#eff6ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="text-[10px] text-slate-400 mt-1">${time}</div>
             </div>`;
@@ -2918,6 +3138,7 @@ function appendChatMessage(msg) {
     list.appendChild(div);
     list.scrollTop = list.scrollHeight;
 }
+
 async function deleteChatMsg(id) {
     if (!confirm('Delete this message?')) return;
     try {
