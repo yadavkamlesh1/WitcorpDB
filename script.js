@@ -2622,6 +2622,7 @@ function showApp(user) {
 
     saveActivity('Login: ' + user.email);
     subscribeToPush();
+    fetchOnlineUsersForMention();
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
 
