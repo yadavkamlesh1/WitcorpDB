@@ -3287,3 +3287,84 @@ function cancelEditMessage() {
 
     input?.focus();
 }
+// ============================================================
+// CHAT MESSAGE SEARCH
+// ============================================================
+function toggleChatSearch() {
+    const bar = document.getElementById('chatSearchBar');
+    const input = document.getElementById('chatSearchInput');
+    if (!bar) return;
+    const isHidden = bar.classList.contains('hidden');
+    bar.classList.toggle('hidden');
+    if (isHidden) {
+        input?.focus();
+    } else {
+        clearChatSearch();
+    }
+}
+
+function searchChatMessages(query) {
+    const q = query.trim().toLowerCase();
+    const count = document.getElementById('chatSearchCount');
+    const allMsgs = document.querySelectorAll('#chatList [data-msg-id]');
+
+    // Pehle sab highlight remove karo
+    allMsgs.forEach(el => {
+        const p = el.querySelector('p');
+        if (!p) return;
+        p.innerHTML = escapeHtml(p.textContent);
+        el.style.opacity = '1';
+    });
+
+    if (!q) {
+        if (count) count.innerText = '';
+        return;
+    }
+
+    let matchCount = 0;
+    let firstMatch = null;
+
+    allMsgs.forEach(el => {
+        const p = el.querySelector('p');
+        if (!p) return;
+        const text = p.textContent;
+        if (text.toLowerCase().includes(q)) {
+            matchCount++;
+            // Highlight
+            const highlighted = escapeHtml(text).replace(
+                new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+                match => `<mark style="background:#fef08a;color:#854d0e;border-radius:3px;padding:0 2px;">${match}</mark>`
+            );
+            p.innerHTML = highlighted;
+            el.style.opacity = '1';
+            if (!firstMatch) firstMatch = el;
+        } else {
+            el.style.opacity = '0.25';
+        }
+    });
+
+    if (count) {
+        count.innerText = matchCount > 0
+            ? `${matchCount} message${matchCount > 1 ? 's' : ''} found`
+            : 'No messages found';
+    }
+
+    // Pehle match pe scroll karo
+    if (firstMatch) {
+        firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function clearChatSearch() {
+    const input = document.getElementById('chatSearchInput');
+    const count = document.getElementById('chatSearchCount');
+    if (input) input.value = '';
+    if (count) count.innerText = '';
+
+    // Sab opacity wapas normal karo, highlights hata do
+    document.querySelectorAll('#chatList [data-msg-id]').forEach(el => {
+        const p = el.querySelector('p');
+        if (p) p.innerHTML = escapeHtml(p.textContent);
+        el.style.opacity = '1';
+    });
+}
