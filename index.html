@@ -420,45 +420,22 @@
 
         <!-- NOTIFICATION PANEL -->
 <div id="notificationPanel" class="hidden fixed top-20 right-6 w-[95vw] sm:w-[420px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]" style="max-height: 600px; display: flex; flex-direction: column;">
-
   <!-- Tabs -->
   <div class="flex border-b border-slate-200 flex-shrink-0">
     <button id="tabNotif" onclick="switchPanelTab('notif')"
       class="flex-1 px-4 py-3 text-sm font-black flex items-center justify-center gap-2 border-b-2 border-blue-600 text-blue-600 bg-blue-50 transition-all">
       <i class="fas fa-bell"></i> Notifications
     </button>
-    <button id="tabChat" onclick="switchPanelTab('chat')"
-      class="flex-1 px-4 py-3 text-sm font-black flex items-center justify-center gap-2 border-b-2 border-transparent text-slate-500 hover:bg-slate-50 transition-all">
-      <i class="fas fa-comments"></i> Team Chat
-      <span id="chatUnreadBadge" class="hidden w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-black">0</span>
-    </button>
   </div>
 
-  <!-- Notifications Tab Content -->
-  <div id="panelNotifContent" class="flex flex-col flex-1 overflow-hidden">
-    <div class="p-3 border-b flex items-center justify-between flex-shrink-0">
-      <span class="text-xs font-bold text-slate-500">Recent activity</span>
-      <button onclick="markAllRead()" class="text-xs text-blue-600 font-bold hover:underline">Mark All Read</button>
-    </div>
-    <div id="notificationList" class="flex-1 overflow-y-auto divide-y"></div>
+  <!-- NOTIFICATION PANEL -->
+<div id="notificationPanel" class="hidden fixed top-20 right-6 w-[95vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
+  <div class="p-4 border-b flex items-center justify-between">
+    <span class="font-black text-slate-700">Notifications</span>
+    <button onclick="markAllRead()" class="text-xs text-blue-600 font-bold hover:underline">Mark All Read</button>
   </div>
-
-  <!-- Chat Tab Content -->
-  <div id="panelChatContent" class="hidden flex-col flex-1 overflow-hidden" style="height: 500px;">
-
-    <!-- Chat header -->
-    <div class="px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0 flex items-center gap-3">
-      <div class="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-        <i class="fas fa-comments text-sm"></i>
-      </div>
-      <div>
-        <div class="font-black text-sm">Team Chat</div>
-        <div class="text-[10px] opacity-70 flex items-center gap-1">
-          <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span> Live
-        </div>
-      </div>
-    </div>
-
+  <div id="notificationList" class="max-h-[500px] overflow-y-auto divide-y"></div>
+</div>
     <!-- Messages -->
     <div id="chatList" class="flex-1 overflow-y-auto p-3 space-y-1 bg-slate-50/50 min-h-0">
       <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
