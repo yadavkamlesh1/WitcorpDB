@@ -1,8 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
 
 /* ========================= */
-/* CSS VARIABLES — ek jagah sab colors/sizes */
-/* Pehle yeh nahi tha — hardcoded hex 20+ jagah the */
+/* CSS VARIABLES */
 /* ========================= */
 
 :root {
@@ -49,11 +48,10 @@ body {
     background-color: #F4F6F9;
     scroll-behavior: smooth;
     background-attachment: fixed;
-    /* transition: all hataya body pe — unnecessary repaint hota tha */
 }
 
 /* ========================= */
-/* ACCESSIBILITY — pehle bilkul missing tha */
+/* ACCESSIBILITY */
 /* ========================= */
 
 :focus-visible {
@@ -62,14 +60,12 @@ body {
     border-radius: var(--radius-sm);
 }
 
-/* outline: none sirf mouse users ke liye */
 :focus:not(:focus-visible) {
     outline: none;
 }
 
 /* ========================= */
-/* REDUCED MOTION — pehle nahi tha */
-/* Motion-sensitive users ke liye saari animations off */
+/* REDUCED MOTION */
 /* ========================= */
 
 @media (prefers-reduced-motion: reduce) {
@@ -113,11 +109,9 @@ body {
     animation: borderGlow 10s linear infinite;
     opacity: 0.1;
     border-radius: 2.6rem;
-    /* Performance: GPU layer hint */
     will-change: background-position;
 }
 
-/* Shine sweep */
 .lighting-border::after {
     content: "";
     position: absolute;
@@ -150,7 +144,6 @@ body {
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-md);
-    /* sirf zaroori properties — "all" nahi */
     transition:
         transform var(--transition-normal),
         background var(--transition-normal),
@@ -166,7 +159,6 @@ body {
     transform: scale(1.2) rotate(-5deg);
 }
 
-/* !important hataya — specificity se solve kiya */
 .nav-btn:hover {
     transform: translateX(4px);
 }
@@ -183,7 +175,7 @@ body {
 }
 
 /* ========================= */
-/* BUTTONS — nav-btn aur generic button alag */
+/* BUTTONS */
 /* ========================= */
 
 button {
@@ -196,7 +188,6 @@ button:hover {
     transform: translateY(-2px);
 }
 
-/* nav-btn ke andar button:hover override nahi kare */
 .nav-btn:is(button):hover {
     transform: translateX(4px);
 }
@@ -220,7 +211,7 @@ button:hover {
 }
 
 /* ========================= */
-/* STAT CARD — ek jagah, clean */
+/* STAT CARD */
 /* ========================= */
 
 .stat-card {
@@ -232,11 +223,9 @@ button:hover {
     backdrop-filter: blur(20px);
     border: 1px solid var(--color-border);
     box-shadow: var(--shadow-md);
-    /* sirf zaroori properties animate karo */
     transition:
         transform var(--transition-slow),
         box-shadow var(--transition-slow);
-    /* GPU layer pehle se ready */
     will-change: transform;
 }
 
@@ -245,7 +234,6 @@ button:hover {
     box-shadow: var(--shadow-lg);
 }
 
-/* Shine sweep — transform se karo (left se zyada performant) */
 .stat-card::after {
     content: "";
     position: absolute;
@@ -283,7 +271,6 @@ textarea {
     background: #ffffff;
     border-radius: var(--radius-md);
     border: 1px solid #e2e8f0;
-    /* sirf border aur shadow animate karo — "all" nahi */
     transition:
         border-color var(--transition-fast),
         box-shadow var(--transition-fast);
@@ -572,6 +559,7 @@ tbody tr:hover {
         #2563eb 100%
     ) !important;
 }
+
 /* ========================= */
 /* TABLE ROW VERTICAL ALIGN FIX */
 /* ========================= */
@@ -589,4 +577,176 @@ tbody tr:hover {
     max-height: none !important;
     padding: 10px 16px !important;
     vertical-align: middle !important;
+}
+
+/* ========================= */
+/* DEV SIGNATURE */
+/* ========================= */
+
+.dev-signature-wrap {
+    position: relative;
+    padding: 18px 10px 14px;
+    text-align: center;
+    overflow: hidden;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: transparent;
+}
+
+.dev-signature-wrap::before {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 60px;
+    background: radial-gradient(ellipse, rgba(250,204,21,0.18) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: devOrb 3s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes devOrb {
+    0%   { opacity: 0.4; transform: translateX(-50%) scale(0.85); }
+    100% { opacity: 1;   transform: translateX(-50%) scale(1.15); }
+}
+
+.dev-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: rgba(147,197,253,0.55);
+    display: block;
+    margin-bottom: 5px;
+}
+
+.dev-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 13.5px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    display: inline-block;
+    position: relative;
+    background: linear-gradient(
+        110deg,
+        #b8860b 0%,
+        #ffd700 18%,
+        #fffacd 34%,
+        #ffd700 50%,
+        #daa520 66%,
+        #ffd700 82%,
+        #b8860b 100%
+    );
+    background-size: 250% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: devShimmer 3.5s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(250,204,21,0.45));
+}
+
+@keyframes devShimmer {
+    0%   { background-position: 200% center; }
+    100% { background-position: -200% center; }
+}
+
+.dev-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 7px;
+}
+
+.dev-divider-line {
+    flex: 1;
+    max-width: 38px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(250,204,21,0.4), transparent);
+    border-radius: 1px;
+}
+
+.dev-divider-dot {
+    width: 4px;
+    height: 4px;
+    background: #fbbf24;
+    border-radius: 50%;
+    box-shadow: 0 0 6px 2px rgba(251,191,36,0.55);
+    animation: devDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes devDotPulse {
+    0%, 100% { box-shadow: 0 0 4px 1px rgba(251,191,36,0.4); }
+    50%       { box-shadow: 0 0 10px 4px rgba(251,191,36,0.8); }
+}
+
+/* ========================= */
+/* WORKSPACE HEADER */
+/* ========================= */
+
+.workspace-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 2.5rem;
+}
+
+.workspace-header-row h2 {
+    white-space: nowrap;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #1e293b;
+    letter-spacing: -0.02em;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.workspace-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ========================= */
+/* CHAT TOGGLE BUTTON */
+/* ========================= */
+
+#chatToggleBtn {
+    display: none !important;
+}
+
+#chatToggleBtn.chat-visible {
+    display: flex !important;
+}
+
+/* ========================= */
+/* TEAM CHAT PANEL — MOBILE FIX */
+/* ========================= */
+
+#chatPanel {
+    position: fixed !important;
+    bottom: 16px !important;
+    right: 16px !important;
+    left: 16px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    height: 520px !important;
+    max-height: 85vh !important;
+    z-index: 99998 !important;
+}
+
+@media (min-width: 640px) {
+    #chatPanel {
+        left: auto !important;
+        right: 112px !important;
+        bottom: 96px !important;
+        width: 380px !important;
+        max-width: 380px !important;
+    }
 }
