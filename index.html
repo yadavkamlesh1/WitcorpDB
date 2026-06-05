@@ -284,6 +284,24 @@
                   <button onclick="openThemeSettings()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
                     <i class="fas fa-palette"></i> Theme Settings
                   </button>
+                    <!-- FONT SIZE - DROPDOWN MEIN ADD KARO -->
+               <div class="w-full px-4 py-3 rounded-xl bg-slate-50 text-slate-700 font-bold mb-2">
+                 <div class="flex items-center gap-3 mb-2">
+               <i class="fas fa-text-height text-slate-500"></i> Font Size
+               </div>
+              <div class="flex gap-2">
+                <button onclick="setFontSize('small')" id="font-small-dd"
+             class="flex-1 py-2 rounded-xl border-2 font-black text-xs transition-all"
+           style="border-color:#e2e8f0; color:#64748b;">Small</button>
+        <button onclick="setFontSize('medium')" id="font-medium-dd"
+         class="flex-1 py-2 rounded-xl border-2 font-black text-xs transition-all"
+          style="border-color:#e2e8f0; color:#64748b;">Medium</button>
+           <button onclick="setFontSize('large')" id="font-large-dd"
+          class="flex-1 py-2 rounded-xl border-2 font-black text-xs transition-all"
+           style="border-color:#e2e8f0; color:#64748b;">Large</button>
+               </div>
+                </div>
+
                   <button onclick="toggleNotificationSetting()" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold transition-all mb-2">
                     <div class="flex items-center gap-3"><i class="fas fa-bell"></i> Notification</div>
                     <span id="notificationStatus" class="text-green-600 font-black">ON</span>
@@ -302,7 +320,6 @@
             </div>
           </div>
         </div>
-
         <!-- NOTIFICATION PANEL -->
         <div id="notificationPanel" class="hidden fixed top-20 right-6 w-[95vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
           <div class="p-4 border-b flex items-center justify-between">
@@ -957,42 +974,6 @@
             <option value="Completed">Completed</option>
           </select>
         </div>
-
-        <!-- FONT SIZE TOGGLE -->
-       <div>
-  <label class="text-xs font-black text-slate-500 uppercase mb-2 block">Font Size</label>
-  <div class="flex gap-2">
-    <button onclick="setFontSize('small')" id="font-small"
-      class="flex-1 py-2.5 rounded-xl border-2 font-black text-sm transition-all"
-      style="border-color:#e2e8f0; color:#64748b;">
-      Small
-    </button>
-    <button onclick="setFontSize('medium')" id="font-medium"
-      class="flex-1 py-2.5 rounded-xl border-2 font-black text-sm transition-all"
-      style="border-color:#e2e8f0; color:#64748b;">
-      Medium
-    </button>
-    <button onclick="setFontSize('large')" id="font-large"
-      class="flex-1 py-2.5 rounded-xl border-2 font-black text-base transition-all"
-      style="border-color:#e2e8f0; color:#64748b;">
-      Large
-    </button>
-  </div>
-          <p class="text-xs text-slate-400 mt-2 font-semibold">The entire app's text size will change</p>
-        </div>
-
-      </div>
-      <div class="p-6 flex gap-3 border-t border-slate-100 mt-2">
-        <button onclick="saveProfileChanges()" class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all">
-          <i class="fas fa-save mr-2"></i>Save Changes
-        </button>
-        <button onclick="closeProfileModal()" class="px-6 py-3 bg-slate-100 text-slate-700 rounded-2xl font-black text-sm hover:bg-slate-200 transition-all">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- AUDIT TRAIL MODAL -->
   <div id="auditModal" class="hidden fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
