@@ -2667,7 +2667,11 @@ function toggleChat() {
     const isOpen = panel.getAttribute('data-chat-open') === 'true';
     if (!isOpen) {
         panel.setAttribute('data-chat-open', 'true');
-        panel.classList.remove('hidden');
+        if (window.innerWidth >= 1024) {
+    panel.style.height = Math.min(window.innerHeight * 0.80, 750) + 'px';
+} else {
+    panel.style.height = '600px';
+}
         chatOpen = true;
         loadChats();
         subscribeChatRealtime();
