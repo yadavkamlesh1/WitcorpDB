@@ -2658,8 +2658,9 @@ let chatSubscription = null;
 function toggleChat() {
     const panel = document.getElementById('chatPanel');
     if (!panel) return;
-    chatOpen = !chatOpen;
-    if (chatOpen) {
+    const isHidden = panel.classList.contains('hidden');
+    chatOpen = isHidden;
+    if (isHidden) {
         panel.classList.remove('hidden');
         loadChats();
         subscribeChatRealtime();
