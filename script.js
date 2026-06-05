@@ -2623,9 +2623,6 @@ function showApp(user) {
     saveActivity('Login: ' + user.email);
     subscribeToPush();
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
-  // Chat button show karo
-const chatBtn = document.getElementById('chatToggleBtn');
-if (chatBtn) chatBtn.style.display = 'flex';
 }
 
 // ============================================================
