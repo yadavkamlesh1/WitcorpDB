@@ -2658,13 +2658,8 @@ let chatSubscription = null;
 function toggleChat() {
     const panel = document.getElementById('chatPanel');
     if (!panel) return;
-    
-    // CSS !important se 'hidden' class kaam nahi karti properly
-    // isliye data attribute use karo
     const isOpen = panel.getAttribute('data-chat-open') === 'true';
-    
     if (!isOpen) {
-        // Open karo
         panel.setAttribute('data-chat-open', 'true');
         panel.classList.remove('hidden');
         chatOpen = true;
@@ -2672,7 +2667,6 @@ function toggleChat() {
         subscribeChatRealtime();
         setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
     } else {
-        // Close karo
         panel.setAttribute('data-chat-open', 'false');
         panel.classList.add('hidden');
         chatOpen = false;
@@ -2682,44 +2676,6 @@ function toggleChat() {
         }
     }
 }
-// ============================================================
-// PANEL TAB SWITCHER (Notifications + Chat)
-// ============================================================
-function switchPanelTab(tab) {
-    const notifContent = document.getElementById('panelNotifContent');
-    const chatContent = document.getElementById('panelChatContent');
-    const tabNotif = document.getElementById('tabNotif');
-    const tabChat = document.getElementById('tabChat');
-
-    if (tab === 'chat') {
-        if (notifContent) notifContent.style.display = 'none';
-        if (chatContent) { chatContent.style.display = 'flex'; }
-        if (tabNotif) {
-            tabNotif.classList.remove('border-blue-600', 'text-blue-600', 'bg-blue-50');
-            tabNotif.classList.add('border-transparent', 'text-slate-500');
-        }
-        if (tabChat) {
-            tabChat.classList.remove('border-transparent', 'text-slate-500');
-            tabChat.classList.add('border-purple-600', 'text-purple-600', 'bg-purple-50');
-        }
-        loadChats();
-        subscribeChatRealtime();
-        setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
-    } else {
-        if (chatContent) chatContent.style.display = 'none';
-        if (notifContent) notifContent.style.display = 'flex';
-        if (tabChat) {
-            tabChat.classList.remove('border-purple-600', 'text-purple-600', 'bg-purple-50');
-            tabChat.classList.add('border-transparent', 'text-slate-500');
-        }
-        if (tabNotif) {
-            tabNotif.classList.remove('border-transparent', 'text-slate-500');
-            tabNotif.classList.add('border-blue-600', 'text-blue-600', 'bg-blue-50');
-        }
-        fetchNotifications();
-    }
-}
-
 async function loadChats() {
     try {
         const { data, error } = await supabaseClient
