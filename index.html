@@ -334,14 +334,22 @@
               <p class="text-sm font-bold text-slate-400">No messages yet</p>
             </div>
           </div>
-          <div class="flex items-center gap-2 p-3 border-t border-slate-200 bg-white flex-shrink-0">
-            <input id="chatInput" type="text" placeholder="Write Message... (Enter)"
-              onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChat(); }"
-              class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200 text-sm font-semibold focus:outline-none focus:border-purple-400 focus:bg-white transition-all">
-            <button id="sendChatBtn" onclick="sendChat()" class="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-all flex-shrink-0 shadow-md">
-              <i class="fas fa-paper-plane text-sm"></i>
-            </button>
-          </div>
+         <div class="flex-shrink-0 bg-white border-t border-slate-200">
+    <div class="flex items-center gap-2 p-3">
+        <button id="emojiBtn" onclick="toggleEmojiPicker()"
+            class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-yellow-100 hover:text-yellow-500 transition-all flex-shrink-0 text-base">
+            😊
+        </button>
+        <input id="chatInput" type="text" placeholder="Write Message... (@ to mention, Enter to send)"
+            oninput="handleChatInput(event)"
+            onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChat(); }"
+            class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200 text-sm font-semibold focus:outline-none focus:border-purple-400 focus:bg-white transition-all">
+        <button id="sendChatBtn" onclick="sendChat()"
+            class="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-all flex-shrink-0 shadow-md">
+            <i class="fas fa-paper-plane text-sm"></i>
+        </button>
+    </div>
+</div>
         </div>
 
         <!-- GLOBAL SEARCH -->
