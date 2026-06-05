@@ -1890,12 +1890,16 @@ function applyGreenHeaders() {
 // ============================================================
 // KEYBOARD SHORTCUTS — SINGLE UNIFIED HANDLER
 // ============================================================
-if (e.key === 'Escape') {
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
         if (editingMessageId) {
             cancelEditMessage();
             return;
         }
         e.preventDefault();
+        ['notificationPanel', 'profileMenu', 'themeModal', 'activityModal', 'exportModal',
+         'auditModal', 'commentsModal', 'subtasksModal', 'quickAddModal', 'profileModal']
+            .forEach(id => document.getElementById(id)?.classList.add('hidden'));
         const searchBox = document.getElementById('globalSearch');
         if (searchBox) {
             const globalSearchBox = document.getElementById('globalSearchBox');
@@ -1903,22 +1907,18 @@ if (e.key === 'Escape') {
             searchBox.focus();
             searchBox.select();
         }
-   }
+    }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
         if (!currentUserEmail) return;
         openQuickAdd();
     }
-    if (e.key === 'Escape') {
-        ['notificationPanel', 'profileMenu', 'themeModal', 'activityModal', 'exportModal',
-         'auditModal', 'commentsModal', 'subtasksModal', 'quickAddModal', 'profileModal']
-            .forEach(id => document.getElementById(id)?.classList.add('hidden'));
-    }
     if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.id === 'commentInput') {
         e.preventDefault();
         postComment();
     }
-});
+
+}); 
 
 // ============================================================
 // USER PROFILE SYSTEM
