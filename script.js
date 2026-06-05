@@ -3520,3 +3520,7 @@ function loadFontSize() {
     document.documentElement.style.setProperty('--base-font-size', FONT_SIZES[saved]);
     updateFontButtons(saved);
 }
+function openFontSizeModal() {
+  document.getElementById('profileMenu').classList.add('hidden');
+  document.getElementById('fontSizeModal').classList.remove('hidden');
+}
