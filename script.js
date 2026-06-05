@@ -2660,12 +2660,21 @@ let chatOpen = false;
 let chatSubscription = null;
 
 function toggleChat() {
-    // Ab chat notification panel ke andar hai
-    // Notification panel open karo aur chat tab pe switch karo
-    const panel = document.getElementById('notificationPanel');
+    const panel = document.getElementById('chatPanel');
     if (!panel) return;
-    panel.classList.remove('hidden');
-    switchPanelTab('chat');
+    chatOpen = !chatOpen;
+    if (chatOpen) {
+        panel.classList.remove('hidden');
+        loadChats();
+        subscribeChatRealtime();
+        setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
+    } else {
+        panel.classList.add('hidden');
+        if (chatSubscription) {
+            supabaseClient.removeChannel(chatSubscription);
+            chatSubscription = null;
+        }
+    }
 }
 // ============================================================
 // PANEL TAB SWITCHER (Notifications + Chat)
