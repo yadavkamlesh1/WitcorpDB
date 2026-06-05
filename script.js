@@ -2038,6 +2038,8 @@ function openProfileModal() {
         if (statsUpdated) statsUpdated.innerText = currentUserProfile.total_updated || 0;
         if (statsDeleted) statsDeleted.innerText = currentUserProfile.total_deleted || 0;
     }
+    const savedFont = localStorage.getItem('witcorp_font_size') || 'medium';
+    updateFontButtons(savedFont);
     modal.classList.remove('hidden');
 }
 
@@ -2640,6 +2642,7 @@ window.addEventListener('load', async () => {
     const savedSidebar = localStorage.getItem('sidebarTheme');
     if (savedSidebar) changeSidebarTheme(savedSidebar);
     loadNotificationSetting();
+    loadFontSize();
     setTimeout(applyGreenHeaders, 400);
     fetchNotifications();
 
@@ -3478,4 +3481,41 @@ function renderTypingIndicator() {
         indicator.classList.add('flex');
         if (chatList) chatList.scrollTop = chatList.scrollHeight;
     }
+}
+// ============================================================
+// FONT SIZE ACCESSIBILITY TOGGLE
+// ============================================================
+const FONT_SIZES = {
+    small:  '13px',
+    medium: '16px',
+    large:  '19px'
+};
+
+function setFontSize(size) {
+    document.documentElement.style.setProperty('--base-font-size', FONT_SIZES[size]);
+    localStorage.setItem('witcorp_font_size', size);
+    updateFontButtons(size);
+    showToast(`Font size: ${size.charAt(0).toUpperCase() + size.slice(1)}`, 'success', 2000);
+}
+
+function updateFontButtons(activeSize) {
+    ['small', 'medium', 'large'].forEach(size => {
+        const btn = document.getElementById('font-' + size);
+        if (!btn) return;
+        if (size === activeSize) {
+            btn.style.borderColor = '#1A2E5A';
+            btn.style.color = '#1A2E5A';
+            btn.style.background = '#eff6ff';
+        } else {
+            btn.style.borderColor = '#e2e8f0';
+            btn.style.color = '#64748b';
+            btn.style.background = '';
+        }
+    });
+}
+
+function loadFontSize() {
+    const saved = localStorage.getItem('witcorp_font_size') || 'medium';
+    document.documentElement.style.setProperty('--base-font-size', FONT_SIZES[saved]);
+    updateFontButtons(saved);
 }
