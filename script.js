@@ -3499,21 +3499,22 @@ function setFontSize(size) {
 }
 
 function updateFontButtons(activeSize) {
-    ['small', 'medium', 'large'].forEach(size => {
-        const btn = document.getElementById('font-' + size);
-        if (!btn) return;
-        if (size === activeSize) {
-            btn.style.borderColor = '#1A2E5A';
-            btn.style.color = '#1A2E5A';
-            btn.style.background = '#eff6ff';
-        } else {
-            btn.style.borderColor = '#e2e8f0';
-            btn.style.color = '#64748b';
-            btn.style.background = '';
-        }
+  ['small', 'medium', 'large'].forEach(size => {
+    ['font-' + size, 'font-' + size + '-dd'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      if (size === activeSize) {
+        btn.style.borderColor = '#1A2E5A';
+        btn.style.color = '#1A2E5A';
+        btn.style.background = '#eff6ff';
+      } else {
+        btn.style.borderColor = '#e2e8f0';
+        btn.style.color = '#64748b';
+        btn.style.background = '';
+      }
     });
+  });
 }
-
 function loadFontSize() {
     const saved = localStorage.getItem('witcorp_font_size') || 'medium';
     document.documentElement.style.setProperty('--base-font-size', FONT_SIZES[saved]);
