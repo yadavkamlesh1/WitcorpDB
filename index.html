@@ -351,7 +351,16 @@
               <span id="lastSyncText">Syncing...</span>
             </div>
 
-            <!-- NOTIFICATION BELL -->
+            <!-- TEAM CHAT BUTTON -->
+<button onclick="toggleChat()"
+  id="chatToggleBtn"
+  class="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[11px] font-black hover:bg-purple-200 transition-all border border-purple-200 relative"
+  title="Team Chat">
+  <i class="fas fa-comments text-sm"></i>
+  <span>Team Chat</span>
+  <span id="chatUnreadBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-black">0</span>
+</button>
+              <!-- NOTIFICATION BELL -->
             <div class="relative">
               <button onclick="toggleNotificationPanel()" class="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-slate-700 relative hover:bg-blue-50 transition-all">
                 <i class="fas fa-bell text-lg"></i>
