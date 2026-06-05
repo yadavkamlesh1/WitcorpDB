@@ -1903,6 +1903,7 @@ if (e.key === 'Escape') {
             searchBox.focus();
             searchBox.select();
         }
+   }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
         if (!currentUserEmail) return;
