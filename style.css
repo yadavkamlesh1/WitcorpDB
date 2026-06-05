@@ -732,8 +732,8 @@ tbody tr:hover {
     left: 16px !important;
     width: auto !important;
     max-width: 100% !important;
-    height: auto !important;
-    max-height: 65vh !important;
+    height: 420px !important;
+    max-height: 70vh !important;
     z-index: 99998 !important;
 }
 
@@ -742,7 +742,9 @@ tbody tr:hover {
         left: auto !important;
         right: 112px !important;
         bottom: 96px !important;
-        width: 380px !important;
-        max-width: 380px !important;
+        width: 420px !important;
+        max-width: 420px !important;
+        height: 520px !important;
+        max-height: 75vh !important;
     }
 }
