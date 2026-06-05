@@ -2982,18 +2982,18 @@ const EMOJIS = [
 ];
 
 function toggleEmojiPicker() {
-  let picker = document.getElementById('emojiPicker');
-  if (picker) { picker.remove(); return; }
+    let picker = document.getElementById('emojiPicker');
+    if (picker) { picker.remove(); return; }
 
-  picker = document.createElement('div');
-  picker.id = 'emojiPicker';
-  picker.style.cssText = `
-      position:absolute;bottom:100%;right:0;
-      background:white;border:1px solid #e2e8f0;
-      border-radius:12px;box-shadow:0 -8px 24px rgba(0,0,0,0.12);
-      padding:10px;display:grid;grid-template-columns:repeat(10,1fr);
-      gap:4px;z-index:999999;margin-bottom:4px;width:280px;
-  `;
+    picker = document.createElement('div');
+    picker.id = 'emojiPicker';
+    picker.style.cssText = `
+        position:fixed;
+        background:white;border:1px solid #e2e8f0;
+        border-radius:12px;box-shadow:0 -8px 24px rgba(0,0,0,0.12);
+        padding:10px;display:grid;grid-template-columns:repeat(8,1fr);
+        gap:4px;z-index:999999;width:240px;
+    `;
 
     EMOJIS.forEach(emoji => {
         const btn = document.createElement('button');
@@ -3017,11 +3017,34 @@ function toggleEmojiPicker() {
         picker.appendChild(btn);
     });
 
+    document.body.appendChild(picker);
+
     const emojiBtn = document.getElementById('emojiBtn');
-    if (emojiBtn) {
-        emojiBtn.parentElement.style.position = 'relative';
-        emojiBtn.parentElement.appendChild(picker);
+    const rect = emojiBtn.getBoundingClientRect();
+    const pickerWidth = 240;
+    const pickerHeight = 160;
+
+    let leftPos = rect.left;
+    let topPos = rect.top - pickerHeight - 8;
+
+    if (leftPos + pickerWidth > window.innerWidth - 16) {
+        leftPos = window.innerWidth - pickerWidth - 16;
     }
+    if (topPos < 8) {
+        topPos = rect.bottom + 8;
+    }
+
+    picker.style.left = leftPos + 'px';
+    picker.style.top = topPos + 'px';
+
+    setTimeout(() => {
+        document.addEventListener('click', function closePicker(e) {
+            if (!picker.contains(e.target) && e.target.id !== 'emojiBtn') {
+                picker.remove();
+                document.removeEventListener('click', closePicker);
+            }
+        });
+    }, 100);
 }
 function subscribeChatRealtime() {
     if (chatSubscription) return;
