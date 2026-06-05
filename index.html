@@ -127,6 +127,13 @@
         gap: 8px;
         flex-wrap: wrap;
       }
+      /* FIX: Chat button visible by default, hidden when not logged in */
+      #chatToggleBtn {
+        display: none;
+      }
+      #chatToggleBtn.chat-visible {
+        display: flex !important;
+      }
     </style>
 </head>
 <body id="appBody" class="min-h-screen overflow-x-hidden bg-slate-100">
@@ -153,10 +160,10 @@
     </div>
   </div>
 
-  <!-- FIX: appScreen - proper structure, announcement banner first, then layout -->
+  <!-- appScreen -->
   <div id="appScreen" class="hidden flex-col w-full min-h-screen">
 
-    <!-- ANNOUNCEMENT BANNER (full width, above everything) -->
+    <!-- ANNOUNCEMENT BANNER -->
     <div id="announcementBanner" class="hidden w-full bg-blue-600 text-white px-4 py-2.5 flex items-center justify-between text-sm font-semibold z-40">
       <div class="flex items-center gap-2">
         <i class="fas fa-bullhorn text-yellow-300"></i>
@@ -166,7 +173,7 @@
         class="ml-4 opacity-70 hover:opacity-100 font-black text-lg leading-none">✕</button>
     </div>
 
-    <!-- MAIN LAYOUT ROW (sidebar + content) -->
+    <!-- MAIN LAYOUT ROW -->
     <div class="flex flex-col lg:flex-row flex-1 w-full min-h-0">
 
       <!-- MOBILE TOPBAR -->
@@ -351,17 +358,17 @@
               <span id="lastSyncText">Syncing...</span>
             </div>
 
-            <!-- TEAM CHAT BUTTON -->
-<button onclick="toggleChat()"
-  id="chatToggleBtn"
-  class="lg:flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[11px] font-black hover:bg-purple-200 transition-all border border-purple-200 relative"
-style="display: none;"
-  title="Team Chat">
-  <i class="fas fa-comments text-sm"></i>
-  <span>Team Chat</span>
-  <span id="chatUnreadBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-black">0</span>
-</button>
-              <!-- NOTIFICATION BELL -->
+            <!-- TEAM CHAT BUTTON — FIX: no inline display:none, controlled via CSS class -->
+            <button onclick="toggleChat()"
+              id="chatToggleBtn"
+              class="items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[11px] font-black hover:bg-purple-200 transition-all border border-purple-200 relative"
+              title="Team Chat">
+              <i class="fas fa-comments text-sm"></i>
+              <span>Team Chat</span>
+              <span id="chatUnreadBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-black">0</span>
+            </button>
+
+            <!-- NOTIFICATION BELL -->
             <div class="relative">
               <button onclick="toggleNotificationPanel()" class="w-12 h-12 rounded-full bg-white shadow-lg border flex items-center justify-center text-slate-700 relative hover:bg-blue-50 transition-all">
                 <i class="fas fa-bell text-lg"></i>
@@ -419,46 +426,47 @@ style="display: none;"
           </div>
         </div>
 
-     <!-- NOTIFICATION PANEL -->
-<div id="notificationPanel" class="hidden fixed top-20 right-6 w-[95vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
-  <div class="p-4 border-b flex items-center justify-between">
-    <span class="font-black text-slate-700">Notifications</span>
-    <button onclick="markAllRead()" class="text-xs text-blue-600 font-bold hover:underline">Mark All Read</button>
-  </div>
-  <div id="notificationList" class="max-h-[500px] overflow-y-auto divide-y"></div>
-</div>
-
-<!-- TEAM CHAT PANEL -->
-<div id="chatPanel" class="hidden fixed z-[99998] bottom-4 left-1/2 -translate-x-1/2 sm:bottom-24 sm:left-auto sm:translate-x-0 sm:right-28 w-[94vw] sm:w-[380px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden" style="height:520px; max-height:85vh;">
-  <div class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-        <i class="fas fa-comments"></i>
-      </div>
-      <div>
-        <div class="font-black text-sm">Team Chat</div>
-        <div class="text-[10px] opacity-70 flex items-center gap-1">
-          <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span> Live Sync On
+        <!-- NOTIFICATION PANEL -->
+        <div id="notificationPanel" class="hidden fixed top-20 right-6 w-[95vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl border overflow-hidden z-[99999]">
+          <div class="p-4 border-b flex items-center justify-between">
+            <span class="font-black text-slate-700">Notifications</span>
+            <button onclick="markAllRead()" class="text-xs text-blue-600 font-bold hover:underline">Mark All Read</button>
+          </div>
+          <div id="notificationList" class="max-h-[500px] overflow-y-auto divide-y"></div>
         </div>
-      </div>
-    </div>
-    <button onclick="toggleChat()" class="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all text-lg font-black">✕</button>
-  </div>
-  <div id="chatList" class="flex-1 overflow-y-auto p-4 space-y-1 bg-slate-50/50 min-h-0">
-    <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
-      <i class="fas fa-comments text-4xl text-slate-300"></i>
-      <p class="text-sm font-bold text-slate-400">No messages yet</p>
-    </div>
-  </div>
-  <div class="flex items-center gap-2 p-3 border-t border-slate-200 bg-white flex-shrink-0">
-    <input id="chatInput" type="text" placeholder="Write Message... (Enter)"
-      onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChat(); }"
-      class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200 text-sm font-semibold focus:outline-none focus:border-purple-400 focus:bg-white transition-all">
-    <button id="sendChatBtn" onclick="sendChat()" class="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-all flex-shrink-0 shadow-md">
-      <i class="fas fa-paper-plane text-sm"></i>
-    </button>
-  </div>
-</div>
+
+        <!-- TEAM CHAT PANEL -->
+        <div id="chatPanel" class="hidden fixed z-[99998] bottom-4 left-1/2 -translate-x-1/2 sm:bottom-24 sm:left-auto sm:translate-x-0 sm:right-28 w-[94vw] sm:w-[380px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex-col overflow-hidden" style="height:520px; max-height:85vh;">
+          <div class="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex-shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                <i class="fas fa-comments"></i>
+              </div>
+              <div>
+                <div class="font-black text-sm">Team Chat</div>
+                <div class="text-[10px] opacity-70 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 bg-green-400 rounded-full inline-block"></span> Live Sync On
+                </div>
+              </div>
+            </div>
+            <button onclick="toggleChat()" class="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all text-lg font-black">✕</button>
+          </div>
+          <div id="chatList" class="flex-1 overflow-y-auto p-4 space-y-1 bg-slate-50/50 min-h-0">
+            <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
+              <i class="fas fa-comments text-4xl text-slate-300"></i>
+              <p class="text-sm font-bold text-slate-400">No messages yet</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 p-3 border-t border-slate-200 bg-white flex-shrink-0">
+            <input id="chatInput" type="text" placeholder="Write Message... (Enter)"
+              onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChat(); }"
+              class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 border border-slate-200 text-sm font-semibold focus:outline-none focus:border-purple-400 focus:bg-white transition-all">
+            <button id="sendChatBtn" onclick="sendChat()" class="w-11 h-11 rounded-2xl bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-all flex-shrink-0 shadow-md">
+              <i class="fas fa-paper-plane text-sm"></i>
+            </button>
+          </div>
+        </div>
+
         <!-- GLOBAL SEARCH -->
         <div id="globalSearchBox" class="mb-10 relative max-w-2xl transform transition-all focus-within:scale-[1.02]">
           <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -526,7 +534,7 @@ style="display: none;"
 
           <!-- STAT CARDS -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-            <div onclick="filterByField('all')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group cursor-pointer hover:shadow-md transition-all">
+            <div onclick="filterByField('status', '')" class="stat-card bg-white p-4 rounded-[2.5rem] shadow-sm border-l-[12px] border-blue-600 relative overflow-hidden group cursor-pointer hover:shadow-md transition-all">
               <i class="fas fa-folder-tree absolute -right-4 -bottom-4 text-8xl text-slate-50 opacity-10 group-hover:rotate-12 transition-transform"></i>
               <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Portfolios</p>
               <h3 id="statTotal" class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-800 mt-2">0</h3>
@@ -657,7 +665,7 @@ style="display: none;"
                 <thead>
                   <tr class="bg-slate-50/50">
                     <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b">
-                      <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded">
+                      <input type="checkbox" id="mainSelectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded">
                     </th>
                     <th class="p-4 text-[10px] font-black uppercase border-b tracking-wider cursor-pointer hover:text-blue-600 transition-colors" onclick="sortTable('client_name')">
                       Client <i class="fas fa-sort ml-1 opacity-40" id="sort_client_name"></i>
@@ -827,8 +835,8 @@ style="display: none;"
                 <thead class="bg-slate-50/50">
                   <tr>
                     <th class="p-4 text-[10px] font-black text-slate-400 uppercase border-b">
-                   <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded">
-                   </th>
+                      <input type="checkbox" id="filterSelectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 rounded">
+                    </th>
                     <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
                     <th class="p-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Info</th>
                     <th class="p-4 text-[10px] font-black text-slate-400 uppercase text-center tracking-widest">Service Desk</th>
@@ -849,10 +857,10 @@ style="display: none;"
         </div>
 
       </main>
-    </div><!-- end layout row -->
-  </div><!-- end appScreen -->
+    </div>
+  </div>
 
-  <!-- QUICK ADD FLOATING BUTTON (outside appScreen, always visible when logged in) -->
+  <!-- QUICK ADD FLOATING BUTTON -->
   <button onclick="openQuickAdd()"
     class="fixed bottom-24 right-6 z-[9999] w-14 h-14 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all lg:bottom-8"
     title="Quick Add (Ctrl+N)">
@@ -944,7 +952,7 @@ style="display: none;"
       <div id="activityList" class="p-5 max-h-[500px] overflow-y-auto"></div>
     </div>
   </div>
-   
+
   <!-- EXPORT MODAL -->
   <div id="exportModal" class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden">
@@ -1121,7 +1129,7 @@ style="display: none;"
         <input id="qaClientName" list="clientSuggestions" type="text" placeholder="Client Name *"
           class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
         <select id="qaCategory" onchange="updateQAServiceOptions(this.value); document.getElementById('qaServiceDetail').value='';"
-  class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
+          class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-blue-400">
           <option value="GST">GST</option>
           <option value="ROC">ROC</option>
           <option value="IT">Income Tax</option>
@@ -1168,6 +1176,6 @@ style="display: none;"
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-  <script src="script.js?v=2.2"></script>
+  <script src="script.js?v=2.3"></script>
 </body>
 </html>
