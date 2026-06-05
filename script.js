@@ -2658,15 +2658,24 @@ let chatSubscription = null;
 function toggleChat() {
     const panel = document.getElementById('chatPanel');
     if (!panel) return;
-    const isHidden = panel.classList.contains('hidden');
-    chatOpen = isHidden;
-    if (isHidden) {
+    
+    // CSS !important se 'hidden' class kaam nahi karti properly
+    // isliye data attribute use karo
+    const isOpen = panel.getAttribute('data-chat-open') === 'true';
+    
+    if (!isOpen) {
+        // Open karo
+        panel.setAttribute('data-chat-open', 'true');
         panel.classList.remove('hidden');
+        chatOpen = true;
         loadChats();
         subscribeChatRealtime();
         setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
     } else {
+        // Close karo
+        panel.setAttribute('data-chat-open', 'false');
         panel.classList.add('hidden');
+        chatOpen = false;
         if (chatSubscription) {
             supabaseClient.removeChannel(chatSubscription);
             chatSubscription = null;
