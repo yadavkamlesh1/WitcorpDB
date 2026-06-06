@@ -207,13 +207,10 @@ async function fetchRecords(reset = true) {
     wrapper.style.display = 'none';
   }
   try {
-   if (reset) { recordPage = 0; allRecords = []; }
-const from = recordPage * PAGE_SIZE;
-const to = from + PAGE_SIZE - 1;
+  if (reset) { recordPage = 0; allRecords = []; }
 const { data, error } = await supabaseClient
   .from('witcorp_records')
   .select('*')
-  .order('updated_at', { ascending: false, nullsFirst: false })
   .order('id', { ascending: false })
   .limit(PAGE_SIZE);
 if (error) { console.error("fetchRecords error:", error); showToast('Failed to fetch records. Check connection.', 'error'); return; }
