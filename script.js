@@ -213,7 +213,8 @@ const to = from + PAGE_SIZE - 1;
 const { data, error } = await supabaseClient
   .from('witcorp_records')
   .select('*')
-  .order('updated_at', { ascending: false })
+  .order('updated_at', { ascending: false, nullsFirst: false })
+  .order('id', { ascending: false })
   .range(from, to);
 if (error) { console.error("fetchRecords error:", error); showToast('Failed to fetch records. Check connection.', 'error'); return; }
 if (data) {
