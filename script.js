@@ -1114,8 +1114,12 @@ function searchVault(query) {
 // ============================================================
 // FIX #23: Accounting Hub toggles merged into one function
 // ============================================================
-function toggleAccountingHub(id) {
-  document.getElementById(id).classList.toggle('hidden');
+function toggleAccountingHub() {
+  document.getElementById('accountinghubMenu').classList.toggle('hidden');
+}
+
+function toggleAccountingHubDesktop() {
+  document.getElementById('accountinghubDesktopMenu').classList.toggle('hidden');
 }
 
 // ============================================================
