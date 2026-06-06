@@ -2718,12 +2718,14 @@ function renderChats(messages) {
     const list = document.getElementById('chatList');
     if (!list) return;
 
+    // PEHLE POORA CLEAR KARO
+    list.innerHTML = '';
+
     if (messages.length === 0) {
         list.innerHTML = `
             <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
                 <i class="fas fa-comments text-4xl text-slate-300"></i>
                 <p class="text-sm font-bold text-slate-400">No messages yet</p>
-                <p class="text-xs text-slate-300">Send the first message!</p>
             </div>`;
         return;
     }
