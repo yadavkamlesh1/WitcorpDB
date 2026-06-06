@@ -2673,26 +2673,41 @@ function toggleChat() {
     const isOpen = panel.getAttribute('data-chat-open') === 'true';
     if (!isOpen) {
         panel.setAttribute('data-chat-open', 'true');
-       panel.classList.remove('hidden');
+        panel.classList.remove('hidden');
         chatOpen = true;
-        loadChats();
         subscribeChatRealtime();
+        loadChats().then(() => {
+            const list = document.getElementById('chatList');
+            if (list) list.scrollTop = list.scrollHeight;
+        });
         setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
     } else {
         panel.setAttribute('data-chat-open', 'false');
         panel.classList.add('hidden');
         chatOpen = false;
-        // Subscription mat hatao — messages live rehne chahiye
     }
 }
 async function loadChats() {
+    const list = document.getElementById('chatList');
+    if (!list) return;
+    
+    // Loading state dikhao pehle
+    list.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
+            <i class="fas fa-spinner fa-spin text-3xl text-slate-300"></i>
+            <p class="text-sm font-bold text-slate-400">Loading messages...</p>
+        </div>`;
+    
     try {
         const { data, error } = await supabaseClient
             .from('witcorp_chats')
             .select('*')
             .order('created_at', { ascending: true })
             .limit(100);
-        if (error) return;
+        if (error) {
+            list.innerHTML = `<div class="text-center text-red-400 py-8 font-semibold">Failed to load messages</div>`;
+            return;
+        }
         renderChats(data || []);
     } catch (err) {
         console.error('loadChats error:', err);
