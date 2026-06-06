@@ -2665,10 +2665,9 @@ let editingMessageText = null;
 function toggleChat() {
     const panel = document.getElementById('chatPanel');
     if (!panel) return;
-
-    // Ensure panel is always properly positioned when toggled
+ 
     _moveChatPanelToBody();
-
+ 
     const isOpen = panel.getAttribute('data-chat-open') === 'true';
     if (!isOpen) {
         panel.setAttribute('data-chat-open', 'true');
@@ -2676,6 +2675,17 @@ function toggleChat() {
         panel.style.display = 'flex';
         panel.style.flexDirection = 'column';
         chatOpen = true;
+ 
+        // FIX: Reset subscription so it always reconnects fresh
+        if (chatSubscription) {
+            supabaseClient.removeChannel(chatSubscription);
+            chatSubscription = null;
+        }
+        if (typingChannel) {
+            supabaseClient.removeChannel(typingChannel);
+            typingChannel = null;
+        }
+ 
         subscribeChatRealtime();
         loadChats().then(() => {
             const list = document.getElementById('chatList');
@@ -2687,6 +2697,16 @@ function toggleChat() {
         panel.classList.add('hidden');
         panel.style.display = 'none';
         chatOpen = false;
+ 
+        // FIX: Cleanup channels on close
+        if (chatSubscription) {
+            supabaseClient.removeChannel(chatSubscription);
+            chatSubscription = null;
+        }
+        if (typingChannel) {
+            supabaseClient.removeChannel(typingChannel);
+            typingChannel = null;
+        }
     }
 }
 
@@ -3119,30 +3139,21 @@ function toggleEmojiPicker() {
 // FIX: subscribeChatRealtime — prevent duplicate subscriptions
 // ============================================================
 function subscribeChatRealtime() {
-    if (chatSubscription) return; // Already subscribed — skip
+    // FIX: chatSubscription is always null here (reset in toggleChat)
+    if (chatSubscription) return;
+ 
     initTypingChannel();
+ 
     chatSubscription = supabaseClient
-        .channel('team-chat-' + Date.now()) // unique channel name prevents stale subscription
-        .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'witcorp_chats'
-        }, (payload) => {
+        .channel('team-chat-' + Date.now())
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'witcorp_chats' }, (payload) => {
             appendChatMessage(payload.new);
         })
-        .on('postgres_changes', {
-            event: 'DELETE',
-            schema: 'public',
-            table: 'witcorp_chats'
-        }, (payload) => {
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'witcorp_chats' }, (payload) => {
             const el = document.querySelector(`[data-msg-id="${payload.old.id}"]`);
             if (el) el.remove();
         })
-        .on('postgres_changes', {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'witcorp_chats'
-        }, (payload) => {
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'witcorp_chats' }, (payload) => {
             const el = document.querySelector(`[data-msg-id="${payload.new.id}"]`);
             if (el) {
                 const p = el.querySelector('p');
@@ -3156,9 +3167,10 @@ function subscribeChatRealtime() {
                 }
             }
         })
-        .subscribe();
+        .subscribe((status) => {
+            console.log('Chat subscription status:', status);
+        });
 }
-
 function appendChatMessage(msg) {
     const list = document.getElementById('chatList');
     if (!list) return;
@@ -3451,9 +3463,10 @@ let typingChannel = null;
 let currentlyTypingUsers = {};
 
 function initTypingChannel() {
-    if (typingChannel) return; // FIX: prevent duplicate typing channels
+    if (typingChannel) return;
+ 
     typingChannel = supabaseClient.channel('typing-indicator-' + Date.now());
-
+ 
     typingChannel
         .on('presence', { event: 'sync' }, () => {
             const state = typingChannel.presenceState();
