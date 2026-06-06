@@ -2925,12 +2925,26 @@ let onlineUsersList = [];
 
 async function fetchOnlineUsersForMention() {
     try {
-        const fiveMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
         const { data } = await supabaseClient
+            .from('witcorp_users')
+            .select('email')
+            .eq('approved', true);
+        
+        // Presence se avatar info bhi lao
+        const { data: presenceData } = await supabaseClient
             .from('witcorp_presence')
-            .select('user_email, user_initial, avatar_color')
-            .gte('last_seen', fiveMinAgo);
-        onlineUsersList = data || [];
+            .select('user_email, user_initial, avatar_color');
+        
+        const presenceMap = {};
+        (presenceData || []).forEach(p => {
+            presenceMap[p.user_email] = p;
+        });
+        
+        onlineUsersList = (data || []).map(u => ({
+            user_email: u.email,
+            user_initial: (presenceMap[u.email]?.user_initial) || u.email.charAt(0).toUpperCase(),
+            avatar_color: presenceMap[u.email]?.avatar_color || '#3b82f6'
+        }));
     } catch (err) {
         console.error('fetchOnlineUsersForMention error:', err);
     }
@@ -3231,27 +3245,24 @@ function editChatMsg(id, btn) {
     const pEl = msgDiv?.querySelector('p');
     if (!pEl) return;
 
-    const oldText = pEl.textContent;
+    // escapeHtml se render hua text wapas original mein convert karo
+    const oldText = pEl.innerText; // innerText decoded text deta hai
+
     const input = document.getElementById('chatInput');
     if (!input) return;
 
-    // Set edit mode
     editingMessageId = id;
     editingMessageText = oldText;
 
-    // Populate input box
     input.value = oldText;
     input.focus();
 
-    // Show editing indicator
     showEditingIndicator(oldText);
 
-    // Highlight the message being edited
     msgDiv.style.opacity = '0.7';
     msgDiv.style.borderLeft = '3px solid #3b82f6';
     msgDiv.style.paddingLeft = '12px';
 }
-
 function showEditingIndicator(text) {
     let indicator = document.getElementById('editingIndicator');
     
@@ -3280,23 +3291,23 @@ function showEditingIndicator(text) {
 }
 
 function cancelEditMessage() {
+    if (!editingMessageId) return; // agar edit mode mein nahi hain toh kuch mat karo
+    
+    const prevMsgDiv = document.querySelector(`[data-msg-id="${editingMessageId}"]`);
+    if (prevMsgDiv) {
+        prevMsgDiv.style.opacity = '1';
+        prevMsgDiv.style.borderLeft = 'none';
+        prevMsgDiv.style.paddingLeft = '0';
+    }
+    
     editingMessageId = null;
     editingMessageText = null;
     
-    // Clear input
     const input = document.getElementById('chatInput');
     if (input) input.value = '';
     
-    // Remove indicator
     const indicator = document.getElementById('editingIndicator');
     if (indicator) indicator.remove();
-
-    // Remove highlight
-    document.querySelectorAll('[data-msg-id]').forEach(el => {
-        el.style.opacity = '1';
-        el.style.borderLeft = 'none';
-        el.style.paddingLeft = '0';
-    });
 
     input?.focus();
 }
