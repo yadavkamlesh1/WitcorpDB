@@ -2690,27 +2690,16 @@ function toggleChat() {
 async function loadChats() {
     const list = document.getElementById('chatList');
     if (!list) return;
-    
-    // Loading state dikhao pehle
-    list.innerHTML = `
-        <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
-            <i class="fas fa-spinner fa-spin text-3xl text-slate-300"></i>
-            <p class="text-sm font-bold text-slate-400">Loading messages...</p>
-        </div>`;
-    
+    list.innerHTML = '';
     try {
         const { data, error } = await supabaseClient
             .from('witcorp_chats')
             .select('*')
-            .order('created_at', { ascending: true })
             .limit(100);
-        if (error) {
-            list.innerHTML = `<div class="text-center text-red-400 py-8 font-semibold">Failed to load messages</div>`;
-            return;
-        }
+        if (error) { console.error('loadChats error:', error); return; }
         renderChats(data || []);
     } catch (err) {
-        console.error('loadChats error:', err);
+        console.error('loadChats exception:', err);
     }
 }
 
