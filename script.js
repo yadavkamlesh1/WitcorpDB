@@ -2925,31 +2925,33 @@ let onlineUsersList = [];
 
 async function fetchOnlineUsersForMention() {
     try {
-        const { data } = await supabaseClient
+        // Sab approved users fetch karo — online/offline koi fark nahi
+        const { data: usersData } = await supabaseClient
             .from('witcorp_users')
             .select('email')
             .eq('approved', true);
-        
-        // Presence se avatar info bhi lao
+
+        // Presence table se avatar info lo
         const { data: presenceData } = await supabaseClient
             .from('witcorp_presence')
             .select('user_email, user_initial, avatar_color');
-        
+
         const presenceMap = {};
         (presenceData || []).forEach(p => {
             presenceMap[p.user_email] = p;
         });
-        
-        onlineUsersList = (data || []).map(u => ({
+
+        onlineUsersList = (usersData || []).map(u => ({
             user_email: u.email,
-            user_initial: (presenceMap[u.email]?.user_initial) || u.email.charAt(0).toUpperCase(),
+            user_initial: presenceMap[u.email]?.user_initial 
+                          || u.email.charAt(0).toUpperCase(),
             avatar_color: presenceMap[u.email]?.avatar_color || '#3b82f6'
         }));
+
     } catch (err) {
         console.error('fetchOnlineUsersForMention error:', err);
     }
 }
-
 function handleChatInput(e) {
     const input = e.target;
      // Typing broadcast
