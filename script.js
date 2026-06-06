@@ -1,51 +1,69 @@
-// WITCORP HUB — ENTERPRISE SCRIPT (FULLY FIXED v4.0)
+// WITCORP HUB — ENTERPRISE SCRIPT (FIXED VERSION)
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const VAPID_PUBLIC_KEY = "BDosxz9iUmLcKRXXxkXbJBDGqGOkAXipmriqsvi33FyqjfqNxec1bTzvA5CRN6OT6ianW7uh8Vs8Yc2Cfrah0sc";
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-
 // ============================================================
 // SERVICE DETAIL OPTIONS BY CATEGORY
 // ============================================================
 const SERVICE_DETAILS_MAP = {
   "GST": [
-    "GST Registration","GST Amendment","GST Monthly Filing (GSTR-1 & 3B)",
-    "GST Quarterly Filing (GSTR-1 & 3B)","LUT Filing","GST Surrender",
-    "GST Notice Reply","GST Refund Application"
+    "GST Registration",
+    "GST Amendment",
+    "GST Monthly Filing (GSTR-1 & 3B)",
+    "GST Quarterly Filing (GSTR-1 & 3B)",
+    "LUT Filing",
+    "GST Surrender",
+    "GST Notice Reply",
+    "GST Refund Application"
   ],
   "ROC": [
-    "PLC/OPC Annual Filing","Company Registration","Company Amendment",
-    "First 30 Days Compliance","LLP Amendment","LLP Annual Filing",
-    "Company Closure","Director KYC","Miscellaneous ROC Work"
+    "PLC/OPC Annual Filing",
+    "Company Registration",
+    "Company Amendment",
+    "First 30 Days Compliance",
+    "LLP Amendment",
+    "LLP Annual Filing",
+    "Company Closure",
+    "Director KYC",
+    "Miscellaneous ROC Work"
   ],
   "IT": [
-    "ITR 1","ITR 2","ITR 3","ITR 4","ITR 5","ITR 6",
-    "Income Tax Notice Reply","PAN Application"
+    "ITR 1",
+    "ITR 2",
+    "ITR 3",
+    "ITR 4",
+    "ITR 5",
+    "ITR 6",
+    "Income Tax Notice Reply",
+    "PAN Application"
   ],
   "TDS": [
-    "TDS Challan","Salary TDS Return","Non-Salary TDS Return","Non-Resident TDS Return",
-    "TDS on Property","TDS Lower Deduction Certificate","TDS Return Revision",
-    "TAN Registration","Income Tax TAN Registration","Traces TAN Registration","Form 16 / 16A"
+    "TDS Challan",
+    "Salary TDS Return",
+    "Non-Salary TDS Return",
+    "Non-Resident TDS Return",
+    "TDS on Property",
+    "TDS Lower Deduction Certificate",
+    "TDS Return Revision",
+    "TAN Registration",
+    "Income Tax TAN Registration",
+    "Traces TAN Registration",
+    "Form 16 / 16A"
   ]
 };
-
 function updateServiceDetailOptions(categoryValue) {
   const datalist = document.getElementById('serviceSuggestions');
   if (!datalist) return;
   const options = SERVICE_DETAILS_MAP[categoryValue] || [];
   datalist.innerHTML = options.map(opt => `<option value="${opt}">`).join('');
 }
-
 function updateQAServiceOptions(categoryValue) {
   const datalist = document.getElementById('serviceSuggestions');
   if (!datalist) return;
   const options = SERVICE_DETAILS_MAP[categoryValue] || [];
   datalist.innerHTML = options.map(opt => `<option value="${opt}">`).join('');
 }
-
-// ============================================================
-// GLOBAL STATE
-// ============================================================
 let allRecords = [];
 let allClients = [];
 let allVault = [];
@@ -63,7 +81,7 @@ let sortField = null;
 let sortAsc = true;
 let isFormDirty = false;
 let selectedRowIds = new Set();
-// FIX: Single interval references — prevent duplicate intervals on re-login
+// FIX 8: Single interval references — prevent duplicate intervals on re-login
 let _onlineUsersInterval = null;
 let _presenceInterval = null;
 
@@ -288,13 +306,11 @@ function toggleRowSelect(id, checked) {
     if (checked) { selectedRowIds.add(id); } else { selectedRowIds.delete(id); }
     updateBulkBar();
     const allCbs = document.querySelectorAll('.row-checkbox');
-    const selectAllCbs = document.querySelectorAll('#mainSelectAllCheckbox, #filterSelectAllCheckbox');
-    selectAllCbs.forEach(selectAllCb => {
-        if (selectAllCb) {
-            selectAllCb.checked = allCbs.length > 0 && [...allCbs].every(cb => cb.checked);
-            selectAllCb.indeterminate = selectedRowIds.size > 0 && selectedRowIds.size < allCbs.length;
-        }
-    });
+    const selectAllCb = document.getElementById('selectAllCheckbox');
+    if (selectAllCb) {
+        selectAllCb.checked = allCbs.length > 0 && [...allCbs].every(cb => cb.checked);
+        selectAllCb.indeterminate = selectedRowIds.size > 0 && selectedRowIds.size < allCbs.length;
+    }
 }
 
 function updateBulkBar() {
@@ -312,9 +328,8 @@ function updateBulkBar() {
 function clearBulkSelection() {
     selectedRowIds.clear();
     document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
-    document.querySelectorAll('#mainSelectAllCheckbox, #filterSelectAllCheckbox').forEach(cb => {
-        if (cb) { cb.checked = false; cb.indeterminate = false; }
-    });
+    const selectAll = document.getElementById('selectAllCheckbox');
+    if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
     updateBulkBar();
 }
 
@@ -400,7 +415,7 @@ async function undoBulkStatus(previousStatuses) {
 }
 
 // ============================================================
-// RENDER TABLE — FIXED: use array join instead of innerHTML +=
+// RENDER TABLE
 // ============================================================
 let _rmkCounter = 0;
 
@@ -428,9 +443,7 @@ function renderTable(data, targetId) {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // FIX: Use array + join instead of innerHTML += for performance
-    const rows = [];
+    tbody.innerHTML = '';
 
     data.forEach(row => {
         const statusClass = { 'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing' }[row.status] || 'bg-slate-100';
@@ -500,10 +513,14 @@ function renderTable(data, targetId) {
         }
 
         const isChecked = selectedRowIds.has(row.id) ? 'checked' : '';
+
+        // FIX 6: Safe JSON for onclick — prevent single-quote injection breaking HTML attribute
         const safeJson = JSON.stringify(row).replace(/'/g, "&#39;");
+
+        // FIX 5: Safe client name for onclick string params
         const safeClientName = row.client_name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-        rows.push(`
+       tbody.innerHTML += `
             <tr class="group transition-all ${rowBg}" id="row_${row.id}">
                 <td class="p-4">
                     <input type="checkbox" class="row-checkbox w-4 h-4 rounded" data-id="${row.id}" ${isChecked}
@@ -563,11 +580,10 @@ function renderTable(data, targetId) {
                         </button>
                     </div>
                 </td>
-            </tr>`);
+            </tr>`;
     });
-
-    tbody.innerHTML = rows.join('');
 }
+
 
 // ============================================================
 // REMARKS TOGGLE — event delegation
@@ -586,7 +602,7 @@ document.addEventListener('click', function(e) {
         btn.innerText = expanded ? 'more' : 'less';
         return;
     }
-    // Consolidated click-outside handlers
+    // FIX 7: Consolidated click-outside handlers
     const profileMenu = document.getElementById("profileMenu");
     if (profileMenu && !e.target.closest("#profileMenu") && !e.target.closest("[onclick*='toggleProfileMenu']")) {
         profileMenu.classList.add("hidden");
@@ -608,11 +624,10 @@ async function handleSubmit() {
 
     if (!clientName) { showToast('Client Name is mandatory.', 'error'); return; }
     if (!serviceCategory) { showToast('Service Category is mandatory.', 'error'); return; }
-
-    const oldRecord = allRecords.find(r => r.id === parseInt(id));
-    const oldStaff = oldRecord?.assigned_staff || '';
-    const newStaff = document.getElementById('assignedStaff').value;
-
+    // Pehle old assigned staff yaad rakho
+const oldRecord = allRecords.find(r => r.id === parseInt(id));
+const oldStaff = oldRecord?.assigned_staff || '';
+const newStaff = document.getElementById('assignedStaff').value;
     const payload = {
         status: document.getElementById('status').value,
         remarks: document.getElementById('remarks').value,
@@ -641,8 +656,8 @@ async function handleSubmit() {
 
         if (!error) {
             if (id) {
-                const oldRec = allRecords.find(r => r.id === parseInt(id));
-                await saveAuditTrail('witcorp_records', id, 'UPDATE', oldRec, payload);
+                const oldRecord = allRecords.find(r => r.id === parseInt(id));
+                await saveAuditTrail('witcorp_records', id, 'UPDATE', oldRecord, payload);
             } else {
                 await saveAuditTrail('witcorp_records', 'new', 'INSERT', null, payload);
             }
@@ -657,18 +672,17 @@ async function handleSubmit() {
             );
             showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
             if (payload.status === 'Completed') fireConfetti();
-
-            // Staff assignment notification
-            if (newStaff && newStaff !== oldStaff) {
-                await supabaseClient.from('witcorp_notifications').insert([{
-                    title: '📋 New Task Assigned!',
-                    message: `${currentUserName} assigned you: ${payload.client_name} — ${payload.service_category}`,
-                    type: 'record',
-                    reference: payload.client_name,
-                    created_by: currentUserEmail,
-                    is_read: false
-                }]);
-            }
+            // Feature 12 — Staff assignment notification
+if (newStaff && newStaff !== oldStaff) {
+    await supabaseClient.from('witcorp_notifications').insert([{
+        title: '📋 New Task Assigned!',
+         message: `${currentUserName} assigned you: ${payload.client_name} — ${payload.service_category}`,
+        type: 'record',
+        reference: payload.client_name,
+        created_by: currentUserEmail,
+        is_read: false
+    }]);
+}
             clearForm();
             clearDirtyState();
             await fetchRecords(true);
@@ -685,11 +699,6 @@ async function handleSubmit() {
 }
 
 function editRecord(row) {
-    // Re-enable all fields first before disabling specific ones
-    ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline'].forEach(fId => {
-        const el = document.getElementById(fId);
-        if (el) el.disabled = false;
-    });
     document.getElementById('editId').value = row.id;
     document.getElementById('clientName').value = row.client_name;
     document.getElementById('serviceCategory').value = row.service_category;
@@ -703,7 +712,7 @@ function editRecord(row) {
     document.getElementById('formTitle').innerText = "Modify Existing Profile";
     document.getElementById('submitBtn').innerHTML = `<i class="fas fa-arrows-rotate mr-2"></i> Confirm Changes`;
     document.getElementById('editBadge').classList.remove('hidden');
-    // Only disable identity fields, keep status/remarks editable
+    // FIX 1: Only disable specific fields, keep status/remarks editable
     ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline'].forEach(fId => {
         const el = document.getElementById(fId);
         if (el) el.disabled = true;
@@ -737,7 +746,7 @@ async function deleteRecord(id) {
 }
 
 // ============================================================
-// CLEAR FORM — FIX: Re-enable all fields + correct default category
+// CLEAR FORM — FIX 1: Re-enable all fields on clear
 // ============================================================
 function clearForm() {
     document.getElementById('editId').value = "";
@@ -752,7 +761,7 @@ function clearForm() {
         else if (fId === 'status') { el.value = 'Pending'; }
         else { el.value = ""; }
     });
-    updateServiceDetailOptions('Sales'); // FIX: match default category 'Sales'
+  updateServiceDetailOptions('GST');
     clearDirtyState();
 }
 
@@ -790,6 +799,7 @@ async function fetchClients() {
             const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
             const recordBadge = clientRecordCount > 0
                 ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>` : '';
+            // FIX 6: Safe JSON for onclick
             const safeClientJson = JSON.stringify(c).replace(/'/g, "&#39;");
             document.getElementById(listId).innerHTML += `
                 <div class="p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group">
@@ -896,17 +906,18 @@ function renderVaultTable(data) {
             </div></td></tr>`;
         return;
     }
-    const rows = [];
     data.forEach(v => {
         const fullPass = v.password || '';
         const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
         const vId = `vault_${v.id}`;
+        // FIX 4: Consistent safe base64 encode for unicode support
         let encodedPass = '';
         try { encodedPass = btoa(unescape(encodeURIComponent(fullPass))); } catch (e) { encodedPass = btoa(fullPass); }
+        // FIX 6: Safe JSON for editVault onclick
         const safeVaultJson = JSON.stringify(v).replace(/'/g, "&#39;");
         const safeUsername = v.username.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
-        rows.push(`
+        tbody.innerHTML += `
             <tr class="group hover:bg-slate-50" id="${vId}_row">
                 <td class="p-4 font-bold text-blue-900 text-sm whitespace-nowrap">${v.client_name || 'N/A'}</td>
                 <td class="p-4 whitespace-nowrap"><span class="px-2 py-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-700">${v.category}</span></td>
@@ -938,12 +949,11 @@ function renderVaultTable(data) {
                         <button onclick="deleteVault(${v.id})" class="text-rose-500 hover:scale-125 transition-transform text-sm"><i class="fas fa-trash-alt"></i></button>
                     </div>
                 </td>
-            </tr>`);
+            </tr>`;
     });
-    tbody.innerHTML = rows.join('');
 }
 
-// FIX: Consistent password encode/decode
+// FIX 4: Consistent password encode/decode
 function _encodePass(plainText) {
     try { return btoa(unescape(encodeURIComponent(plainText))); } catch (e) { return btoa(plainText); }
 }
@@ -1110,15 +1120,16 @@ function showSection(id) {
         if (navId) document.getElementById(navId)?.classList.add('active');
     }
 
-    if (id === 'dashboard') {
-        const fetchPromises = [];
-        if (allRecords.length === 0) fetchPromises.push(fetchRecords());
-        if (allClients.length === 0) fetchPromises.push(fetchClients());
-        if (fetchPromises.length > 0) {
-            Promise.all(fetchPromises).then(() => setupPredictions());
-        }
+   // AFTER:
+if (id === 'dashboard') {
+    const fetchPromises = [];
+    if (allRecords.length === 0) fetchPromises.push(fetchRecords());
+    if (allClients.length === 0) fetchPromises.push(fetchClients());
+    if (fetchPromises.length > 0) {
+        Promise.all(fetchPromises).then(() => setupPredictions());
     }
-    if (id === 'clientManagement') fetchClients();
+}
+if (id === 'clientManagement') fetchClients();
     if (id === 'vaultManagement') fetchVault();
     if (id === 'dscManagement') fetchDSC();
 
@@ -1128,7 +1139,7 @@ function showSection(id) {
 }
 
 // ============================================================
-// FILTER BY FIELD
+// FILTER BY FIELD — FIX 5: Explicit 'all' handling
 // ============================================================
 function filterByField(field, value) {
     window._lastFilterValue = value;
@@ -1336,7 +1347,6 @@ function renderDSC(data) {
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const rows = [];
     data.forEach(d => {
         const fullRem = d.remarks || '—';
         const shortRem = fullRem.length > 50 ? fullRem.substring(0, 48) + '\u2026' : fullRem;
@@ -1363,7 +1373,7 @@ function renderDSC(data) {
             }
         }
         const safeDscJson = JSON.stringify(d).replace(/'/g, "&#39;");
-        rows.push(`
+        tbody.innerHTML += `
             <tr class="border-b border-slate-200 hover:bg-slate-50 transition-all">
                 <td class="p-4 font-bold text-sm text-slate-800 whitespace-nowrap">${d.company_name || ''}</td>
                 <td class="p-4 font-semibold text-sm text-slate-600 whitespace-nowrap">${d.client_name || ''}</td>
@@ -1380,20 +1390,19 @@ function renderDSC(data) {
                         <button onclick="deleteDSC(${d.id})" class="px-3 py-1 bg-red-500 text-white rounded-xl text-xs font-semibold hover:bg-red-600 transition-all">Delete</button>
                     </div>
                 </td>
-            </tr>`);
+            </tr>`;
     });
-    tbody.innerHTML = rows.join('');
 }
 
 async function saveDSC() {
     const btn = document.getElementById('dscBtn');
-    const id = document.getElementById('dEditId').value;
+    const id = document.getElementById('dEditId').value; // Capture id before async
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
     const companyName = document.getElementById('dCompany').value?.trim();
     if (!companyName) {
         btn.disabled = false;
-        btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
+        btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status'; // FIX 3: Use captured id
         showToast('Company Name Required', 'error');
         return;
     }
@@ -1423,6 +1432,7 @@ async function saveDSC() {
     } catch (err) { console.error("saveDSC error:", err); showToast('Save operation failed.', 'error'); }
     finally {
         btn.disabled = false;
+        // FIX 3: Use captured id for correct label
         btn.innerHTML = id ? 'Update DSC Status' : 'Save DSC Status';
     }
 }
@@ -1464,7 +1474,7 @@ function searchDSC(query) {
 
 // ============================================================
 // SERVICE WORKER
-// ============================================================
+// ===========================================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/WitcorpDB/sw.js', { scope: '/WitcorpDB/' })
         .then(() => console.log("SW registered"))
@@ -1488,28 +1498,30 @@ function closeThemeSettings() { document.getElementById("themeModal").classList.
 // NOTIFICATIONS
 // ============================================================
 async function createNotificationForOthers(title, message, type = "info", reference = "") {
-    try {
-        await supabaseClient.from('witcorp_notifications').insert([{
-            title, message, type, reference,
-            created_by: currentUserName, is_read: false
-        }]);
-        await supabaseClient.from('witcorp_push_queue').insert([{ title, message }]);
-        fetch(`${SB_URL}/functions/v1/send-push-`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${SB_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ title, message })
-        }).catch(() => {});
-    } catch (err) {
-        console.error("createNotificationForOthers error:", err);
-    }
-}
+  try {
+    await supabaseClient.from('witcorp_notifications').insert([{
+      title, message, type, reference,
+      created_by: currentUserName, is_read: false
+    }]);
 
+    // ✅ Insert push queue with proper data
+    await supabaseClient.from('witcorp_push_queue').insert([{ title, message }]);
+
+    // ✅ Call edge function WITH body — warna server kuch push nahi karta
+    fetch(`${SB_URL}/functions/v1/send-push-`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ title, message })  // ← YEH MISSING THA
+    }).catch(() => {});
+
+  } catch (err) {
+    console.error("createNotificationForOthers error:", err);
+  }
+}
 async function fetchNotifications() {
-    // FIX: Only fetch if user is logged in
-    if (!currentUserEmail) return;
     try {
         const { data, error } = await supabaseClient
             .from('witcorp_notifications').select('*')
@@ -1591,7 +1603,6 @@ function renderNotifications() {
 function toggleNotificationPanel() {
     document.getElementById('notificationPanel')?.classList.toggle('hidden');
 }
-
 async function openNotification(id, type, reference) {
     try {
         await supabaseClient.from('witcorp_notifications').update({ is_read: true }).eq('id', parseInt(id, 10));
@@ -1651,11 +1662,11 @@ function setupPredictions() {
     const uniqueClients = [...new Set(allClients.map(c => c.client_name).filter(Boolean))];
     if (clientList) clientList.innerHTML = uniqueClients.map(name => `<option value="${name}">`).join('');
     const serviceList = document.getElementById('serviceSuggestions');
-    const currentCat = document.getElementById('serviceCategory')?.value || '';
-    const categoryOptions = SERVICE_DETAILS_MAP[currentCat] || [];
-    const dbOptions = [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
-    const mergedOptions = [...new Set([...categoryOptions, ...dbOptions])];
-    if (serviceList) serviceList.innerHTML = mergedOptions.map(name => `<option value="${name}">`).join('');
+const currentCat = document.getElementById('serviceCategory')?.value || '';
+const categoryOptions = SERVICE_DETAILS_MAP[currentCat] || [];
+const dbOptions = [...new Set(allRecords.map(r => r.service_detail).filter(Boolean))];
+const mergedOptions = [...new Set([...categoryOptions, ...dbOptions])];
+if (serviceList) serviceList.innerHTML = mergedOptions.map(name => `<option value="${name}">`).join('');
     const staffList = document.getElementById('staffSuggestions');
     const uniqueStaff = [...new Set(allRecords.map(r => r.assigned_staff).filter(Boolean))];
     if (staffList) staffList.innerHTML = uniqueStaff.map(name => `<option value="${name}">`).join('');
@@ -1706,10 +1717,12 @@ function loadNotificationSetting() {
 async function toggleNotificationSetting() {
     const current = localStorage.getItem("notificationSound");
     if (current === "off") {
+        // ON karo — dobara subscribe
         localStorage.setItem("notificationSound", "on");
         await subscribeToPush();
         showToast('Notifications enabled', 'success', 2000);
     } else {
+        // OFF karo — unsubscribe
         localStorage.setItem("notificationSound", "off");
         try {
             const reg = await navigator.serviceWorker.ready;
@@ -1885,12 +1898,10 @@ document.addEventListener('keydown', function(e) {
             cancelEditMessage();
             return;
         }
+        e.preventDefault();
         ['notificationPanel', 'profileMenu', 'themeModal', 'activityModal', 'exportModal',
-         'auditModal', 'commentsModal', 'subtasksModal', 'quickAddModal', 'profileModal', 'fontSizeModal']
+         'auditModal', 'commentsModal', 'subtasksModal', 'quickAddModal', 'profileModal']
             .forEach(id => document.getElementById(id)?.classList.add('hidden'));
-        // FIX: Also close emoji picker if open
-        const emojiPicker = document.getElementById('emojiPicker');
-        if (emojiPicker) emojiPicker.remove();
         const searchBox = document.getElementById('globalSearch');
         if (searchBox) {
             const globalSearchBox = document.getElementById('globalSearchBox');
@@ -1898,19 +1909,18 @@ document.addEventListener('keydown', function(e) {
             searchBox.focus();
             searchBox.select();
         }
-        return;
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
         if (!currentUserEmail) return;
         openQuickAdd();
-        return;
     }
     if (e.key === 'Enter' && !e.shiftKey && document.activeElement?.id === 'commentInput') {
         e.preventDefault();
         postComment();
     }
-});
+
+}); 
 
 // ============================================================
 // USER PROFILE SYSTEM
@@ -1971,26 +1981,34 @@ function applyUserPreferences(profile) {
 function updateProfileUI(profile) {
     const name = profile.full_name || profile.email;
     const initial = name.charAt(0).toUpperCase();
-    const profileElements = [
-        { id: 'profileInitial', fontSize: '15px' },
-        { id: 'profileInitial2', fontSize: '15px' },
-        { id: 'profileInitialModal', fontSize: '18px' }
-    ];
-    profileElements.forEach(({ id, fontSize }) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.innerText = initial;
-        el.style.background = profile.avatar_color || '#3b82f6';
-        el.style.color = '#ffffff';
-        el.style.fontWeight = '800';
-        el.style.fontSize = fontSize;
-        el.style.display = 'flex';
-        el.style.alignItems = 'center';
-        el.style.justifyContent = 'center';
-        el.style.borderRadius = '50%';
-        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.22)';
-        el.style.textShadow = '0 1px 2px rgba(0,0,0,0.18)';
-    });
+    const p1 = document.getElementById('profileInitial');
+    const p2 = document.getElementById('profileInitial2');
+    if (p1) {
+        p1.innerText = initial;
+        p1.style.background = profile.avatar_color || '#3b82f6';
+        p1.style.color = '#ffffff';
+        p1.style.fontWeight = '800';
+        p1.style.fontSize = '15px';
+        p1.style.display = 'flex';
+        p1.style.alignItems = 'center';
+        p1.style.justifyContent = 'center';
+        p1.style.borderRadius = '50%';
+        p1.style.boxShadow = '0 2px 8px rgba(0,0,0,0.22)';
+        p1.style.textShadow = '0 1px 2px rgba(0,0,0,0.18)';
+    }
+    if (p2) {
+        p2.innerText = initial;
+        p2.style.background = profile.avatar_color || '#3b82f6';
+        p2.style.color = '#ffffff';
+        p2.style.fontWeight = '800';
+        p2.style.fontSize = '15px';
+        p2.style.display = 'flex';
+        p2.style.alignItems = 'center';
+        p2.style.justifyContent = 'center';
+        p2.style.borderRadius = '50%';
+        p2.style.boxShadow = '0 2px 8px rgba(0,0,0,0.22)';
+        p2.style.textShadow = '0 1px 2px rgba(0,0,0,0.18)';
+    }
     const nameEl = document.getElementById('profileDisplayName');
     if (nameEl) nameEl.innerText = profile.full_name || profile.email.split('@')[0];
     const desigEl = document.getElementById('profileDesignation');
@@ -2039,6 +2057,37 @@ async function saveProfileChanges() {
     await updateUserProfile(updates);
     currentUserName = updates.full_name || currentUserProfile.email;
     closeProfileModal();
+}
+
+async function loadActivityInProfile() {
+    try {
+        const { data } = await supabaseClient
+            .from('witcorp_activity_log').select('*')
+            .eq('user_email', currentUserEmail)
+            .order('created_at', { ascending: false }).limit(30);
+        const list = document.getElementById('profileActivityList');
+        if (!list) return;
+        if (!data || data.length === 0) {
+            list.innerHTML = `<div class="text-center text-slate-400 py-6 text-sm font-semibold">No activity yet</div>`;
+            return;
+        }
+        const iconMap = {
+            Added: 'fa-circle-plus text-emerald-500', Updated: 'fa-pen-to-square text-blue-500',
+            Deleted: 'fa-trash-can text-rose-500', Exported: 'fa-file-export text-purple-500',
+            Bulk: 'fa-layer-group text-cyan-500', Login: 'fa-right-to-bracket text-amber-500',
+            Other: 'fa-clock-rotate-left text-slate-400'
+        };
+        list.innerHTML = data.map(item => `
+            <div class="flex items-start gap-3 py-3 border-b border-slate-100 last:border-0">
+                <div class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0">
+                    <i class="fas ${iconMap[item.action_type] || iconMap.Other} text-xs"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-slate-700">${item.action_text}</div>
+                    <div class="text-xs text-blue-500 font-semibold mt-0.5">${new Date(item.created_at).toLocaleString('en-IN')}</div>
+                </div>
+            </div>`).join('');
+    } catch (err) { console.error('loadActivityInProfile error:', err); }
 }
 
 // ============================================================
@@ -2169,13 +2218,6 @@ async function openCommentsModal(recordId, clientName) {
     if (title) title.innerText = `Comments — ${clientName}`;
     modal.classList.remove('hidden');
     await loadComments(recordId);
-    // Allow Enter to send comment
-    const commentInput = document.getElementById('commentInput');
-    if (commentInput) {
-        commentInput.onkeydown = (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment(); }
-        };
-    }
 }
 
 function closeCommentsModal() { document.getElementById('commentsModal')?.classList.add('hidden'); activeCommentRecordId = null; }
@@ -2247,13 +2289,6 @@ async function openSubtasksModal(recordId, clientName) {
     if (title) title.innerText = `Checklist — ${clientName}`;
     modal.classList.remove('hidden');
     await loadSubtasks(recordId);
-    // Allow Enter to add subtask
-    const subtaskInput = document.getElementById('subtaskInput');
-    if (subtaskInput) {
-        subtaskInput.onkeydown = (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); addSubtask(); }
-        };
-    }
 }
 
 function closeSubtasksModal() { document.getElementById('subtasksModal')?.classList.add('hidden'); activeSubtaskRecordId = null; }
@@ -2531,40 +2566,37 @@ function resetColumns() {
     document.querySelectorAll('.col-toggle-cb').forEach(cb => cb.checked = true);
     applyColumnVisibility();
 }
-
-// ============================================================
 // PUSH NOTIFICATION SUBSCRIBE
-// ============================================================
 function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
 async function subscribeToPush() {
-    if (!('PushManager' in window)) return;
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
-        const reg = await navigator.serviceWorker.ready;
-        const existing = await reg.pushManager.getSubscription();
-        const subscription = existing || await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-        });
-        await supabaseClient.from('witcorp_push_subscriptions').upsert({
-            user_email: currentUserEmail,
-            subscription: JSON.stringify(subscription),
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'user_email' });
-    } catch (err) {
-        console.error('Push subscribe error:', err);
-    }
+  if (!('PushManager' in window)) return;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    const subscription = existing || await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    await supabaseClient.from('witcorp_push_subscriptions').upsert({
+      user_email: currentUserEmail,
+      subscription: JSON.stringify(subscription),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_email' });
+  } catch (err) {
+    console.error('Push subscribe error:', err);
+  }
 }
 
 // ============================================================
-// SHOWAPP — FIX: Prevent duplicate intervals, init chat panel positioning
+// SHOWAPP — FIX 2 & FIX 8
 // ============================================================
 function showApp(user) {
     document.getElementById('authScreen').style.display = 'none';
@@ -2582,9 +2614,6 @@ function showApp(user) {
     if (p1) p1.innerText = user.email.charAt(0).toUpperCase();
     if (p2) p2.innerText = user.email.charAt(0).toUpperCase();
 
-    // FIX: Move chat panel to body (outside main) for correct positioning
-    _moveChatPanelToBody();
-
     loadUserProfile(user.email);
     loadAnnouncements();
     loadOnlineUsers();
@@ -2593,7 +2622,6 @@ function showApp(user) {
     loadColumnPrefs();
     showSection('dashboard');
 
-    // FIX: Clear old intervals before setting new ones (prevent duplicates on re-login)
     if (_onlineUsersInterval) clearInterval(_onlineUsersInterval);
     if (_presenceInterval) clearInterval(_presenceInterval);
     _onlineUsersInterval = setInterval(loadOnlineUsers, 30000);
@@ -2602,34 +2630,11 @@ function showApp(user) {
     saveActivity('Login: ' + user.email);
     subscribeToPush();
     fetchOnlineUsersForMention();
-    fetchNotifications();
     showToast(`Welcome back, ${user.email.split('@')[0]}!`, 'success');
 }
 
 // ============================================================
-// FIX ROOT CAUSE: Move chatPanel outside main to prevent layout overlap
-// ============================================================
-function _moveChatPanelToBody() {
-    const chatPanel = document.getElementById('chatPanel');
-    if (!chatPanel) return;
-    // Only move if not already moved
-    if (chatPanel.parentElement !== document.body) {
-        document.body.appendChild(chatPanel);
-    }
-    // Apply fixed positioning styles
-    chatPanel.style.position = 'fixed';
-    chatPanel.style.bottom = '80px';
-    chatPanel.style.right = '24px';
-    chatPanel.style.width = '420px';
-    chatPanel.style.maxWidth = 'calc(100vw - 48px)';
-    chatPanel.style.zIndex = '99998';
-    chatPanel.style.height = '75vh';
-    chatPanel.style.minHeight = '500px';
-    chatPanel.style.maxHeight = '750px';
-}
-
-// ============================================================
-// window.addEventListener('load')
+// SINGLE window.addEventListener('load')
 // ============================================================
 window.addEventListener('load', async () => {
     const savedBg = localStorage.getItem('bgTheme');
@@ -2639,7 +2644,7 @@ window.addEventListener('load', async () => {
     loadNotificationSetting();
     loadFontSize();
     setTimeout(applyGreenHeaders, 400);
-    // FIX: Don't fetch notifications on load if not logged in — handled in showApp instead
+    fetchNotifications();
 
     // Password reset flow
     const hash = window.location.hash;
@@ -2653,7 +2658,6 @@ window.addEventListener('load', async () => {
         } catch (err) { console.error("Password update error:", err); showToast("Password update failed. Please try again.", 'error'); }
     }
 });
-
 // ============================================================
 // TEAM CHAT SYSTEM
 // ============================================================
@@ -2665,65 +2669,32 @@ let editingMessageText = null;
 function toggleChat() {
     const panel = document.getElementById('chatPanel');
     if (!panel) return;
- 
-    _moveChatPanelToBody();
- 
     const isOpen = panel.getAttribute('data-chat-open') === 'true';
     if (!isOpen) {
         panel.setAttribute('data-chat-open', 'true');
-        panel.classList.remove('hidden');
-        panel.style.display = 'flex';
-        panel.style.flexDirection = 'column';
+       panel.classList.remove('hidden');
         chatOpen = true;
- 
-        // FIX: Reset subscription so it always reconnects fresh
-        if (chatSubscription) {
-            supabaseClient.removeChannel(chatSubscription);
-            chatSubscription = null;
-        }
-        if (typingChannel) {
-            supabaseClient.removeChannel(typingChannel);
-            typingChannel = null;
-        }
- 
+        loadChats();
         subscribeChatRealtime();
-        loadChats().then(() => {
-            const list = document.getElementById('chatList');
-            if (list) list.scrollTop = list.scrollHeight;
-        });
         setTimeout(() => document.getElementById('chatInput')?.focus(), 100);
     } else {
         panel.setAttribute('data-chat-open', 'false');
         panel.classList.add('hidden');
-        panel.style.display = 'none';
         chatOpen = false;
- 
-        // FIX: Cleanup channels on close
-        if (chatSubscription) {
-            supabaseClient.removeChannel(chatSubscription);
-            chatSubscription = null;
-        }
-        if (typingChannel) {
-            supabaseClient.removeChannel(typingChannel);
-            typingChannel = null;
-        }
+        // Subscription mat hatao — messages live rehne chahiye
     }
 }
-
 async function loadChats() {
-    const list = document.getElementById('chatList');
-    if (!list) return;
-    list.innerHTML = '';
     try {
         const { data, error } = await supabaseClient
             .from('witcorp_chats')
             .select('*')
             .order('created_at', { ascending: true })
             .limit(100);
-        if (error) { console.error('loadChats error:', error); return; }
+        if (error) return;
         renderChats(data || []);
     } catch (err) {
-        console.error('loadChats exception:', err);
+        console.error('loadChats error:', err);
     }
 }
 
@@ -2731,13 +2702,12 @@ function renderChats(messages) {
     const list = document.getElementById('chatList');
     if (!list) return;
 
-    list.innerHTML = '';
-
     if (messages.length === 0) {
         list.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50 py-16">
+            <div class="flex flex-col items-center justify-center h-full gap-3 opacity-50">
                 <i class="fas fa-comments text-4xl text-slate-300"></i>
-                <p class="text-sm font-bold text-slate-400">No messages yet. Say hi! 👋</p>
+                <p class="text-sm font-bold text-slate-400">No messages yet</p>
+                <p class="text-xs text-slate-300">Send the first message!</p>
             </div>`;
         return;
     }
@@ -2765,6 +2735,7 @@ function renderChats(messages) {
             hour: '2-digit', minute: '2-digit', hour12: true
         });
 
+        // Reply preview
         let replyHtml = '';
         if (msg.reply_to_text) {
             replyHtml = `
@@ -2775,9 +2746,6 @@ function renderChats(messages) {
         }
 
         const editedTag = msg.is_edited ? `<span style="font-size:9px;opacity:0.6;margin-left:4px;">edited</span>` : '';
-        const safeMsgText = escapeHtml(msg.message);
-        const safeMsgForAttr = safeMsgText.replace(/'/g, "\\'");
-        const safeSender = (msg.sent_by || '').split('@')[0];
 
         if (isMe) {
             html += `
@@ -2786,16 +2754,16 @@ function renderChats(messages) {
                         <div class="text-[10px] font-bold text-slate-400 text-right mb-1">You</div>
                         <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
                             ${replyHtml}
-                            <p class="text-sm font-medium break-words whitespace-pre-wrap">${safeMsgText}</p>
+                            <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
                             <div class="flex gap-1 justify-end mt-1.5">
-                                <button onclick="setReply(${msg.id}, '${safeMsgForAttr}', 'You')"
+                                <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', 'You')"
                                     style="background:rgba(255,255,255,0.2);border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;" title="Reply">
                                     <i class="fas fa-reply"></i>
                                 </button>
-                                <button onclick="editChatMsg(${msg.id}, this)"
-                                    style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;"
-                                    title="Edit message">
-                                    <i class="fas fa-pencil"></i>
+                               <button onclick="editChatMsg(${msg.id}, this)"
+                               style="background:#e0e7ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;transition:0.2s;"
+                                onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'" title="Edit message">
+                                 <i class="fas fa-pencil"></i>
                                 </button>
                                 <button onclick="deleteChatMsg(${msg.id})"
                                     style="background:#fee2e2;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:11px;">
@@ -2814,12 +2782,12 @@ function renderChats(messages) {
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
                         style="background:${msg.avatar_color || '#6366f1'}">${msg.sent_by_initial || '?'}</div>
                     <div class="max-w-[75%]">
-                        <div class="text-[10px] font-bold text-slate-500 mb-1">${safeSender}</div>
+                        <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
                         <div class="bg-white border border-slate-200 text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
                             ${replyHtml}
-                            <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${safeMsgText}</p>
+                            <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
                             <div class="flex gap-1 mt-1.5">
-                                <button onclick="setReply(${msg.id}, '${safeMsgForAttr}', '${safeSender}')"
+                                <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', '${msg.sent_by.split('@')[0]}')"
                                     style="background:#eff6ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;" title="Reply">
                                     <i class="fas fa-reply"></i>
                                 </button>
@@ -2834,10 +2802,8 @@ function renderChats(messages) {
     list.innerHTML = html;
     list.scrollTop = list.scrollHeight;
 }
-
 function escapeHtml(text) {
-    if (!text) return '';
-    return String(text)
+    return text
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -2857,12 +2823,13 @@ async function sendChat() {
     clearTimeout(typingTimeout);
 
     try {
+        // Check if editing
         if (editingMessageId) {
             // UPDATE MODE
             const { error } = await supabaseClient
                 .from('witcorp_chats')
-                .update({
-                    message: message,
+                .update({ 
+                    message: message, 
                     is_edited: true,
                     updated_at: new Date().toISOString()
                 })
@@ -2877,7 +2844,7 @@ async function sendChat() {
                 showToast('Update failed: ' + error.message, 'error');
             }
         } else {
-            // INSERT MODE
+            // INSERT MODE (normal message)
             const payload = {
                 message,
                 sent_by: currentUserEmail,
@@ -2904,13 +2871,11 @@ async function sendChat() {
         }
     } catch (err) {
         console.error('sendChat error:', err);
-        showToast('Failed to send message.', 'error');
     } finally {
         if (btn) btn.disabled = false;
         input?.focus();
     }
 }
-
 // ============================================================
 // REPLY SYSTEM
 // ============================================================
@@ -2959,26 +2924,12 @@ let onlineUsersList = [];
 
 async function fetchOnlineUsersForMention() {
     try {
-        const { data: usersData } = await supabaseClient
-            .from('witcorp_users')
-            .select('email')
-            .eq('approved', true);
-
-        const { data: presenceData } = await supabaseClient
+        const fiveMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        const { data } = await supabaseClient
             .from('witcorp_presence')
-            .select('user_email, user_initial, avatar_color');
-
-        const presenceMap = {};
-        (presenceData || []).forEach(p => {
-            presenceMap[p.user_email] = p;
-        });
-
-        onlineUsersList = (usersData || []).map(u => ({
-            user_email: u.email,
-            user_initial: presenceMap[u.email]?.user_initial
-                          || u.email.charAt(0).toUpperCase(),
-            avatar_color: presenceMap[u.email]?.avatar_color || '#3b82f6'
-        }));
+            .select('user_email, user_initial, avatar_color')
+            .gte('last_seen', fiveMinAgo);
+        onlineUsersList = data || [];
     } catch (err) {
         console.error('fetchOnlineUsersForMention error:', err);
     }
@@ -2986,6 +2937,7 @@ async function fetchOnlineUsersForMention() {
 
 function handleChatInput(e) {
     const input = e.target;
+     // Typing broadcast
     broadcastTyping(true);
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => broadcastTyping(false), 2000);
@@ -3134,48 +3086,48 @@ function toggleEmojiPicker() {
         });
     }, 100);
 }
-
-// ============================================================
-// FIX: subscribeChatRealtime — prevent duplicate subscriptions
-// ============================================================
 function subscribeChatRealtime() {
-    // FIX: chatSubscription is always null here (reset in toggleChat)
     if (chatSubscription) return;
- 
     initTypingChannel();
- 
     chatSubscription = supabaseClient
-        .channel('team-chat-' + Date.now())
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'witcorp_chats' }, (payload) => {
+        .channel('team-chat')
+        .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'witcorp_chats'
+        }, (payload) => {
             appendChatMessage(payload.new);
         })
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'witcorp_chats' }, (payload) => {
+        .on('postgres_changes', {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'witcorp_chats'
+        }, (payload) => {
             const el = document.querySelector(`[data-msg-id="${payload.old.id}"]`);
             if (el) el.remove();
         })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'witcorp_chats' }, (payload) => {
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'witcorp_chats'
+        }, (payload) => {
             const el = document.querySelector(`[data-msg-id="${payload.new.id}"]`);
             if (el) {
                 const p = el.querySelector('p');
                 if (p) p.textContent = payload.new.message;
-                const timeEl = document.getElementById(`msgtime_${payload.new.id}`);
+                const timeEl = el.querySelector(`#msgtime_${payload.new.id}`);
                 if (timeEl && payload.new.is_edited) {
-                    const currentText = timeEl.textContent;
-                    if (!currentText.includes('edited')) {
-                        timeEl.innerHTML = timeEl.innerHTML + ' · <span style="font-size:9px;opacity:0.6;">edited</span>';
-                    }
+                    timeEl.innerHTML = timeEl.innerHTML.replace(' · <span class="italic">edited</span>', '') + ' · <span class="italic">edited</span>';
                 }
             }
         })
-        .subscribe((status) => {
-            console.log('Chat subscription status:', status);
-        });
+        .subscribe();
 }
+
 function appendChatMessage(msg) {
     const list = document.getElementById('chatList');
     if (!list) return;
 
-    // Remove empty state if present
     if (list.querySelector('.fa-comments')) {
         list.innerHTML = '';
     }
@@ -3194,10 +3146,6 @@ function appendChatMessage(msg) {
             </div>`;
     }
 
-    const safeMsgText = escapeHtml(msg.message);
-    const safeMsgForAttr = safeMsgText.replace(/'/g, "\\'");
-    const safeSender = (msg.sent_by || '').split('@')[0];
-
     const div = document.createElement('div');
     div.className = `flex ${isMe ? 'justify-end' : ''} gap-2 mb-3`;
     div.setAttribute('data-msg-id', msg.id);
@@ -3208,9 +3156,9 @@ function appendChatMessage(msg) {
                 <div class="text-[10px] font-bold text-slate-400 text-right mb-1">You</div>
                 <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
                     ${replyHtml}
-                    <p class="text-sm font-medium break-words whitespace-pre-wrap">${safeMsgText}</p>
+                    <p class="text-sm font-medium break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
                     <div class="flex gap-1 justify-end mt-1.5">
-                        <button onclick="setReply(${msg.id}, '${safeMsgForAttr}', 'You')"
+                        <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', 'You')"
                             style="background:rgba(255,255,255,0.2);border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">
                             <i class="fas fa-reply"></i>
                         </button>
@@ -3233,12 +3181,12 @@ function appendChatMessage(msg) {
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 mt-5"
                 style="background:${msg.avatar_color || '#6366f1'}">${msg.sent_by_initial || '?'}</div>
             <div class="max-w-[75%]">
-                <div class="text-[10px] font-bold text-slate-500 mb-1">${safeSender}</div>
+                <div class="text-[10px] font-bold text-slate-500 mb-1">${msg.sent_by.split('@')[0]}</div>
                 <div class="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
                     ${replyHtml}
-                    <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${safeMsgText}</p>
+                    <p class="text-sm font-medium text-slate-800 break-words whitespace-pre-wrap">${escapeHtml(msg.message)}</p>
                     <div class="flex gap-1 mt-1.5">
-                        <button onclick="setReply(${msg.id}, '${safeMsgForAttr}', '${safeSender}')"
+                        <button onclick="setReply(${msg.id}, '${escapeHtml(msg.message).replace(/'/g,"\\'")}', '${msg.sent_by.split('@')[0]}')"
                             style="background:#eff6ff;border:none;cursor:pointer;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:11px;">
                             <i class="fas fa-reply"></i>
                         </button>
@@ -3248,7 +3196,7 @@ function appendChatMessage(msg) {
             </div>`;
 
         if (document.hidden || !chatOpen) {
-            showToast(`💬 ${safeSender}: ${msg.message.substring(0, 40)}`, 'info', 4000);
+            showToast(`💬 ${msg.sent_by.split('@')[0]}: ${msg.message.substring(0, 40)}`, 'info', 4000);
         }
     }
 
@@ -3282,28 +3230,30 @@ function editChatMsg(id, btn) {
     const pEl = msgDiv?.querySelector('p');
     if (!pEl) return;
 
-    const oldText = pEl.innerText;
+    const oldText = pEl.textContent;
     const input = document.getElementById('chatInput');
     if (!input) return;
 
+    // Set edit mode
     editingMessageId = id;
     editingMessageText = oldText;
 
+    // Populate input box
     input.value = oldText;
     input.focus();
 
+    // Show editing indicator
     showEditingIndicator(oldText);
 
+    // Highlight the message being edited
     msgDiv.style.opacity = '0.7';
     msgDiv.style.borderLeft = '3px solid #3b82f6';
     msgDiv.style.paddingLeft = '12px';
-    msgDiv.style.borderRadius = '8px';
-    msgDiv.style.transition = 'all 0.2s';
 }
 
 function showEditingIndicator(text) {
     let indicator = document.getElementById('editingIndicator');
-
+    
     if (!indicator) {
         indicator = document.createElement('div');
         indicator.id = 'editingIndicator';
@@ -3329,27 +3279,26 @@ function showEditingIndicator(text) {
 }
 
 function cancelEditMessage() {
-    if (!editingMessageId) return;
-
-    const prevMsgDiv = document.querySelector(`[data-msg-id="${editingMessageId}"]`);
-    if (prevMsgDiv) {
-        prevMsgDiv.style.opacity = '1';
-        prevMsgDiv.style.borderLeft = 'none';
-        prevMsgDiv.style.paddingLeft = '0';
-    }
-
     editingMessageId = null;
     editingMessageText = null;
-
+    
+    // Clear input
     const input = document.getElementById('chatInput');
     if (input) input.value = '';
-
+    
+    // Remove indicator
     const indicator = document.getElementById('editingIndicator');
     if (indicator) indicator.remove();
 
+    // Remove highlight
+    document.querySelectorAll('[data-msg-id]').forEach(el => {
+        el.style.opacity = '1';
+        el.style.borderLeft = 'none';
+        el.style.paddingLeft = '0';
+    });
+
     input?.focus();
 }
-
 // ============================================================
 // CHAT MESSAGE SEARCH
 // ============================================================
@@ -3371,6 +3320,7 @@ function searchChatMessages(query) {
     const count = document.getElementById('chatSearchCount');
     const allMsgs = document.querySelectorAll('#chatList [data-msg-id]');
 
+    // Pehle sab highlight remove karo
     allMsgs.forEach(el => {
         const p = el.querySelector('p');
         if (!p) return;
@@ -3392,6 +3342,7 @@ function searchChatMessages(query) {
         const text = p.textContent;
         if (text.toLowerCase().includes(q)) {
             matchCount++;
+            // Highlight
             const highlighted = escapeHtml(text).replace(
                 new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
                 match => `<mark style="background:#fef08a;color:#854d0e;border-radius:3px;padding:0 2px;">${match}</mark>`
@@ -3410,6 +3361,7 @@ function searchChatMessages(query) {
             : 'No messages found';
     }
 
+    // Pehle match pe scroll karo
     if (firstMatch) {
         firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -3421,18 +3373,17 @@ function clearChatSearch() {
     if (input) input.value = '';
     if (count) count.innerText = '';
 
+    // Sab opacity wapas normal karo, highlights hata do
     document.querySelectorAll('#chatList [data-msg-id]').forEach(el => {
         const p = el.querySelector('p');
         if (p) p.innerHTML = escapeHtml(p.textContent);
         el.style.opacity = '1';
     });
 }
-
 // ============================================================
 // CONFETTI — CELEBRATION ON COMPLETION
 // ============================================================
 function fireConfetti() {
-    if (typeof confetti === 'undefined') return; // Guard if library not loaded
     const duration = 1800;
     const end = Date.now() + duration;
     const colors = ['#1A2E5A', '#fbbf24', '#10b981', '#3b82f6', '#f43f5e'];
@@ -3454,7 +3405,6 @@ function fireConfetti() {
         if (Date.now() < end) requestAnimationFrame(frame);
     })();
 }
-
 // ============================================================
 // TYPING INDICATOR SYSTEM
 // ============================================================
@@ -3464,9 +3414,8 @@ let currentlyTypingUsers = {};
 
 function initTypingChannel() {
     if (typingChannel) return;
- 
-    typingChannel = supabaseClient.channel('typing-indicator-' + Date.now());
- 
+    typingChannel = supabaseClient.channel('typing-indicator');
+
     typingChannel
         .on('presence', { event: 'sync' }, () => {
             const state = typingChannel.presenceState();
@@ -3533,7 +3482,6 @@ function renderTypingIndicator() {
         if (chatList) chatList.scrollTop = chatList.scrollHeight;
     }
 }
-
 // ============================================================
 // FONT SIZE ACCESSIBILITY TOGGLE
 // ============================================================
@@ -3551,30 +3499,28 @@ function setFontSize(size) {
 }
 
 function updateFontButtons(activeSize) {
-    ['small', 'medium', 'large'].forEach(size => {
-        ['font-' + size, 'font-' + size + '-dd'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (!btn) return;
-            if (size === activeSize) {
-                btn.style.borderColor = '#1A2E5A';
-                btn.style.color = '#1A2E5A';
-                btn.style.background = '#eff6ff';
-            } else {
-                btn.style.borderColor = '#e2e8f0';
-                btn.style.color = '#64748b';
-                btn.style.background = '';
-            }
-        });
+  ['small', 'medium', 'large'].forEach(size => {
+    ['font-' + size, 'font-' + size + '-dd'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      if (size === activeSize) {
+        btn.style.borderColor = '#1A2E5A';
+        btn.style.color = '#1A2E5A';
+        btn.style.background = '#eff6ff';
+      } else {
+        btn.style.borderColor = '#e2e8f0';
+        btn.style.color = '#64748b';
+        btn.style.background = '';
+      }
     });
+  });
 }
-
 function loadFontSize() {
     const saved = localStorage.getItem('witcorp_font_size') || 'medium';
     document.documentElement.style.setProperty('--base-font-size', FONT_SIZES[saved]);
     updateFontButtons(saved);
 }
-
 function openFontSizeModal() {
-    document.getElementById('profileMenu').classList.add('hidden');
-    document.getElementById('fontSizeModal').classList.remove('hidden');
+  document.getElementById('profileMenu').classList.add('hidden');
+  document.getElementById('fontSizeModal').classList.remove('hidden');
 }
