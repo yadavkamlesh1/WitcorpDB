@@ -207,18 +207,22 @@ async function fetchRecords(reset = true) {
     wrapper.style.display = 'none';
   }
   try {
-    if (reset) { recordPage = 0; allRecords = []; }
-    const from = recordPage * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
-    const { data, error } = await supabaseClient
-      .from('witcorp_records')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .range(from, to);
-    if (error) { console.error("fetchRecords error:", error); showToast('Failed to fetch records. Check connection.', 'error'); return; }
-    if (data) {
-      const uniqueData = data.filter(n => !allRecords.some(o => o.id === n.id));
-      allRecords = [...allRecords, ...uniqueData];
+   if (reset) { recordPage = 0; allRecords = []; }
+const from = recordPage * PAGE_SIZE;
+const to = from + PAGE_SIZE - 1;
+const { data, error } = await supabaseClient
+  .from('witcorp_records')
+  .select('*')
+  .order('updated_at', { ascending: false })
+  .range(from, to);
+if (error) { console.error("fetchRecords error:", error); showToast('Failed to fetch records. Check connection.', 'error'); return; }
+if (data) {
+  if (reset) {
+    allRecords = data;
+  } else {
+    const uniqueData = data.filter(n => !allRecords.some(o => o.id === n.id));
+    allRecords = [...allRecords, ...uniqueData];
+  }
       // FIX #17: memory cap
       if (allRecords.length > MAX_RECORDS_IN_MEMORY) {
         allRecords = allRecords.slice(-MAX_RECORDS_IN_MEMORY);
