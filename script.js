@@ -495,8 +495,8 @@ function renderTable(data, targetId) {
     _rmkCounter++;
     const uid = `rmk_${_rmkCounter}`;
     const fullRemarksRaw = row.remarks || '—';
-    const safeShort = fullRemarksRaw.length > 55 ? fullRemarksRaw.substring(0, 55) + '\u2026' : fullRemarksRaw;
-    const needsExpand = fullRemarksRaw.length > 55;
+    const safeShort = fullRemarksRaw.length > 56 ? fullRemarksRaw.substring(0, 55) + '\u2026' : fullRemarksRaw;
+    const needsExpand = fullRemarksRaw.length > 56;
     const safeShortHtml = esc(safeShort);
     const safeFull = esc(fullRemarksRaw);
 
