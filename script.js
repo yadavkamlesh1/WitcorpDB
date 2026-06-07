@@ -1159,12 +1159,13 @@ function showSection(id) {
     if (navId) document.getElementById(navId)?.classList.add('active');
   }
 
-  if (id === 'dashboard') {
-    const fetchPromises = [];
-    if (allRecords.length === 0) fetchPromises.push(fetchRecords());
-    if (allClients.length === 0) fetchPromises.push(fetchClients());
-    if (fetchPromises.length > 0) Promise.all(fetchPromises).then(() => setupPredictions());
-  }
+ if (id === 'dashboard') {
+    isFetchingRecords = false;
+    fetchRecords(true).then(() => {
+        if (allClients.length === 0) fetchClients();
+        setupPredictions();
+    });
+}
   if (id === 'clientManagement') fetchClients();
   if (id === 'vaultManagement') fetchVault();
   if (id === 'dscManagement') fetchDSC();
