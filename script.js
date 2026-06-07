@@ -73,8 +73,8 @@ let unreadCount = 0;
 let currentUserEmail = "";
 let currentUserName = "";
 let recordPage = 0;
-const PAGE_SIZE = 500;
-const MAX_RECORDS_IN_MEMORY = 1000; // FIX #17: memory cap
+const PAGE_SIZE = 100;
+const MAX_RECORDS_IN_MEMORY = 500; // FIX #17: memory cap
 let isFetchingRecords = false;
 let sortField = null;
 let sortAsc = true;
@@ -212,7 +212,7 @@ const { data, error } = await supabaseClient
   .from('witcorp_records')
   .select('*')
   .order('id', { ascending: false })
-  .limit(PAGE_SIZE);
+  .limit(500);
 if (error) { console.error("fetchRecords error:", error); showToast('Failed to fetch records. Check connection.', 'error'); return; }
 if (data) {
   if (reset) {
