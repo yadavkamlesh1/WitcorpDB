@@ -699,6 +699,7 @@ if (newStaff && newStaff !== oldStaff) {
 }
 
 function editRecord(row) {
+    ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline'].forEach(fId => { const el = document.getElementById(fId); if (el) el.disabled = false; });
     document.getElementById('editId').value = row.id;
     document.getElementById('clientName').value = row.client_name;
     document.getElementById('serviceCategory').value = row.service_category;
