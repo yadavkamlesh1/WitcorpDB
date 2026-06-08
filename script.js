@@ -252,7 +252,6 @@ renderTable(allRecords, 'mainTableBody');
 updateStats(allRecords);
 checkDeadlineAlerts(allRecords);
 updateLastSync();
-      await fetchRecords(true);
 
 const btn = document.getElementById("loadMoreBtn");
 if (btn) btn.style.display = hasMoreRecords ? "block" : "none";
