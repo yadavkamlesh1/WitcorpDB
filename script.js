@@ -3180,6 +3180,7 @@ if (!isMe && (document.hidden || !chatOpen)) {
         4000
     );
 }
+}
 
 async function deleteChatMsg(id) {
 if (!confirm('Delete this message?')) return;
