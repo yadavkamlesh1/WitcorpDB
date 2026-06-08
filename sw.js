@@ -1,6 +1,5 @@
-const STATIC_CACHE = "witcorp-static-v3";
-const DYNAMIC_CACHE = "witcorp-dynamic-v3";
-
+const STATIC_CACHE = "witcorp-static-v4";
+const DYNAMIC_CACHE = "witcorp-dynamic-v4";
 const STATIC_ASSETS = [
   "/WitcorpDB/",
   "/WitcorpDB/index.html",
