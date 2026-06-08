@@ -1,14 +1,5 @@
 // WITCORP HUB — ENTERPRISE SCRIPT (FULLY FIXED v6.0)
-// ============================================================
-// ALL BUGS FIXED:
-// FIX-A: fetchRecords now uses proper .range() pagination
-// FIX-B: Removed fetchRecords from notification handler (race condition)
-// FIX-C: Added realtime subscription for witcorp_records table
-// FIX-D: isFetchingRecords race condition resolved with queue
-// FIX-E: Memory cap removed (was causing data loss)
-// FIX-F: Duplicate channel subscriptions prevented
-// FIX-G: Session restore race condition fixed
-// ============================================================
+
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const VAPID_PUBLIC_KEY = "BDosxz9iUmLcKRXXxkXbJBDGqGOkAXipmriqsvi33FyqjfqNxec1bTzvA5CRN6OT6ianW7uh8Vs8Yc2Cfrah0sc";
