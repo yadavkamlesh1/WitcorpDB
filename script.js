@@ -67,6 +67,7 @@ let allNotifications = [];
 let currentExportData = [];
 let currentExportType = "records";
 let unreadCount = 0;
+let chatUnreadCount = 0;
 let currentUserEmail = "";
 let currentUserName = "";
 
@@ -2791,6 +2792,7 @@ panel.style.display = 'flex';
 panel.style.flexDirection = 'column';
 chatOpen = true;
 subscribeChatRealtime();
+updateChatBadge(false);
 loadChats().then(() => {
 const list = document.getElementById('chatList');
 if (list) list.scrollTop = list.scrollHeight;
@@ -3000,6 +3002,21 @@ window._replyToId = null; window._replyToText = null; window._replyToSender = nu
 const bar = document.getElementById('replyBar');
 if (bar) bar.remove();
 }
+function updateChatBadge(increment = true) {
+  const badge = document.getElementById('chatUnreadBadge');
+  if (!badge) return;
+  if (increment) {
+    chatUnreadCount++;
+  } else {
+    chatUnreadCount = 0;
+  }
+  if (chatUnreadCount > 0) {
+    badge.classList.remove('hidden');
+    badge.innerText = chatUnreadCount > 99 ? '99+' : chatUnreadCount;
+  } else {
+    badge.classList.add('hidden');
+  }
+}
 
 // ============================================================
 // @ MENTION SYSTEM
@@ -3175,11 +3192,12 @@ list.scrollTop = list.scrollHeight;
 
 if (!isMe && (document.hidden || !chatOpen)) {
     showToast(
-        `💬 ${esc(msg.sent_by?.split('@')[0] || 'Team')}: ${msg.message.substring(0, 40)}`,
-        'info',
-        4000
+      `💬 ${esc(msg.sent_by?.split('@')[0] || 'Team')}: ${msg.message.substring(0, 40)}`,
+      'info',
+      4000
     );
-}
+    updateChatBadge(true);
+  }
 }
 
 async function deleteChatMsg(id) {
