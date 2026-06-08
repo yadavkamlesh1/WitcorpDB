@@ -1,7 +1,7 @@
 {
   "name": "Witcorp Hub",
   "short_name": "Witcorp",
-  "start_url": "./index.html",
+  "start_url": "/WitcorpDB/index.html?v=7"
   "display": "standalone",
   "background_color": "#1e3a8a",
   "theme_color": "#1e3a8a",
