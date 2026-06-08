@@ -67,18 +67,6 @@ let allNotifications = [];
 let currentExportData = [];
 let currentExportType = "records";
 let unreadCount = 0;
-function updateChatBadge() {
-    const badge = document.getElementById('chatUnreadBadge');
-    if (!badge) return;
-
-    if (unreadCount > 0) {
-        badge.classList.remove('hidden');
-        badge.innerText = unreadCount > 99 ? '99+' : unreadCount;
-    } else {
-        badge.classList.add('hidden');
-        badge.innerText = '0';
-    }
-}
 let currentUserEmail = "";
 let currentUserName = "";
 
@@ -2802,8 +2790,6 @@ panel.classList.remove('hidden');
 panel.style.display = 'flex';
 panel.style.flexDirection = 'column';
 chatOpen = true;
-unreadCount = 0;
-updateChatBadge();
 subscribeChatRealtime();
 loadChats().then(() => {
 const list = document.getElementById('chatList');
@@ -3187,20 +3173,12 @@ div.innerHTML = buildMessageHTML(msg);
 list.appendChild(div);
 list.scrollTop = list.scrollHeight;
 
-if (!isMe) {
-
-    if (!chatOpen) {
-        unreadCount++;
-        updateChatBadge();
-    }
-
-    if (document.hidden || !chatOpen) {
-        showToast(
-            `💬 ${esc(msg.sent_by?.split('@')[0] || 'Team')}: ${msg.message.substring(0, 40)}`,
-            'info',
-            4000
-        );
-    }
+if (!isMe && (document.hidden || !chatOpen)) {
+    showToast(
+        `💬 ${esc(msg.sent_by?.split('@')[0] || 'Team')}: ${msg.message.substring(0, 40)}`,
+        'info',
+        4000
+    );
 }
 
 async function deleteChatMsg(id) {
