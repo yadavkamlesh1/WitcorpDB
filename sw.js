@@ -29,26 +29,26 @@ self.addEventListener("activate", event => {
   self.clients.claim();
 });
 
-// FETCH
+// FETCH (Network First)
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then(networkRes => {
-          return caches.open(DYNAMIC_CACHE).then(cache => {
-            cache.put(event.request, networkRes.clone());
-            return networkRes;
-          });
-        })
-        .catch(() => {
-          if (event.request.destination === "document") return caches.match("/index.html");
+    fetch(event.request)
+      .then(response => {
+        const clone = response.clone();
+
+        caches.open(DYNAMIC_CACHE).then(cache => {
+          cache.put(event.request, clone);
         });
-    })
+
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
-
 // ✅ SINGLE push handler — app close hone par bhi kaam karega
 self.addEventListener('push', function(event) {
   let data = {};
