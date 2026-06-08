@@ -1290,7 +1290,7 @@ function showSection(id) {
 
   if (id === 'dashboard') {
     const fetchPromises = [];
-    if (allRecords.length === 0) fetchPromises.push(fetchRecords());
+    fetchPromises.push(fetchRecords(true));
     if (allClients.length === 0) fetchPromises.push(fetchClients());
     if (fetchPromises.length > 0) Promise.all(fetchPromises).then(() => setupPredictions());
     else {
@@ -2728,6 +2728,7 @@ function showApp(user) {
   // FIX-C: Start realtime subscription for records
   subscribeRecordsRealtime();
 
+  fetchRecords(true);
   showSection('dashboard');
 
   saveActivity('Login: ' + user.email);
