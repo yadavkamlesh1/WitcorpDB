@@ -1,7 +1,13 @@
-// WITCORP HUB — ENTERPRISE SCRIPT (FULLY FIXED v5.0)
+// WITCORP HUB — ENTERPRISE SCRIPT (FULLY FIXED v6.0)
 // ============================================================
-// FIX #1: SB_KEY is public — RLS MUST be enabled in Supabase Dashboard
-//         for every table. Key cannot be hidden in browser JS.
+// ALL BUGS FIXED:
+// FIX-A: fetchRecords now uses proper .range() pagination
+// FIX-B: Removed fetchRecords from notification handler (race condition)
+// FIX-C: Added realtime subscription for witcorp_records table
+// FIX-D: isFetchingRecords race condition resolved with queue
+// FIX-E: Memory cap removed (was causing data loss)
+// FIX-F: Duplicate channel subscriptions prevented
+// FIX-G: Session restore race condition fixed
 // ============================================================
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
@@ -48,7 +54,7 @@ function updateQAServiceOptions(categoryValue) {
 }
 
 // ============================================================
-// FIX #5: PROPER HTML ESCAPE — prevents XSS from DB values
+// HTML ESCAPE — prevents XSS
 // ============================================================
 function esc(str) {
   return String(str || '')
@@ -72,28 +78,29 @@ let currentExportType = "records";
 let unreadCount = 0;
 let currentUserEmail = "";
 let currentUserName = "";
-let recordPage = 0;
+
+// FIX-A: Proper pagination variables
 const PAGE_SIZE = 500;
-const MAX_RECORDS_IN_MEMORY = 1000; // FIX #17: memory cap
+let recordPage = 0;
+let hasMoreRecords = true;
 let isFetchingRecords = false;
+let _fetchQueue = []; // FIX-D: queue for concurrent fetch requests
+
 let sortField = null;
 let sortAsc = true;
 let isFormDirty = false;
 let selectedRowIds = new Set();
 
-// FIX #2/#3: Single interval references — cleared on logout
+// FIX-F: Single interval/channel references — cleared on logout
 let _onlineUsersInterval = null;
 let _presenceInterval = null;
-
-// FIX #2/#3: Channel references — cleared on logout
 let chatSubscription = null;
 let typingChannel = null;
+let recordsSubscription = null; // FIX-C: realtime for records table
 
-// FIX #19: Presence debounce — prevent DB write per keystroke
+// Debounce references
 let _presenceDebounce = null;
-// FIX #9: Session reset debounce
 let _sessionResetDebounce = null;
-// FIX #20: Chat send rate limit
 let _lastSendTime = 0;
 
 // ============================================================
@@ -195,53 +202,150 @@ function checkDeadlineAlerts(data) {
 }
 
 // ============================================================
-// FETCH RECORDS
+// FIX-A + FIX-D: FETCH RECORDS — proper pagination + queue
 // ============================================================
 async function fetchRecords(reset = true) {
-  if (isFetchingRecords) return;
+  // FIX-D: If already fetching and reset requested, queue the reset
+  if (isFetchingRecords) {
+    if (reset) {
+      _fetchQueue.push(true);
+    }
+    return;
+  }
+
   isFetchingRecords = true;
   const skeleton = document.getElementById('tableSkeleton');
   const wrapper = document.getElementById('mainTableWrapper');
-  if (reset && skeleton && wrapper) {
-    skeleton.style.display = 'block';
-    wrapper.style.display = 'none';
-  }
-  try {
-  if (reset) { recordPage = 0; allRecords = []; }
-const { data, error } = await supabaseClient
-  .from('witcorp_records')
-  .select('*')
-  .order('id', { ascending: false })
-  .limit(PAGE_SIZE);
-if (error) { console.error("fetchRecords error:", error); showToast('Failed to fetch records. Check connection.', 'error'); return; }
-if (data) {
+
   if (reset) {
-    allRecords = data;
-  } else {
-    const uniqueData = data.filter(n => !allRecords.some(o => o.id === n.id));
-    allRecords = [...allRecords, ...uniqueData];
+    recordPage = 0;
+    allRecords = [];
+    hasMoreRecords = true;
+    if (skeleton && wrapper) {
+      skeleton.style.display = 'block';
+      wrapper.style.display = 'none';
+    }
   }
-      // FIX #17: memory cap
-      if (allRecords.length > MAX_RECORDS_IN_MEMORY) {
-        allRecords = allRecords.slice(-MAX_RECORDS_IN_MEMORY);
+
+  try {
+    // FIX-A: Proper .range() based pagination
+    const from = recordPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, error, count } = await supabaseClient
+      .from('witcorp_records')
+      .select('*', { count: 'exact' })
+      .order('id', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.error("fetchRecords error:", error);
+      showToast('Failed to fetch records. Check connection.', 'error');
+      return;
+    }
+
+    if (data) {
+      if (reset) {
+        allRecords = data;
+      } else {
+        // FIX-E: No memory cap — add all unique records
+        const existingIds = new Set(allRecords.map(r => r.id));
+        const newRecords = data.filter(r => !existingIds.has(r.id));
+        allRecords = [...allRecords, ...newRecords];
       }
+
+      hasMoreRecords = data.length === PAGE_SIZE;
+      recordPage++;
+
       renderTable(allRecords, 'mainTableBody');
       updateStats(allRecords);
       checkDeadlineAlerts(allRecords);
       updateLastSync();
-      recordPage++;
+
       const btn = document.getElementById("loadMoreBtn");
-      if (btn) btn.style.display = data.length < PAGE_SIZE ? "none" : "block";
+      if (btn) btn.style.display = hasMoreRecords ? "block" : "none";
+
       const badge = document.getElementById('recordCountBadge');
-      if (badge) badge.innerText = `${allRecords.length} records`;
+      if (badge) {
+        badge.innerText = count
+          ? `${allRecords.length} of ${count} records`
+          : `${allRecords.length} records`;
+      }
     }
   } catch (err) {
     console.error("fetchRecords exception:", err);
     showToast('Error loading records. Please try again.', 'error');
   } finally {
     isFetchingRecords = false;
-    if (skeleton && wrapper) { skeleton.style.display = 'none'; wrapper.style.display = 'block'; }
+    if (skeleton && wrapper) {
+      skeleton.style.display = 'none';
+      wrapper.style.display = 'block';
+    }
+
+    // FIX-D: Process queued fetch requests
+    if (_fetchQueue.length > 0) {
+      _fetchQueue = [];
+      fetchRecords(true);
+    }
   }
+}
+
+// ============================================================
+// FIX-C: REALTIME SUBSCRIPTION for witcorp_records table
+// ============================================================
+function subscribeRecordsRealtime() {
+  if (recordsSubscription) return; // prevent duplicates
+
+  recordsSubscription = supabaseClient
+    .channel('records-realtime-' + Date.now())
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'witcorp_records'
+    }, (payload) => {
+      // Add new record to top of array without full refetch
+      if (!allRecords.find(r => r.id === payload.new.id)) {
+        allRecords.unshift(payload.new);
+        renderTable(allRecords, 'mainTableBody');
+        updateStats(allRecords);
+        checkDeadlineAlerts(allRecords);
+        updateLastSync();
+        const badge = document.getElementById('recordCountBadge');
+        if (badge) badge.innerText = `${allRecords.length} records`;
+      }
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'witcorp_records'
+    }, (payload) => {
+      // Update existing record in-place
+      const idx = allRecords.findIndex(r => r.id === payload.new.id);
+      if (idx !== -1) {
+        allRecords[idx] = payload.new;
+        renderTable(allRecords, 'mainTableBody');
+        updateStats(allRecords);
+        checkDeadlineAlerts(allRecords);
+        updateLastSync();
+      }
+    })
+    .on('postgres_changes', {
+      event: 'DELETE',
+      schema: 'public',
+      table: 'witcorp_records'
+    }, (payload) => {
+      // Remove deleted record from array
+      allRecords = allRecords.filter(r => r.id !== payload.old.id);
+      renderTable(allRecords, 'mainTableBody');
+      updateStats(allRecords);
+      checkDeadlineAlerts(allRecords);
+      updateLastSync();
+      const badge = document.getElementById('recordCountBadge');
+      if (badge) badge.innerText = `${allRecords.length} records`;
+    })
+    .subscribe((status) => {
+      console.log("Records realtime status:", status);
+    });
 }
 
 // ============================================================
@@ -280,7 +384,7 @@ function applyMultiFilter() {
   renderTable(filtered, 'mainTableBody');
   updateStats(filtered);
   const badge = document.getElementById('recordCountBadge');
-  if (badge) badge.innerText = `${filtered.length} records`;
+  if (badge) badge.innerText = `${filtered.length} of ${allRecords.length} records`;
 }
 
 function resetFilters() {
@@ -342,7 +446,7 @@ function clearBulkSelection() {
 }
 
 // ============================================================
-// FIX #7: BULK STATUS — parallel undo with Promise.all
+// BULK STATUS — parallel undo with Promise.all
 // ============================================================
 async function applyBulkStatus() {
   if (selectedRowIds.size === 0) return;
@@ -360,7 +464,17 @@ async function applyBulkStatus() {
   if (!error) {
     saveActivity(`Bulk Update: ${ids.length} records → ${newStatus}`);
     clearBulkSelection();
-    await fetchRecords(true);
+    // FIX-C: Realtime will auto-update, but also update locally for speed
+    ids.forEach(id => {
+      const idx = allRecords.findIndex(r => r.id === id);
+      if (idx !== -1) {
+        allRecords[idx].status = newStatus;
+        allRecords[idx].updated_at = new Date().toISOString();
+        allRecords[idx].updated_by = currentUserName;
+      }
+    });
+    renderTable(allRecords, 'mainTableBody');
+    updateStats(allRecords);
     showUndoToast(`${ids.length} record${ids.length > 1 ? 's' : ''} marked as ${newStatus}`, previousStatuses, 120000);
     if (newStatus === 'Completed') fireConfetti();
   } else {
@@ -407,7 +521,6 @@ function showUndoToast(message, previousStatuses, duration = 120000) {
   setTimeout(() => { clearInterval(ticker); removeToast(toast); }, duration);
 }
 
-// FIX #7: parallel undo with Promise.all
 async function undoBulkStatus(previousStatuses) {
   try {
     await Promise.all(previousStatuses.map(({ id, status, updated_at, updated_by }) =>
@@ -417,7 +530,17 @@ async function undoBulkStatus(previousStatuses) {
     ));
     saveActivity(`Undo Bulk Update: ${previousStatuses.length} records restored`);
     showToast(`${previousStatuses.length} record${previousStatuses.length > 1 ? 's' : ''} fully restored`, 'info');
-    await fetchRecords(true);
+    // Update locally
+    previousStatuses.forEach(({ id, status, updated_at, updated_by }) => {
+      const idx = allRecords.findIndex(r => r.id === id);
+      if (idx !== -1) {
+        allRecords[idx].status = status;
+        allRecords[idx].updated_at = updated_at;
+        allRecords[idx].updated_by = updated_by;
+      }
+    });
+    renderTable(allRecords, 'mainTableBody');
+    updateStats(allRecords);
   } catch (err) {
     console.error("undoBulkStatus error:", err);
     showToast('Undo failed. Check connection.', 'error');
@@ -425,17 +548,13 @@ async function undoBulkStatus(previousStatuses) {
 }
 
 // ============================================================
-// FIX #13: rowDataMap — eliminates JSON-in-onclick (XSS safe)
+// rowDataMap — eliminates JSON-in-onclick (XSS safe)
 // ============================================================
 const rowDataMap = new Map();
-
-// ============================================================
-// FIX #14: _rmkCounter resets per render call
-// ============================================================
 let _rmkCounter = 0;
 
 // ============================================================
-// RENDER TABLE — FIX #5 XSS, FIX #13 rowDataMap, FIX #14 counter reset
+// RENDER TABLE
 // ============================================================
 function renderTable(data, targetId) {
   currentExportData = data;
@@ -443,8 +562,8 @@ function renderTable(data, targetId) {
   const tbody = document.getElementById(targetId);
   if (!tbody) return;
 
-  _rmkCounter = 0; // FIX #14: reset per render
-  rowDataMap.clear(); // FIX #13: reset map
+  _rmkCounter = 0;
+  rowDataMap.clear();
 
   if (data.length === 0) {
     tbody.innerHTML = `
@@ -465,7 +584,7 @@ function renderTable(data, targetId) {
   const rows = [];
 
   data.forEach(row => {
-    rowDataMap.set(row.id, row); // FIX #13: store in map
+    rowDataMap.set(row.id, row);
 
     const statusClass = { 'Completed': 'st-completed', 'Pending': 'st-pending', 'Processing': 'st-processing' }[row.status] || 'bg-slate-100';
     const statusIcon = { 'Completed': 'fa-circle-check', 'Pending': 'fa-circle-exclamation', 'Processing': 'fa-spinner fa-spin' }[row.status] || 'fa-info-circle';
@@ -532,7 +651,6 @@ function renderTable(data, targetId) {
     }
 
     const isChecked = selectedRowIds.has(row.id) ? 'checked' : '';
-    // FIX #13: use rowDataMap — no more JSON in onclick
     rows.push(`
       <tr class="group transition-all ${rowBg}" id="row_${row.id}">
         <td class="p-4">
@@ -600,7 +718,7 @@ function renderTable(data, targetId) {
 }
 
 // ============================================================
-// REMARKS TOGGLE — event delegation (unchanged, correct)
+// REMARKS TOGGLE — event delegation
 // ============================================================
 document.addEventListener('click', function(e) {
   const btn = e.target.closest('.rmk-toggle-btn');
@@ -661,9 +779,9 @@ async function handleSubmit() {
   btn.disabled = true;
 
   try {
-    const { error } = id
-      ? await supabaseClient.from('witcorp_records').update(payload).eq('id', parseInt(id, 10))
-      : await supabaseClient.from('witcorp_records').insert([payload]);
+    const { data: savedData, error } = id
+      ? await supabaseClient.from('witcorp_records').update(payload).eq('id', parseInt(id, 10)).select().single()
+      : await supabaseClient.from('witcorp_records').insert([payload]).select().single();
 
     btn.innerHTML = origHtml;
     btn.disabled = false;
@@ -672,18 +790,33 @@ async function handleSubmit() {
       if (id) {
         const oldRec = allRecords.find(r => r.id === parseInt(id));
         await saveAuditTrail('witcorp_records', id, 'UPDATE', oldRec, payload);
+        // Update locally immediately (realtime backup)
+        const idx = allRecords.findIndex(r => r.id === parseInt(id, 10));
+        if (idx !== -1 && savedData) allRecords[idx] = savedData;
       } else {
         await saveAuditTrail('witcorp_records', 'new', 'INSERT', null, payload);
+        // Add locally immediately (realtime backup)
+        if (savedData && !allRecords.find(r => r.id === savedData.id)) {
+          allRecords.unshift(savedData);
+        }
       }
+
+      renderTable(allRecords, 'mainTableBody');
+      updateStats(allRecords);
+      checkDeadlineAlerts(allRecords);
+      updateLastSync();
+
       const actionText = id
         ? `Updated Record: ${payload.client_name} | ${payload.service_category} | Status: ${payload.status}`
         : `Added Record: ${payload.client_name} | ${payload.service_category} | ${payload.service_detail || 'N/A'}`;
       saveActivity(actionText);
+
       await createNotificationForOthers(
         id ? "Record Updated" : "New Record Added",
         `${payload.client_name} — ${payload.service_category} updated by ${currentUserName}`,
         "record", payload.client_name
       );
+
       showToast(id ? `Record updated: ${payload.client_name}` : `Record added: ${payload.client_name}`, 'success');
       if (payload.status === 'Completed') fireConfetti();
 
@@ -697,7 +830,6 @@ async function handleSubmit() {
       }
       clearForm();
       clearDirtyState();
-      await fetchRecords(true);
       showSection('dashboard');
     } else {
       showToast('Sync Error: Please check connection.', 'error');
@@ -710,12 +842,10 @@ async function handleSubmit() {
   }
 }
 
-// FIX #13: editRecord takes ID, reads from rowDataMap
 function editRecord(id) {
   const row = rowDataMap.get(id);
   if (!row) { showToast('Record data not found. Please refresh.', 'error'); return; }
 
-  // FIX #4: Always re-enable all fields first
   ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline', 'status', 'remarks']
     .forEach(fId => {
       const el = document.getElementById(fId);
@@ -736,7 +866,6 @@ function editRecord(id) {
   document.getElementById('submitBtn').innerHTML = `<i class="fas fa-arrows-rotate mr-2"></i> Confirm Changes`;
   document.getElementById('editBadge').classList.remove('hidden');
 
-  // Only disable identity fields
   ['clientName', 'serviceCategory', 'serviceDetail', 'assignedStaff', 'allotedBy', 'deadline']
     .forEach(fId => {
       const el = document.getElementById(fId);
@@ -755,12 +884,19 @@ async function deleteRecord(id) {
     try {
       const { error } = await supabaseClient.from('witcorp_records').delete().eq('id', parseInt(id, 10));
       if (!error) {
+        // Remove locally immediately (realtime backup)
+        allRecords = allRecords.filter(r => r.id !== id);
+        renderTable(allRecords, 'mainTableBody');
+        updateStats(allRecords);
+        checkDeadlineAlerts(allRecords);
+        const badge = document.getElementById('recordCountBadge');
+        if (badge) badge.innerText = `${allRecords.length} records`;
+
         const logText = rec
           ? `Deleted Record: ${rec.client_name} | ${rec.service_category} | ${rec.service_detail || 'N/A'}`
           : `Deleted Record ID: ${id}`;
         saveActivity(logText);
         showToast(rec ? `Deleted: ${rec.client_name}` : 'Record deleted', 'warning');
-        await fetchRecords(true);
       } else {
         showToast('Delete failed. Check connection.', 'error');
       }
@@ -772,7 +908,7 @@ async function deleteRecord(id) {
 }
 
 // ============================================================
-// FIX #4: clearForm — ALWAYS re-enable all fields first
+// clearForm — ALWAYS re-enable all fields first
 // ============================================================
 function clearForm() {
   document.getElementById('editId').value = "";
@@ -784,7 +920,7 @@ function clearForm() {
     const el = document.getElementById(fId);
     if (!el) return;
     el.disabled = false;
-    el.removeAttribute('disabled'); // belt + suspenders
+    el.removeAttribute('disabled');
     if (fId === 'serviceCategory') { el.value = 'Sales'; }
     else if (fId === 'status') { el.value = 'Pending'; }
     else { el.value = ""; }
@@ -794,13 +930,12 @@ function clearForm() {
 }
 
 // ============================================================
-// FETCH CLIENTS — FIX #21: extract renderClientCard() to avoid duplication
+// FETCH CLIENTS
 // ============================================================
 function renderClientCard(c, listId) {
   const clientRecordCount = allRecords.filter(r => r.client_name === c.client_name).length;
   const recordBadge = clientRecordCount > 0
     ? `<span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black">${clientRecordCount} records</span>` : '';
-  // FIX #13 style: use data-id attr instead of JSON in onclick
   const card = document.createElement('div');
   card.className = "p-5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-blue-400 transition-all group";
   card.innerHTML = `
@@ -847,7 +982,7 @@ async function fetchClients() {
     data.forEach(c => {
       const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
       counts[typeKey]++;
-      renderClientCard(c, containers[typeKey]); // FIX #21: shared render fn
+      renderClientCard(c, containers[typeKey]);
     });
 
     const pvtCount = document.getElementById('pvtLtdCount');
@@ -944,9 +1079,7 @@ function renderVaultTable(data) {
     const fullPass = v.password || '';
     const maskedPass = '•'.repeat(Math.min(fullPass.length, 12));
     const vId = `vault_${v.id}`;
-    // FIX #26: use shared _encodePass helper
     const encodedPass = _encodePass(fullPass);
-    // FIX #11: use data-shown attribute for state tracking
     const safeUsername = esc(v.username || '');
 
     rows.push(`
@@ -985,7 +1118,6 @@ function renderVaultTable(data) {
   });
   tbody.innerHTML = rows.join('');
 
-  // attach edit listeners using vaultDataMap
   tbody.querySelectorAll('.vault-edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const v = allVault.find(x => x.id === parseInt(btn.dataset.vaultId, 10));
@@ -994,7 +1126,6 @@ function renderVaultTable(data) {
   });
 }
 
-// FIX #11: consistent encode/decode + data-shown attribute
 function _encodePass(plainText) {
   try { return btoa(unescape(encodeURIComponent(plainText))); } catch (e) { return btoa(plainText); }
 }
@@ -1002,7 +1133,6 @@ function _decodePass(encoded) {
   try { return decodeURIComponent(escape(atob(encoded))); } catch (e) { return atob(encoded); }
 }
 
-// FIX #11: use data-shown instead of textContent check
 function toggleVaultPassword(vId) {
   const passEl = document.getElementById(vId + '_pass');
   const eyeEl = document.getElementById(vId + '_eye');
@@ -1024,7 +1154,6 @@ function toggleVaultPassword(vId) {
   }
 }
 
-// FIX #11: use data-shown attribute
 function copyPasswordSafe(vId) {
   const passEl = document.getElementById(vId + '_pass');
   if (!passEl) return;
@@ -1114,7 +1243,7 @@ function searchVault(query) {
 }
 
 // ============================================================
-// FIX #23: Accounting Hub toggles merged into one function
+// ACCOUNTING HUB TOGGLES
 // ============================================================
 function toggleAccountingHub() {
   document.getElementById('accountinghubMenu').classList.toggle('hidden');
@@ -1125,7 +1254,7 @@ function toggleAccountingHubDesktop() {
 }
 
 // ============================================================
-// FIX #18/#19: showSection — debounced presence, no DB write per search
+// showSection — debounced presence
 // ============================================================
 function showSection(id) {
   if (isFormDirty && id !== 'dashboard') {
@@ -1164,6 +1293,11 @@ function showSection(id) {
     if (allRecords.length === 0) fetchPromises.push(fetchRecords());
     if (allClients.length === 0) fetchPromises.push(fetchClients());
     if (fetchPromises.length > 0) Promise.all(fetchPromises).then(() => setupPredictions());
+    else {
+      // Re-render existing data on dashboard re-visit
+      renderTable(allRecords, 'mainTableBody');
+      updateStats(allRecords);
+    }
   }
   if (id === 'clientManagement') fetchClients();
   if (id === 'vaultManagement') fetchVault();
@@ -1171,7 +1305,6 @@ function showSection(id) {
 
   updateBreadcrumb(id);
 
-  // FIX #12/#18: debounce presence updates — no DB write per keystroke
   clearTimeout(_presenceDebounce);
   _presenceDebounce = setTimeout(() => updatePresence(id), 2000);
 
@@ -1179,7 +1312,7 @@ function showSection(id) {
 }
 
 // ============================================================
-// FIX #24: _showFilterResults — lightweight helper, NO presence write
+// _showFilterResults — lightweight helper
 // ============================================================
 function _showFilterResults(title, data) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -1187,7 +1320,6 @@ function _showFilterResults(title, data) {
   if (section) section.classList.add('active');
   document.getElementById('filterTitle').innerText = title;
   renderTable(data, 'filterTableBody');
-  // No updatePresence here — intentionally omitted
 }
 
 // ============================================================
@@ -1195,7 +1327,6 @@ function _showFilterResults(title, data) {
 // ============================================================
 function filterByField(field, value) {
   window._lastFilterValue = value;
-  // Update nav active state
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const filterMap = {
     'GST': 'nav-gst', 'ROC': 'nav-roc', 'IT': 'nav-it', 'PT': 'nav-pt', 'TDS': 'nav-tds',
@@ -1223,13 +1354,12 @@ function filterByField(field, value) {
 }
 
 // ============================================================
-// FIX #18/#19: handleSearch — uses _showFilterResults, no DB write per keystroke
+// handleSearch
 // ============================================================
 function handleSearch(query) {
   const q = query.toLowerCase().trim();
   if (q === "") {
     showSection('dashboard');
-    if (allRecords.length === 0) fetchRecords();
     return;
   }
   const filtered = allRecords.filter(r =>
@@ -1270,8 +1400,9 @@ async function refreshData() {
   if (!btn) return;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Refreshing';
   btn.disabled = true;
+  // Force full re-fetch
+  allRecords = [];
   await fetchRecords(true);
-  renderTable(allRecords, 'mainTableBody');
   btn.innerHTML = '<i class="fas fa-check mr-1"></i> Updated';
   btn.disabled = false;
   showToast('Records refreshed successfully', 'success', 2000);
@@ -1316,15 +1447,13 @@ async function checkApproval(user) {
   } catch (err) { console.error("checkApproval error:", err); showToast('Approval check failed', 'error'); }
 }
 
-// FIX #2/#3: logout cleans up ALL channels and intervals
+// FIX-F: logout cleans up ALL channels and intervals
 async function logout() {
-  // Clean up realtime subscriptions
   if (chatSubscription) { supabaseClient.removeChannel(chatSubscription); chatSubscription = null; }
   if (typingChannel) { supabaseClient.removeChannel(typingChannel); typingChannel = null; }
-  // Clean up intervals
+  if (recordsSubscription) { supabaseClient.removeChannel(recordsSubscription); recordsSubscription = null; }
   if (_onlineUsersInterval) { clearInterval(_onlineUsersInterval); _onlineUsersInterval = null; }
   if (_presenceInterval) { clearInterval(_presenceInterval); _presenceInterval = null; }
-  // Reset state
   currentUserEmail = "";
   currentUserName = "";
   allRecords = []; allClients = []; allVault = []; allDSC = [];
@@ -1332,10 +1461,15 @@ async function logout() {
   catch (err) { console.error("logout error:", err); location.reload(); }
 }
 
-// FIX #15: wrap session restore in DOMContentLoaded
+// FIX-G: Session restore — single entry point, no race
+let _sessionRestored = false;
 document.addEventListener('DOMContentLoaded', () => {
+  if (_sessionRestored) return;
   supabaseClient.auth.getSession().then(({ data }) => {
-    if (data?.session) checkApproval(data.session.user);
+    if (data?.session && !_sessionRestored) {
+      _sessionRestored = true;
+      checkApproval(data.session.user);
+    }
   });
 });
 
@@ -1350,7 +1484,7 @@ function toggleMenu() {
 }
 
 // ============================================================
-// FIX #21: searchClients uses shared renderClientCard
+// searchClients
 // ============================================================
 function searchClients(query) {
   const q = query.toLowerCase().trim();
@@ -1369,7 +1503,7 @@ function searchClients(query) {
   Object.values(containers).forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ""; });
   filtered.forEach(c => {
     const typeKey = ['Pvt Ltd', 'LLP'].includes(c.entity_type) ? c.entity_type : 'Others';
-    renderClientCard(c, containers[typeKey]); // FIX #21: shared fn, no duplication
+    renderClientCard(c, containers[typeKey]);
   });
   if (query.trim() === "") fetchClients();
 }
@@ -1447,7 +1581,6 @@ function renderDSC(data) {
       </tr>`);
   });
   tbody.innerHTML = rows.join('');
-  // Attach edit listeners via data attributes
   tbody.querySelectorAll('.dsc-edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const d = allDSC.find(x => x.id === parseInt(btn.dataset.dscId, 10));
@@ -1529,7 +1662,7 @@ function searchDSC(query) {
 }
 
 // ============================================================
-// FIX #27: Service Worker — relative path
+// SERVICE WORKER
 // ============================================================
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js', { scope: './' })
@@ -1568,7 +1701,6 @@ async function createNotificationForOthers(title, message, type = "info", refere
   } catch (err) { console.error("createNotificationForOthers error:", err); }
 }
 
-// FIX #6: guard added at start
 async function fetchNotifications() {
   if (!currentUserEmail) return;
   try {
@@ -1657,7 +1789,9 @@ async function openNotification(id, type, reference) {
 }
 
 // ============================================================
-// REALTIME SUBSCRIPTION — records
+// FIX-B: REALTIME SUBSCRIPTION — notifications ONLY
+// NO fetchRecords() call here — FIX for the main data bug
+// Records table has its own subscription (subscribeRecordsRealtime)
 // ============================================================
 supabaseClient
   .channel('live-notifications')
@@ -1686,7 +1820,7 @@ supabaseClient
         }).catch(() => {});
       }
       showToast(payload.new.title + ': ' + payload.new.message, 'info');
-      await fetchRecords(true);
+      // FIX-B: REMOVED fetchRecords(true) — records realtime handles updates
     } catch (err) { console.error("Realtime subscription error:", err); }
   })
   .subscribe((status) => { console.log("NOTIFICATION STATUS:", status); });
@@ -1719,7 +1853,7 @@ function setupPredictions() {
 }
 
 // ============================================================
-// FIX #26: forgot password — use consistent known path
+// FORGOT PASSWORD
 // ============================================================
 async function forgotPassword() {
   const email = document.getElementById("email")?.value;
@@ -1898,8 +2032,7 @@ function exportPDF() {
 }
 
 // ============================================================
-// FIX #16: applyGreenHeaders — use CSS class instead of inline styles
-// Still kept as fallback for dynamic tables
+// GREEN HEADERS
 // ============================================================
 function applyGreenHeaders() {
   document.querySelectorAll('th').forEach(th => {
@@ -1911,7 +2044,7 @@ function applyGreenHeaders() {
 }
 
 // ============================================================
-// FIX #9: KEYBOARD SHORTCUTS — debounced session reset
+// KEYBOARD SHORTCUTS
 // ============================================================
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
@@ -1936,7 +2069,6 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// FIX #9: throttled session reset
 function resetSessionTimer() {
   if (_sessionResetDebounce) return;
   _sessionResetDebounce = setTimeout(() => {
@@ -1976,7 +2108,6 @@ async function loadUserProfile(email) {
   } catch (err) { console.error('loadUserProfile error:', err); }
 }
 
-// FIX #31: createUserProfile — pass user object, no extra getUser() call
 async function createUserProfile(email) {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -2083,7 +2214,7 @@ async function saveProfileChanges() {
 }
 
 // ============================================================
-// ACTIVITY LOG — DB based, FIX #28: no silent localStorage fallback
+// ACTIVITY LOG
 // ============================================================
 async function saveActivity(text) {
   try {
@@ -2106,7 +2237,6 @@ async function saveActivity(text) {
     }
   } catch (err) {
     console.error('saveActivity error:', err);
-    // FIX #28: show user instead of silent localStorage fallback
     showToast('Activity log failed (offline?)', 'warning', 2000);
   }
 }
@@ -2392,7 +2522,7 @@ async function showPinnedRecords() {
 }
 
 // ============================================================
-// ONLINE PRESENCE — FIX #6 guard
+// ONLINE PRESENCE
 // ============================================================
 async function updatePresence(section = 'dashboard') {
   if (!currentUserEmail) return;
@@ -2408,7 +2538,6 @@ async function updatePresence(section = 'dashboard') {
   } catch (err) { console.error('updatePresence error:', err); }
 }
 
-// FIX #6: guard added
 async function loadOnlineUsers() {
   if (!currentUserEmail) return;
   try {
@@ -2483,13 +2612,14 @@ async function submitQuickAdd() {
       ['qaClientName', 'qaServiceDetail', 'qaStaff', 'qaDeadline'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
+      // Realtime will auto-add, but also refresh to be safe
       await fetchRecords(true);
     } else { showToast('Quick add failed', 'error'); }
   } catch (err) { console.error('submitQuickAdd error:', err); }
 }
 
 // ============================================================
-// COLUMN VISIBILITY — FIX #29: add id="mainTable" to HTML
+// COLUMN VISIBILITY
 // ============================================================
 const defaultColumns = {
   checkbox: true, client: true, updated: true, service: true,
@@ -2513,7 +2643,6 @@ function applyColumnVisibility() {
   };
   Object.entries(colMap).forEach(([key, idx]) => {
     const display = columnVisibility[key] !== false ? '' : 'none';
-    // FIX #29: use correct selector
     document.querySelectorAll(`#mainTableBody tr td:nth-child(${idx + 1})`).forEach(td => td.style.display = display);
     document.querySelectorAll(`#mainTableWrapper table thead th:nth-child(${idx + 1})`).forEach(th => th.style.display = display);
   });
@@ -2561,9 +2690,12 @@ async function subscribeToPush() {
 }
 
 // ============================================================
-// SHOWAPP — FIX #2/#3/#6: clean start, no duplicate intervals
+// FIX-G: SHOWAPP — clean start, single entry point
 // ============================================================
 function showApp(user) {
+  // Prevent double initialization
+  if (currentUserEmail === user.email) return;
+
   document.getElementById('authScreen').style.display = 'none';
   const appScreen = document.getElementById('appScreen');
   appScreen.classList.remove('hidden');
@@ -2586,13 +2718,17 @@ function showApp(user) {
   resetSessionTimer();
   updatePresence('dashboard');
   loadColumnPrefs();
-  showSection('dashboard');
 
-  // FIX #2: clear any stale intervals before creating new ones
+  // FIX-F: clear any stale intervals before creating new ones
   if (_onlineUsersInterval) { clearInterval(_onlineUsersInterval); _onlineUsersInterval = null; }
   if (_presenceInterval) { clearInterval(_presenceInterval); _presenceInterval = null; }
   _onlineUsersInterval = setInterval(loadOnlineUsers, 30000);
   _presenceInterval = setInterval(() => updatePresence(), 60000);
+
+  // FIX-C: Start realtime subscription for records
+  subscribeRecordsRealtime();
+
+  showSection('dashboard');
 
   saveActivity('Login: ' + user.email);
   subscribeToPush();
@@ -2602,7 +2738,7 @@ function showApp(user) {
 }
 
 // ============================================================
-// FIX: Move chatPanel to body for correct fixed positioning
+// Move chatPanel to body for correct fixed positioning
 // ============================================================
 function _moveChatPanelToBody() {
   const chatPanel = document.getElementById('chatPanel');
@@ -2620,7 +2756,7 @@ function _moveChatPanelToBody() {
 }
 
 // ============================================================
-// WINDOW LOAD — FIX #15: session restore moved to DOMContentLoaded above
+// WINDOW LOAD
 // ============================================================
 window.addEventListener('load', async () => {
   const savedBg = localStorage.getItem('bgTheme');
@@ -2645,7 +2781,7 @@ window.addEventListener('load', async () => {
 });
 
 // ============================================================
-// TEAM CHAT SYSTEM — FIX #22: buildMessageHTML shared function
+// TEAM CHAT SYSTEM
 // ============================================================
 let chatOpen = false;
 let editingMessageId = null;
@@ -2679,7 +2815,6 @@ function toggleChat() {
 async function loadChats() {
   const list = document.getElementById('chatList');
   if (!list) return;
-  // FIX #12: don't clear here — renderChats handles it
   try {
     const { data, error } = await supabaseClient
       .from('witcorp_chats').select('*')
@@ -2690,7 +2825,7 @@ async function loadChats() {
 }
 
 // ============================================================
-// FIX #22: buildMessageHTML — single shared template
+// buildMessageHTML — single shared template
 // ============================================================
 function buildMessageHTML(msg) {
   const isMe = msg.sent_by === currentUserEmail;
@@ -2755,7 +2890,6 @@ function buildMessageHTML(msg) {
   }
 }
 
-// FIX #22: renderChats uses buildMessageHTML
 function renderChats(messages) {
   const list = document.getElementById('chatList');
   if (!list) return;
@@ -2793,10 +2927,9 @@ function escapeHtml(text) {
   return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// FIX #20: rate limited sendChat
 async function sendChat() {
   const now = Date.now();
-  if (now - _lastSendTime < 500) return; // FIX #20: 500ms rate limit
+  if (now - _lastSendTime < 500) return;
   _lastSendTime = now;
 
   const input = document.getElementById('chatInput');
@@ -2837,7 +2970,7 @@ async function sendChat() {
 }
 
 // ============================================================
-// FIX #10: setReply — use data attributes, no raw text in onclick
+// setReply
 // ============================================================
 function setReply(msgId, btnEl) {
   const msgDiv = btnEl.closest('[data-msg-id]');
@@ -2877,7 +3010,7 @@ function clearReply() {
 }
 
 // ============================================================
-// @ MENTION SYSTEM — FIX #10: no raw email in onclick
+// @ MENTION SYSTEM
 // ============================================================
 let onlineUsersList = [];
 
@@ -2922,7 +3055,6 @@ function showMentionDropdown(query, input) {
     u.user_email.split('@')[0].toLowerCase().includes(query)
   );
   if (filtered.length === 0) { closeMentionDropdown(); return; }
-  // FIX #10: use data attributes, no raw values in onclick
   dropdown.innerHTML = filtered.map((u, i) => `
     <div class="mention-item" data-index="${i}"
       style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background 0.15s;"
@@ -3008,8 +3140,7 @@ function toggleEmojiPicker() {
 }
 
 // ============================================================
-// FIX #2: subscribeChatRealtime — prevent duplicate subscriptions
-// FIX #22: appendChatMessage uses buildMessageHTML
+// FIX-F: subscribeChatRealtime — prevent duplicate subscriptions
 // ============================================================
 function subscribeChatRealtime() {
   if (chatSubscription) return;
@@ -3037,11 +3168,9 @@ function subscribeChatRealtime() {
     .subscribe();
 }
 
-// FIX #22: uses buildMessageHTML — no duplicate template
 function appendChatMessage(msg) {
   const list = document.getElementById('chatList');
   if (!list) return;
-  // Remove empty state placeholder
   if (list.querySelector('.fa-comments')) list.innerHTML = '';
 
   const isMe = msg.sent_by === currentUserEmail;
@@ -3168,7 +3297,7 @@ function clearChatSearch() {
 }
 
 // ============================================================
-// FIX #19: CONFETTI — with CDN error guard
+// CONFETTI
 // ============================================================
 function fireConfetti() {
   if (typeof confetti === 'undefined') return;
@@ -3183,12 +3312,12 @@ function fireConfetti() {
 }
 
 // ============================================================
-// TYPING INDICATOR SYSTEM — FIX #3: prevent duplicate channels
+// TYPING INDICATOR SYSTEM
 // ============================================================
 let typingTimeout = null;
 
 function initTypingChannel() {
-  if (typingChannel) return; // FIX #3: prevent duplicate
+  if (typingChannel) return;
   typingChannel = supabaseClient.channel('typing-indicator-' + Date.now());
   typingChannel
     .on('presence', { event: 'sync' }, () => {
@@ -3238,7 +3367,7 @@ function renderTypingIndicator() {
 }
 
 // ============================================================
-// FIX #32: FONT SIZE — FIX #30: show modal first, then hide menu
+// FONT SIZE
 // ============================================================
 const FONT_SIZES = { small: '13px', medium: '16px', large: '19px' };
 
@@ -3269,7 +3398,6 @@ function loadFontSize() {
   updateFontButtons(saved);
 }
 
-// FIX #30: show modal first, then hide menu (no flicker)
 function openFontSizeModal() {
   document.getElementById('fontSizeModal').classList.remove('hidden');
   document.getElementById('profileMenu').classList.add('hidden');
