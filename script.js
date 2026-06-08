@@ -3,13 +3,7 @@
 const SB_URL = 'https://yznyimxtlamdzotfgajz.supabase.co';
 const SB_KEY = 'sb_publishable_6I-WD5gRpeqgR_JIecUSsw_1yaux_3y';
 const VAPID_PUBLIC_KEY = "BDosxz9iUmLcKRXXxkXbJBDGqGOkAXipmriqsvi33FyqjfqNxec1bTzvA5CRN6OT6ianW7uh8Vs8Yc2Cfrah0sc";
-const supabaseClient = supabase.createClient(SB_URL, SB_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-});
+const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
 // ============================================================
 // SERVICE DETAIL OPTIONS BY CATEGORY
