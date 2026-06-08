@@ -223,11 +223,11 @@ async function fetchRecords(reset = true) {
     const from = recordPage * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    const { data, error, count } = await supabaseClient
-      .from('witcorp_records')
-      .select('*', { count: 'exact' })
-      .order('id', { ascending: false })
-      .range(from, to);
+    const { data, error } = await supabaseClient
+  .from('witcorp_records')
+  .select('*')
+  .order('id', { ascending: false })
+  .limit(1000);
 
     if (error) {
       console.error("fetchRecords error:", error);
@@ -259,9 +259,7 @@ async function fetchRecords(reset = true) {
 
       const badge = document.getElementById('recordCountBadge');
       if (badge) {
-        badge.innerText = count
-          ? `${allRecords.length} of ${count} records`
-          : `${allRecords.length} records`;
+        badge.innerText = `${allRecords.length} records`;
       }
     }
   } catch (err) {
