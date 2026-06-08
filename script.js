@@ -1682,7 +1682,7 @@ async function createNotificationForOthers(title, message, type = "info", refere
 try {
 await supabaseClient.from('witcorp_notifications').insert([{
 title, message, type, reference,
-created_by: currentUserName, is_read: false
+created_by: currentUserEmail, is_read: false
 }]);
 await supabaseClient.from('witcorp_push_queue').insert([{ title, message }]);
 fetch(`${SB_URL}/functions/v1/send-push-`, {
@@ -1789,7 +1789,7 @@ supabaseClient
 .channel('live-notifications')
 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'witcorp_notifications' }, async (payload) => {
 try {
-if (payload.new.created_by === currentUserName) return;
+if (payload.new.created_by === currentUserEmail) return;
 allNotifications.unshift(payload.new);
 renderNotifications();
 const notificationEnabled = localStorage.getItem("notificationSound");
